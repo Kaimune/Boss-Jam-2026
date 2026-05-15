@@ -3,12 +3,16 @@ refreshSearchWindowsInPlayMode = false
 pickerAdvancedUI = false
 fetchPreview = true
 defaultFlags = 0
-keepOpen = false
+keepOpen = true
 queryFolder = "Assets"
 onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
+	"picker_window_position_offset.075BCD15" = "-388;370;320;550"
+	"picker_visibility_flags.075BCD15" = "264"
+	"picker_item_size.075BCD15" = "96"
+	"picker_inspector.075BCD15" = "0"
 }
 providers = {
 	asset = {
@@ -26,6 +30,11 @@ providers = {
 		priority = 2500
 		defaultAction = null
 	}
+	presets_provider = {
+		active = false
+		priority = -10
+		defaultAction = null
+	}
 	find = {
 		active = true
 		priority = 25
@@ -36,12 +45,12 @@ providers = {
 		priority = 90
 		defaultAction = null
 	}
-	profilermarkers = {
+	store = {
 		active = false
 		priority = 100
 		defaultAction = null
 	}
-	store = {
+	profilermarkers = {
 		active = false
 		priority = 100
 		defaultAction = null
@@ -54,6 +63,21 @@ providers = {
 	log = {
 		active = false
 		priority = 210
+		defaultAction = null
+	}
+	"unity.ai.file.search" = {
+		active = true
+		priority = 85
+		defaultAction = null
+	}
+	asset_knowledge = {
+		active = true
+		priority = 99999
+		defaultAction = null
+	}
+	"unity.ai.pattern.search" = {
+		active = true
+		priority = 80
 		defaultAction = null
 	}
 }
