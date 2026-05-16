@@ -5,22 +5,55 @@ using UnityEngine.InputSystem;
 namespace BossJam.Player
 {
     [RequireComponent(typeof(GridMover))]
-    public class BossController : MonoBehaviour, IGridEntity
+    public class BossController : MonoBehaviour, IGridEntity, IDamageable
     {
         [Header("Tick")]
         [Tooltip("Per-actor scalar on the grid's tick. 1 = baseline, >1 slower, <1 faster.")]
         [SerializeField, Min(0.01f)] private float tickMultiplier = 1f;
 
+        [Header("HP")]
+        [SerializeField, Min(1)] private int hp = 10;
+
         [Header("Input")]
         [Tooltip("Below this magnitude the stick is treated as released.")]
         [SerializeField, Range(0f, 0.9f)] private float deadzone = 0.3f;
+
+        [Header("Facing")]
+        [Tooltip("Transform that rotates to face movement. Leave null to rotate the root.")]
+        [SerializeField] private Transform visual;
+        [SerializeField, Min(0f)] private float turnDegreesPerSecond = 720f;
+        [Tooltip("Yaw offset (degrees) applied to the visual. Spin this until the model's nose points along movement direction.")]
+        [SerializeField, Range(-180f, 180f)] private float modelYawOffset = 0f;
+
+        private Quaternion facingTarget = Quaternion.identity;
 
         private GridFootprint cachedFootprint;
         public GridFootprint Footprint =>
             cachedFootprint != null ? cachedFootprint : (cachedFootprint = GetComponent<GridFootprint>());
         public float TickMultiplier => tickMultiplier;
         public Team Team => Team.Boss;
-        public Verdict OnEnteredBy(IGridEntity mover) => Verdict.Block;
+
+        public Verdict OnEnteredBy(IGridEntity mover)
+        {
+            // Hostile mover → pass through, damage us, destroy them.
+            if (mover != null && mover.Team == Team.Enemy)
+            {
+                int damage = (mover is IDamageDealer dd) ? dd.Damage : 1;
+                return Verdict.PassWith(() =>
+                {
+                    TakeDamage(damage, mover);
+                    if (mover is MonoBehaviour mb && mb != null) Destroy(mb.gameObject);
+                });
+            }
+            return Verdict.Block;
+        }
+
+        public void TakeDamage(int amount, IGridEntity source)
+        {
+            hp -= amount;
+            Debug.Log($"Boss took {amount} damage (hp={hp}, from {source})");
+            if (hp <= 0) Debug.Log("Boss would die here — no death handling yet.");
+        }
 
         private void ApplyTick()
         {
@@ -37,6 +70,9 @@ namespace BossJam.Player
         {
             mover = GetComponent<GridMover>();
             moveAction = BuildMoveAction();
+            if (visual == null) visual = transform;
+            facingTarget = Quaternion.Euler(0f, modelYawOffset, 0f);
+            visual.rotation = facingTarget;
         }
 
         private void OnEnable()
@@ -58,7 +94,19 @@ namespace BossJam.Player
         private void Update()
         {
             var raw = moveAction.ReadValue<Vector2>();
-            mover.InputDirection = ToDirection(raw);
+            var dir = ToDirection(raw);
+            mover.InputDirection = dir;
+
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                var forward = new Vector3(dir.x, 0f, dir.y);
+                facingTarget = Quaternion.LookRotation(forward, Vector3.up) * Quaternion.Euler(0f, modelYawOffset, 0f);
+            }
+
+            visual.rotation = Quaternion.RotateTowards(
+                visual.rotation,
+                facingTarget,
+                turnDegreesPerSecond * Time.deltaTime);
         }
 
         // 8-way snap with normalization (so diagonals don't move faster than cardinal).

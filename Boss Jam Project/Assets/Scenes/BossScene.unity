@@ -179,7 +179,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 967.03
   field of view: 60
   orthographic: 1
   orthographic size: 9
@@ -206,8 +206,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 46109876}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.3535534, y: 0.3535534, z: -0.14644663, w: 0.85355335}
-  m_LocalPosition: {x: -3.17, y: 14.01, z: -3.65}
+  m_LocalRotation: {x: 0.41619778, y: 0.1573787, z: -0.0733869, w: 0.89253896}
+  m_LocalPosition: {x: 3, y: 11, z: -2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -313,8 +313,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 873a09f21e6bd40718de7169aede1c25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 12
-  height: 12
+  width: 24
+  height: 24
   cellSize: 0.5
   cellColor: {r: 1, g: 1, b: 1, a: 0.35}
   occupiedColor: {r: 1, g: 0.3, b: 0.3, a: 0.45}
@@ -468,15 +468,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalPosition.x
@@ -488,7 +488,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.15
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalRotation.w
@@ -496,15 +496,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e6a5af3e162ca614ca8f258718e0a3c5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -735,7 +735,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tickMultiplier: 1
+  hp: 10
   deadzone: 0.3
+  visual: {fileID: 0}
+  turnDegreesPerSecond: 720
+  modelYawOffset: 90
 --- !u!114 &1899973955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -778,9 +782,59 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fc67f71a810041b0b8dba0b387e2024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  footprint: {x: 6, y: 6}
+  footprint: {x: 5.5, y: 5.5}
   initialAnchor: {x: 3, y: 3}
   grid: {fileID: 423653430}
+--- !u!1 &2110716742
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2110716744}
+  - component: {fileID: 2110716743}
+  m_Layer: 0
+  m_Name: FireballSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2110716743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2110716742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b2e5cfaf711a408ea031bedb2ba9da7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fireballPrefab: {fileID: 5340630882246654578, guid: c6b5382f5ee7f4b64a1bef0f1dbf3403, type: 3}
+  grid: {fileID: 423653430}
+  target: {fileID: 1899973956}
+  spawnAnchor: {x: 0, y: 12}
+  fireballSize: {x: 1.5, y: 1.5}
+  intervalSeconds: 3
+--- !u!4 &2110716744
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2110716742}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -790,3 +844,4 @@ SceneRoots:
   - {fileID: 1899973956}
   - {fileID: 423653431}
   - {fileID: 1188538155}
+  - {fileID: 2110716744}

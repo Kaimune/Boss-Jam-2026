@@ -62,5 +62,14 @@ namespace BossJam.GridSystem
             Anchor = newAnchor;
             return true;
         }
+
+        // Runtime configuration — call BEFORE the GameObject is activated so OnEnable
+        // registers with the right values. Used by spawners that build entities in code.
+        public void Configure(Vector2 initialAnchor, Vector2 footprintSize, BossGrid grid)
+        {
+            this.initialAnchor = initialAnchor;
+            this.footprint = footprintSize;
+            this.grid = grid;
+        }
     }
 }
