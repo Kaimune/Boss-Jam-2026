@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BossJam.Configs;
 using UnityEngine;
 
 namespace BossJam.GridSystem
@@ -19,6 +20,9 @@ namespace BossJam.GridSystem
         [SerializeField] private Color cellColor = new Color(1f, 1f, 1f, 0.35f);
         [SerializeField] private Color occupiedColor = new Color(1f, 0.3f, 0.3f, 0.45f);
 
+        [Header("Config")]
+        [SerializeField] private GameConfig config;
+
         [Header("Dev Mode")]
         [Tooltip("Show red borders around occupied cells in the Game view. Toggle with F1 at runtime.")]
         [SerializeField] private bool devMode = true;
@@ -28,6 +32,7 @@ namespace BossJam.GridSystem
         public int Width => width;
         public int Height => height;
         public float CellSize => cellSize;
+        public float TickDuration => config.tickDuration;
         public bool DevMode { get => devMode; set => devMode = value; }
 
         private readonly Dictionary<Vector2Int, GridFootprint> occupants = new();

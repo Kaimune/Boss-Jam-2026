@@ -1,11 +1,16 @@
+using BossJam.GridSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace BossJam.Player
 {
     [RequireComponent(typeof(GridMover))]
-    public class BossController : MonoBehaviour
+    public class BossController : MonoBehaviour, IGridEntity
     {
+        [Header("Tick")]
+        [Tooltip("Per-actor scalar on the grid's tick. 1 = baseline, >1 slower, <1 faster.")]
+        [SerializeField, Min(0.01f)] private float tickMultiplier = 1f;
+
         [Header("Auto-repeat")]
         [Tooltip("Pause after the first step finishes before auto-stepping again while held.")]
         [SerializeField, Min(0f)] private float initialDelay = 0.15f;
@@ -13,6 +18,19 @@ namespace BossJam.Player
         [Header("Input")]
         [Tooltip("Below this magnitude the stick is treated as released.")]
         [SerializeField, Range(0f, 0.9f)] private float deadzone = 0.3f;
+
+        private GridFootprint cachedFootprint;
+        public GridFootprint Footprint =>
+            cachedFootprint != null ? cachedFootprint : (cachedFootprint = GetComponent<GridFootprint>());
+        public float TickMultiplier => tickMultiplier;
+
+        private void ApplyTick()
+        {
+            foreach (var t in GetComponentsInChildren<ITickScalable>(includeInactive: true))
+                t.ApplyTick(tickMultiplier);
+        }
+
+        private void OnValidate() => ApplyTick();
 
         private GridMover mover;
         private InputAction moveAction;
@@ -27,6 +45,7 @@ namespace BossJam.Player
 
         private void OnEnable()
         {
+            ApplyTick();
             moveAction.Enable();
             mover.StepCompleted += OnStepCompleted;
         }

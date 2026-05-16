@@ -182,7 +182,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 7
+  orthographic size: 9
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -207,7 +207,7 @@ Transform:
   m_GameObject: {fileID: 46109876}
   serializedVersion: 2
   m_LocalRotation: {x: 0.3535534, y: 0.3535534, z: -0.14644663, w: 0.85355335}
-  m_LocalPosition: {x: -0.5, y: 7.07, z: -0.5}
+  m_LocalPosition: {x: -3.17, y: 14.01, z: -3.65}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -318,6 +318,7 @@ MonoBehaviour:
   cellSize: 1
   cellColor: {r: 1, g: 1, b: 1, a: 0.35}
   occupiedColor: {r: 1, g: 0.3, b: 0.3, a: 0.45}
+  config: {fileID: 11400000, guid: c8e18a3215fd94a9888840cc1b961b8e, type: 2}
   devMode: 1
   devColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   devLineWidth: 0.06
@@ -589,7 +590,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0b4761834ce8f42488ec2669ba0defe9, type: 2}
+  - {fileID: 2100000, guid: e2dd20f2beae3c6429d1c258db39da30, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -652,50 +653,6 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 6, y: 0, z: 6}
   m_LocalScale: {x: 1.2, y: 1, z: 1.2}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1566084092
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1566084094}
-  - component: {fileID: 1566084093}
-  m_Layer: 0
-  m_Name: Grid
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!156049354 &1566084093
-Grid:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1566084092}
-  m_Enabled: 1
-  m_CellSize: {x: 1, y: 0.5, z: 1}
-  m_CellGap: {x: 0, y: 0, z: 0}
-  m_CellLayout: 2
-  m_CellSwizzle: 0
---- !u!4 &1566084094
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1566084092}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.180299, y: -0.26870704, z: -0.62081957}
-  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -777,6 +734,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2aa8eb4fd6b5542beb7c3d9f8667c8a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tickMultiplier: 1
   initialDelay: 0.15
   deadzone: 0.3
 --- !u!114 &1899973955
@@ -793,7 +751,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bossGrid: {fileID: 423653430}
   grid: {fileID: 0}
-  stepDuration: 0.12
   ease: 6
 --- !u!4 &1899973956
 Transform:
@@ -832,7 +789,6 @@ SceneRoots:
   m_Roots:
   - {fileID: 46109879}
   - {fileID: 725105660}
-  - {fileID: 1566084094}
   - {fileID: 1899973956}
   - {fileID: 423653431}
   - {fileID: 1188538155}
