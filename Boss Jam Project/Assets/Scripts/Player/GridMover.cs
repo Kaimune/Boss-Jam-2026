@@ -6,7 +6,7 @@ using UnityEngine;
 namespace BossJam.Player
 {
     [DisallowMultipleComponent]
-    public class GridMover : MonoBehaviour
+    public class GridMover : MonoBehaviour, ITickScalable
     {
         [Header("Grid (use one)")]
         [Tooltip("Custom bounded grid (preferred). If set, drives movement using this entity's GridFootprint.")]
@@ -16,7 +16,6 @@ namespace BossJam.Player
         [SerializeField] private Grid grid;
 
         [Header("Tween")]
-        [SerializeField, Min(0.01f)] private float stepDuration = 0.12f;
         [SerializeField] private Ease ease = Ease.OutQuad;
 
         public Vector3Int CellPosition { get; private set; }
@@ -27,6 +26,12 @@ namespace BossJam.Player
 
         private GridFootprint footprint;
         private Tweener activeTween;
+
+        private float tickScale = 1f;
+        public void ApplyTick(float tickMultiplier) => tickScale = tickMultiplier;
+
+        private float EffectiveStepDuration =>
+            bossGrid != null ? bossGrid.TickDuration * tickScale : 0.12f;
 
         private bool UseBossGrid => bossGrid != null;
 
@@ -89,7 +94,7 @@ namespace BossJam.Player
                 CellPosition = (Vector3Int)targetCell;
                 IsMoving = true;
                 var worldTarget = bossGrid.FootprintCenterWorld(targetCell, footprint.Footprint);
-                activeTween = transform.DOMove(worldTarget, stepDuration)
+                activeTween = transform.DOMove(worldTarget, EffectiveStepDuration)
                     .SetEase(ease)
                     .OnComplete(OnTweenComplete);
                 return true;
@@ -100,7 +105,7 @@ namespace BossJam.Player
             CellPosition = target3;
             IsMoving = true;
             var worldTargetLegacy = grid.GetCellCenterWorld(target3);
-            activeTween = transform.DOMove(worldTargetLegacy, stepDuration)
+            activeTween = transform.DOMove(worldTargetLegacy, EffectiveStepDuration)
                 .SetEase(ease)
                 .OnComplete(OnTweenComplete);
             return true;

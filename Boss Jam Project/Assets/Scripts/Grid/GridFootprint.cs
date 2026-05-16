@@ -17,6 +17,21 @@ namespace BossJam.GridSystem
         public Vector2Int Anchor { get; private set; }
         public BossGrid Grid => grid;
 
+        private IGridEntity ownerCached;
+        private bool ownerResolved;
+        public IGridEntity Owner
+        {
+            get
+            {
+                if (!ownerResolved)
+                {
+                    ownerCached = GetComponent<IGridEntity>();
+                    ownerResolved = true;
+                }
+                return ownerCached;
+            }
+        }
+
         private void Awake()
         {
             if (grid == null) grid = GetComponentInParent<BossGrid>();
