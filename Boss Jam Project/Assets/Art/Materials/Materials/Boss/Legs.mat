@@ -129,8 +129,8 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
-    - _AmbientLight: {r: 0.7036646, g: 0.70246416, b: 0.74213827, a: 1}
-    - _BaseColor: {r: 0.7137255, g: 0.46274513, b: 0.2784314, a: 1}
+    - _AmbientLight: {r: 0.48855266, g: 0.4372848, b: 0.84276724, a: 1}
+    - _BaseColor: {r: 0.6415094, g: 0.43193707, b: 0.37320513, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EdgeHighlightColor: {r: 0.6855345, g: 0.5324749, b: 0.54445404, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
@@ -138,6 +138,7 @@ Material:
     - _PixelGridOrigin: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!114 &1605771998520535654
 MonoBehaviour:
   m_ObjectHideFlags: 11
