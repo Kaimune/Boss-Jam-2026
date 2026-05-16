@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Horn
+  m_Name: Belt
   m_Shader: {fileID: 4800000, guid: 71d6765ad72e11541bc1448c891bbcf9, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -102,7 +102,7 @@ Material:
     - USE_OBJECT_POSITION_FOR_PIXEL_GRID: 0
     - Vector1_4DFF368: 3
     - _AlphaClip: 0
-    - _AlphaClipThreshold: 0.5
+    - _AlphaClipThreshold: 0.216
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
@@ -130,7 +130,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _AmbientLight: {r: 0.48855266, g: 0.4372848, b: 0.84276724, a: 1}
-    - _BaseColor: {r: 0.654088, g: 0.28643367, b: 0.24065493, a: 1}
+    - _BaseColor: {r: 0.51572317, g: 0.2481309, b: 0.27911448, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EdgeHighlightColor: {r: 0.6855345, g: 0.5324749, b: 0.54445404, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

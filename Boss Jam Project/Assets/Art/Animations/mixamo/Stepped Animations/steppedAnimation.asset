@@ -10,18 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 188b5154c9b4d8642b03d2a24e17bda1, type: 3}
-  m_Name: slam stepped
+  m_Name: steppedAnimation
   m_EditorClassIdentifier: 
   SourceClips:
-  - {fileID: -203655887218126122, guid: 23e305524b7844a44a851461f58c6947, type: 3}
+  - {fileID: 7400000, guid: 9273eb40a8b05b1468098340f62d32f2, type: 2}
+  - {fileID: 7400000, guid: 453a9c53364ccd846af0cfa59e5e2002, type: 2}
+  - {fileID: 7400000, guid: 77fca4249055eb947be6d31f7de1a949, type: 2}
   KeyframeMode: 0
-  KeyframeRate: 4
-  ManualKeyframeTimes:
-  - 1
-  - 3
-  - 6
-  - 9
-  - 12
-  - 16
-  - 32
-  FixedTimeDelay: 0.2
+  KeyframeRate: 12
+  ManualKeyframeTimes: []
+  FixedTimeDelay: 0.15
