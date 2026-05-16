@@ -5,16 +5,16 @@ namespace BossJam.GridSystem
     [DisallowMultipleComponent]
     public class GridFootprint : MonoBehaviour
     {
-        [Tooltip("Cells occupied (width × height). For a 3×3 boss, set to (3,3).")]
-        [SerializeField] private Vector2Int footprint = new Vector2Int(1, 1);
+        [Tooltip("Footprint size in cell units. Fractional values give wiggle room before walls (e.g. 5.5 vs 6).")]
+        [SerializeField] private Vector2 footprint = new Vector2(1f, 1f);
 
-        [Tooltip("Starting cell of the bottom-left of the footprint.")]
-        [SerializeField] private Vector2Int initialAnchor = Vector2Int.zero;
+        [Tooltip("Starting position of the bottom-left of the footprint, in cell-space (sub-cell allowed).")]
+        [SerializeField] private Vector2 initialAnchor = Vector2.zero;
 
         [SerializeField] private BossGrid grid;
 
-        public Vector2Int Footprint => footprint;
-        public Vector2Int Anchor { get; private set; }
+        public Vector2 Footprint => footprint;
+        public Vector2 Anchor { get; private set; }
         public BossGrid Grid => grid;
 
         private IGridEntity ownerCached;
@@ -55,7 +55,7 @@ namespace BossJam.GridSystem
             if (grid != null) grid.Unregister(this);
         }
 
-        public bool TryMoveTo(Vector2Int newAnchor)
+        public bool TryMoveTo(Vector2 newAnchor)
         {
             if (grid == null) return false;
             if (!grid.Register(this, newAnchor)) return false;

@@ -4,6 +4,11 @@ using UnityEngine;
 
 namespace BossJam.GridSystem
 {
+    /// <summary>
+    /// Spatial grid: world bounds, cell size, world-space conversion, dev-mode rendering.
+    /// Collision/occupancy logic lives in <see cref="CollisionDetection"/>, owned by this component.
+    /// Public Register/Unregister/InBounds delegate to it.
+    /// </summary>
     [DisallowMultipleComponent]
     [ExecuteAlways]
     public class BossGrid : MonoBehaviour
@@ -35,52 +40,28 @@ namespace BossJam.GridSystem
         public float TickDuration => config.tickDuration;
         public bool DevMode { get => devMode; set => devMode = value; }
 
-        private readonly Dictionary<Vector2Int, GridFootprint> occupants = new();
+        // Cell-occupancy + verdict-resolution. Lazy so it sees up-to-date bounds when first used.
+        private CollisionDetection collisions;
+        public CollisionDetection Collisions
+        {
+            get
+            {
+                if (collisions == null) collisions = new CollisionDetection(width, height);
+                return collisions;
+            }
+        }
+
         private readonly List<LineRenderer> debugLines = new();
         private Material debugLineMaterial;
 
-        public bool InBounds(Vector2Int cell) =>
-            cell.x >= 0 && cell.x < width && cell.y >= 0 && cell.y < height;
+        // ---------------------------------------------------------------- collision API (delegates)
 
-        public bool InBounds(Vector2Int anchor, Vector2Int footprint)
-        {
-            if (footprint.x <= 0 || footprint.y <= 0) return false;
-            return anchor.x >= 0 && anchor.y >= 0
-                && anchor.x + footprint.x <= width
-                && anchor.y + footprint.y <= height;
-        }
+        public bool InBounds(Vector2Int cell) => Collisions.InBoundsCell(cell);
+        public bool InBounds(Vector2 anchor, Vector2 footprint) => Collisions.InBounds(anchor, footprint);
+        public bool Register(GridFootprint entity, Vector2 anchor) => Collisions.Register(entity, anchor);
+        public void Unregister(GridFootprint entity) => Collisions.Unregister(entity);
 
-        public bool IsAreaClear(Vector2Int anchor, Vector2Int footprint, GridFootprint ignore = null)
-        {
-            if (!InBounds(anchor, footprint)) return false;
-            for (int dx = 0; dx < footprint.x; dx++)
-            for (int dy = 0; dy < footprint.y; dy++)
-            {
-                var cell = new Vector2Int(anchor.x + dx, anchor.y + dy);
-                if (occupants.TryGetValue(cell, out var occ) && occ != ignore) return false;
-            }
-            return true;
-        }
-
-        public bool Register(GridFootprint entity, Vector2Int anchor)
-        {
-            if (!IsAreaClear(anchor, entity.Footprint, entity)) return false;
-            UnregisterCellsOf(entity);
-            for (int dx = 0; dx < entity.Footprint.x; dx++)
-            for (int dy = 0; dy < entity.Footprint.y; dy++)
-                occupants[new Vector2Int(anchor.x + dx, anchor.y + dy)] = entity;
-            return true;
-        }
-
-        public void Unregister(GridFootprint entity) => UnregisterCellsOf(entity);
-
-        private void UnregisterCellsOf(GridFootprint entity)
-        {
-            var stale = new List<Vector2Int>();
-            foreach (var kv in occupants)
-                if (kv.Value == entity) stale.Add(kv.Key);
-            foreach (var c in stale) occupants.Remove(c);
-        }
+        // ---------------------------------------------------------------- world-space helpers
 
         // Cell (x, y) → world center of that cell on the XZ plane.
         public Vector3 CellToWorld(Vector2Int cell)
@@ -89,8 +70,8 @@ namespace BossJam.GridSystem
             return transform.TransformPoint(local);
         }
 
-        // Centre of the rectangle of cells [anchor, anchor+footprint).
-        public Vector3 FootprintCenterWorld(Vector2Int anchor, Vector2Int footprint)
+        // Centre of the rectangle [anchor, anchor+footprint). Anchor may be fractional.
+        public Vector3 FootprintCenterWorld(Vector2 anchor, Vector2 footprint)
         {
             float cx = anchor.x + footprint.x * 0.5f;
             float cy = anchor.y + footprint.y * 0.5f;
@@ -103,6 +84,15 @@ namespace BossJam.GridSystem
             return new Vector2Int(
                 Mathf.FloorToInt(local.x / cellSize),
                 Mathf.FloorToInt(local.z / cellSize));
+        }
+
+        // ---------------------------------------------------------------- lifecycle / debug
+
+        private void OnValidate()
+        {
+            // Bounds may have changed in the inspector — drop the cached ledger so it
+            // gets recreated with the new dimensions on next access.
+            collisions = null;
         }
 
         private void Update()
@@ -121,18 +111,17 @@ namespace BossJam.GridSystem
             }
             EnsureDebugMaterial();
 
-            int needed = occupants.Count;
+            int needed = Collisions.OccupiedCellCount;
             while (debugLines.Count < needed) debugLines.Add(CreateDebugLine());
 
             int i = 0;
             const float yLift = 0.02f;
-            foreach (var kv in occupants)
+            foreach (var cell in Collisions.OccupiedCells)
             {
                 var lr = debugLines[i++];
                 lr.enabled = true;
                 lr.startColor = lr.endColor = devColor;
                 lr.startWidth = lr.endWidth = devLineWidth;
-                var cell = kv.Key;
                 lr.SetPosition(0, transform.TransformPoint(new Vector3(cell.x * cellSize,       yLift, cell.y * cellSize)));
                 lr.SetPosition(1, transform.TransformPoint(new Vector3((cell.x + 1) * cellSize, yLift, cell.y * cellSize)));
                 lr.SetPosition(2, transform.TransformPoint(new Vector3((cell.x + 1) * cellSize, yLift, (cell.y + 1) * cellSize)));
@@ -188,14 +177,16 @@ namespace BossJam.GridSystem
             for (int y = 0; y <= height; y++)
                 Gizmos.DrawLine(new Vector3(0, 0, y * cellSize), new Vector3(width * cellSize, 0, y * cellSize));
 
-            // Occupied highlights.
-            Gizmos.color = occupiedColor;
-            var size = new Vector3(cellSize * 0.95f, 0.02f, cellSize * 0.95f);
-            foreach (var kv in occupants)
+            // Occupied highlights (collisions may be null in editor before first use).
+            if (collisions != null)
             {
-                var cell = kv.Key;
-                var center = new Vector3((cell.x + 0.5f) * cellSize, 0f, (cell.y + 0.5f) * cellSize);
-                Gizmos.DrawCube(center, size);
+                Gizmos.color = occupiedColor;
+                var size = new Vector3(cellSize * 0.95f, 0.02f, cellSize * 0.95f);
+                foreach (var cell in collisions.OccupiedCells)
+                {
+                    var center = new Vector3((cell.x + 0.5f) * cellSize, 0f, (cell.y + 0.5f) * cellSize);
+                    Gizmos.DrawCube(center, size);
+                }
             }
 
             Gizmos.matrix = Matrix4x4.identity;
