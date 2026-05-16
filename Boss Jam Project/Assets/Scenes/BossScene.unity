@@ -315,7 +315,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 12
   height: 12
-  cellSize: 1
+  cellSize: 0.5
   cellColor: {r: 1, g: 1, b: 1, a: 0.35}
   occupiedColor: {r: 1, g: 0.3, b: 0.3, a: 0.45}
   config: {fileID: 11400000, guid: c8e18a3215fd94a9888840cc1b961b8e, type: 2}
@@ -735,7 +735,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tickMultiplier: 1
-  initialDelay: 0.15
   deadzone: 0.3
 --- !u!114 &1899973955
 MonoBehaviour:
@@ -751,7 +750,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bossGrid: {fileID: 423653430}
   grid: {fileID: 0}
-  ease: 6
 --- !u!4 &1899973956
 Transform:
   m_ObjectHideFlags: 0
@@ -780,7 +778,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fc67f71a810041b0b8dba0b387e2024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  footprint: {x: 3, y: 3}
+  footprint: {x: 6, y: 6}
   initialAnchor: {x: 3, y: 3}
   grid: {fileID: 423653430}
 --- !u!1660057539 &9223372036854775807

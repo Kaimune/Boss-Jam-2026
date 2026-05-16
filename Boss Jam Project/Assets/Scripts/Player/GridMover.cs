@@ -1,6 +1,4 @@
-using System;
 using BossJam.GridSystem;
-using DG.Tweening;
 using UnityEngine;
 
 namespace BossJam.Player
@@ -15,23 +13,28 @@ namespace BossJam.Player
         [Tooltip("Legacy Unity Grid. Used only when bossGrid is unset.")]
         [SerializeField] private Grid grid;
 
-        [Header("Tween")]
-        [SerializeField] private Ease ease = Ease.OutQuad;
-
-        public Vector3Int CellPosition { get; private set; }
+        public Vector2 AnchorPosition { get; private set; }
         public Vector2Int Facing { get; private set; } = new Vector2Int(1, 0);
         public bool IsMoving { get; private set; }
 
-        public event Action StepCompleted;
+        // Continuous direction (-1..1 per axis). Set externally each frame.
+        public Vector2 InputDirection { get; set; }
 
         private GridFootprint footprint;
-        private Tweener activeTween;
-
         private float tickScale = 1f;
+
         public void ApplyTick(float tickMultiplier) => tickScale = tickMultiplier;
 
-        private float EffectiveStepDuration =>
-            bossGrid != null ? bossGrid.TickDuration * tickScale : 0.12f;
+        // Cells per second. 1 cell per tick by baseline; tickMultiplier scales duration.
+        private float CellsPerSecond
+        {
+            get
+            {
+                if (bossGrid == null) return 8.33f;
+                var dur = bossGrid.TickDuration * tickScale;
+                return dur > 0.0001f ? 1f / dur : 8.33f;
+            }
+        }
 
         private bool UseBossGrid => bossGrid != null;
 
@@ -41,8 +44,6 @@ namespace BossJam.Player
 
             if (UseBossGrid)
             {
-                // GridFootprint owns initial placement & registration; sync happens in Start
-                // because GridFootprint.OnEnable hasn't run yet when Awake fires.
                 if (footprint == null)
                 {
                     Debug.LogError($"{nameof(GridMover)} on '{name}' uses BossGrid but is missing a GridFootprint component.", this);
@@ -51,7 +52,6 @@ namespace BossJam.Player
                 return;
             }
 
-            // Legacy path: Unity Grid + 1×1.
             if (grid == null) grid = GetComponentInParent<Grid>();
             if (grid == null)
             {
@@ -59,83 +59,71 @@ namespace BossJam.Player
                 enabled = false;
                 return;
             }
-            CellPosition = grid.WorldToCell(transform.position);
-            transform.position = grid.GetCellCenterWorld(CellPosition);
+            var startCell = grid.WorldToCell(transform.position);
+            AnchorPosition = new Vector2(startCell.x, startCell.y);
+            transform.position = grid.GetCellCenterWorld(startCell);
         }
 
         private void Start()
         {
             if (!UseBossGrid || footprint == null) return;
-            // GridFootprint.OnEnable has now run and placed the footprint at its initialAnchor.
-            // Mirror that anchor and snap to the footprint center so the boss starts in the right place.
-            CellPosition = (Vector3Int)footprint.Anchor;
+            AnchorPosition = footprint.Anchor;
             transform.position = bossGrid.FootprintCenterWorld(footprint.Anchor, footprint.Footprint);
         }
 
-        private void OnDisable()
+        private void Update()
         {
-            activeTween?.Kill();
-            activeTween = null;
-            IsMoving = false;
-        }
+            if (!UseBossGrid) return;
+            if (footprint == null) return;
 
-        public bool TryStep(Vector2Int gridDelta)
-        {
-            if (IsMoving) return false;
-            if (gridDelta == Vector2Int.zero) return false;
+            var dir = InputDirection;
+            var moved = false;
 
-            Facing = gridDelta;
-
-            var targetCell = new Vector2Int(CellPosition.x + gridDelta.x, CellPosition.y + gridDelta.y);
-
-            if (UseBossGrid)
+            if (dir != Vector2.zero)
             {
-                if (!footprint.TryMoveTo(targetCell)) return false;
-                CellPosition = (Vector3Int)targetCell;
-                IsMoving = true;
-                var worldTarget = bossGrid.FootprintCenterWorld(targetCell, footprint.Footprint);
-                activeTween = transform.DOMove(worldTarget, EffectiveStepDuration)
-                    .SetEase(ease)
-                    .OnComplete(OnTweenComplete);
-                return true;
+                var delta = dir * (CellsPerSecond * Time.deltaTime);
+
+                // X first, then Y. Splitting axes gives slide-along-wall for free.
+                if (Mathf.Abs(delta.x) > 0f)
+                {
+                    var target = new Vector2(AnchorPosition.x + delta.x, AnchorPosition.y);
+                    if (footprint.TryMoveTo(target))
+                    {
+                        AnchorPosition = target;
+                        Facing = new Vector2Int(delta.x > 0 ? 1 : -1, 0);
+                        moved = true;
+                    }
+                }
+
+                if (Mathf.Abs(delta.y) > 0f)
+                {
+                    var target = new Vector2(AnchorPosition.x, AnchorPosition.y + delta.y);
+                    if (footprint.TryMoveTo(target))
+                    {
+                        AnchorPosition = target;
+                        Facing = new Vector2Int(0, delta.y > 0 ? 1 : -1);
+                        moved = true;
+                    }
+                }
             }
 
-            var target3 = new Vector3Int(targetCell.x, targetCell.y, 0);
-            if (!IsCellPassable(target3)) return false;
-            CellPosition = target3;
-            IsMoving = true;
-            var worldTargetLegacy = grid.GetCellCenterWorld(target3);
-            activeTween = transform.DOMove(worldTargetLegacy, EffectiveStepDuration)
-                .SetEase(ease)
-                .OnComplete(OnTweenComplete);
-            return true;
+            IsMoving = moved;
+            transform.position = bossGrid.FootprintCenterWorld(AnchorPosition, footprint.Footprint);
         }
 
-        private void OnTweenComplete()
+        public void SnapToAnchor(Vector2 anchor)
         {
-            IsMoving = false;
-            activeTween = null;
-            StepCompleted?.Invoke();
-        }
-
-        public void SnapToCell(Vector3Int cell)
-        {
-            activeTween?.Kill();
-            activeTween = null;
-            IsMoving = false;
-            CellPosition = cell;
+            AnchorPosition = anchor;
             if (UseBossGrid)
             {
-                var anchor = new Vector2Int(cell.x, cell.y);
                 footprint.TryMoveTo(anchor);
                 transform.position = bossGrid.FootprintCenterWorld(anchor, footprint.Footprint);
             }
             else
             {
+                var cell = new Vector3Int(Mathf.FloorToInt(anchor.x), Mathf.FloorToInt(anchor.y), 0);
                 transform.position = grid.GetCellCenterWorld(cell);
             }
         }
-
-        protected virtual bool IsCellPassable(Vector3Int cell) => true;
     }
 }

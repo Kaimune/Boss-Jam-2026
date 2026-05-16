@@ -11,10 +11,6 @@ namespace BossJam.Player
         [Tooltip("Per-actor scalar on the grid's tick. 1 = baseline, >1 slower, <1 faster.")]
         [SerializeField, Min(0.01f)] private float tickMultiplier = 1f;
 
-        [Header("Auto-repeat")]
-        [Tooltip("Pause after the first step finishes before auto-stepping again while held.")]
-        [SerializeField, Min(0f)] private float initialDelay = 0.15f;
-
         [Header("Input")]
         [Tooltip("Below this magnitude the stick is treated as released.")]
         [SerializeField, Range(0f, 0.9f)] private float deadzone = 0.3f;
@@ -23,6 +19,8 @@ namespace BossJam.Player
         public GridFootprint Footprint =>
             cachedFootprint != null ? cachedFootprint : (cachedFootprint = GetComponent<GridFootprint>());
         public float TickMultiplier => tickMultiplier;
+        public Team Team => Team.Boss;
+        public Verdict OnEnteredBy(IGridEntity mover) => Verdict.Block;
 
         private void ApplyTick()
         {
@@ -34,8 +32,6 @@ namespace BossJam.Player
 
         private GridMover mover;
         private InputAction moveAction;
-        private float repeatReadyAt;
-        private bool initialPauseConsumed;
 
         private void Awake()
         {
@@ -47,13 +43,11 @@ namespace BossJam.Player
         {
             ApplyTick();
             moveAction.Enable();
-            mover.StepCompleted += OnStepCompleted;
         }
 
         private void OnDisable()
         {
             moveAction.Disable();
-            mover.StepCompleted -= OnStepCompleted;
         }
 
         private void OnDestroy()
@@ -63,45 +57,18 @@ namespace BossJam.Player
 
         private void Update()
         {
-            if (mover.IsMoving) return;
-            if (Time.time < repeatReadyAt) return;
-
             var raw = moveAction.ReadValue<Vector2>();
-            var delta = ToGridDelta(raw);
-            if (delta == Vector2Int.zero)
-            {
-                // Released: next press starts a fresh initial-delay cycle.
-                initialPauseConsumed = false;
-                return;
-            }
-
-            mover.TryStep(delta);
+            mover.InputDirection = ToDirection(raw);
         }
 
-        private void OnStepCompleted()
+        // 8-way snap with normalization (so diagonals don't move faster than cardinal).
+        private Vector2 ToDirection(Vector2 raw)
         {
-            // After the very first step in a hold, pause once. Subsequent steps
-            // chain back-to-back for fluid traversal.
-            if (initialPauseConsumed) return;
-
-            var raw = moveAction.ReadValue<Vector2>();
-            if (ToGridDelta(raw) != Vector2Int.zero)
-            {
-                repeatReadyAt = Time.time + initialDelay;
-                initialPauseConsumed = true;
-            }
-        }
-
-        private Vector2Int ToGridDelta(Vector2 raw)
-        {
-            if (raw.sqrMagnitude < deadzone * deadzone) return Vector2Int.zero;
-
-            // 4-direction: pick the dominant axis only.
-            if (Mathf.Abs(raw.x) > Mathf.Abs(raw.y))
-            {
-                return new Vector2Int(raw.x > 0 ? 1 : -1, 0);
-            }
-            return new Vector2Int(0, raw.y > 0 ? 1 : -1);
+            if (raw.sqrMagnitude < deadzone * deadzone) return Vector2.zero;
+            var x = Mathf.Abs(raw.x) > deadzone ? Mathf.Sign(raw.x) : 0f;
+            var y = Mathf.Abs(raw.y) > deadzone ? Mathf.Sign(raw.y) : 0f;
+            var dir = new Vector2(x, y);
+            return dir.sqrMagnitude > 0f ? dir.normalized : Vector2.zero;
         }
 
         private static InputAction BuildMoveAction()
