@@ -5,5 +5,6 @@ namespace BossJam.GridSystem
         Neutral,
         Boss,
         Enemy,
+        Hero,
     }
 }
