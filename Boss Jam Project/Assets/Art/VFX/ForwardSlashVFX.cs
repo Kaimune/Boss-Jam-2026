@@ -38,6 +38,12 @@ public class ForwardSlashVFX : MonoBehaviour
         slashRenderer.enabled = false;
     }
 
+    private void OnDestroy()
+    {
+        if (mat != null)
+            Destroy(mat);
+    }
+
     private void Update()
     {
         if (!playing)
