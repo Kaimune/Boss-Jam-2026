@@ -162,6 +162,7 @@ GameObject:
   - component: {fileID: 2234198488196552854}
   - component: {fileID: 5288692185754433905}
   - component: {fileID: 2769331683903923981}
+  - component: {fileID: 9166748999946467688}
   m_Layer: 0
   m_Name: HpSegment
   m_TagString: Untagged
@@ -243,3 +244,23 @@ MonoBehaviour:
   emptyOverlay: {fileID: 1511587830738109312}
   flashOverlay: {fileID: 6992077937716343763}
   flashDuration: 0.15
+--- !u!114 &9166748999946467688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3921643320786538241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: 32
+  m_MinHeight: 40
+  m_PreferredWidth: 32
+  m_PreferredHeight: 40
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
