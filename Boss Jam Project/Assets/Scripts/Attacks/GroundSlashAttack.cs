@@ -50,10 +50,10 @@ namespace BossJam.Attacks
         private void Awake()
         {
             fsm.Init(config);
-            fsm.OnEnterWindup   += SpawnTelegraph;
-            fsm.OnEnterActive   += SpawnHitboxAndClearTelegraph;
-            fsm.OnEnterRecovery += DestroyHitbox;
-            fsm.OnEnterIdle     += DestroyLive;
+            fsm.OnEnter(AttackState.Windup,   SpawnTelegraph);
+            fsm.OnEnter(AttackState.Active,   SpawnHitboxAndClearTelegraph);
+            fsm.OnEnter(AttackState.Recovery, DestroyHitbox);
+            fsm.OnEnter(AttackState.Idle,     DestroyLive);
         }
 
         private void Update() => fsm.Tick(Time.deltaTime);
