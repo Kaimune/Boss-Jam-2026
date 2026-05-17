@@ -1,0 +1,10 @@
+# Editor scratch & backup files
+*~
+*.bak
+*.swp
+*.swo
+.#*
+
+# Obsidian / Typora / other markdown editor local state
+.obsidian/
+.typora/
