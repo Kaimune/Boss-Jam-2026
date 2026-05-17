@@ -61,10 +61,10 @@ namespace BossJam.Attacks
         private void Awake()
         {
             fsm.Init(config);
-            fsm.OnEnterWindup    += SpawnTelegraph;
-            fsm.OnEnterRecovery  += SpawnHitboxAndClearTelegraph;
-            fsm.OnEnterCooldown  += DestroyHitbox;
-            fsm.OnEnterIdle      += DestroyLive;
+            fsm.OnEnter(AttackState.Windup,   SpawnTelegraph);
+            fsm.OnEnter(AttackState.Recovery, SpawnHitboxAndClearTelegraph);
+            fsm.OnEnter(AttackState.Cooldown, DestroyHitbox);
+            fsm.OnEnter(AttackState.Idle,     DestroyLive);
         }
 
         private void Update()
@@ -98,15 +98,21 @@ namespace BossJam.Attacks
         {
             var mover = BossMover;
             if (mover == null || config == null) return;
+            var before = mover.AnchorPosition;
+
             var delta = chargeDirection * (config.chargeCellsPerSecond * tickScale * Time.deltaTime);
-            var target = mover.AnchorPosition + delta;
+            var target = before + delta;
 
             // Try the combined move; if blocked, axis-split to slide along walls.
             if (!mover.DriveTo(target))
             {
-                mover.DriveTo(new Vector2(target.x, mover.AnchorPosition.y));
-                mover.DriveTo(new Vector2(mover.AnchorPosition.x, target.y));
+                mover.DriveTo(new Vector2(target.x, before.y));
+                mover.DriveTo(new Vector2(before.x,  target.y));
             }
+
+            // Zero net movement = wall head-on. End Active early so hitbox lands here.
+            if (Vector2.SqrMagnitude(mover.AnchorPosition - before) < 0.0001f)
+                fsm.AdvanceNow();
         }
 
         // Hitbox spawns at boss's CURRENT center (after charge has moved them).
