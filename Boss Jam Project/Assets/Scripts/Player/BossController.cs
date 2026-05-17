@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using BossJam.Attacks;
 using BossJam.GridSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -35,6 +37,9 @@ namespace BossJam.Player
 
         public Verdict OnEnteredBy(IGridEntity mover)
         {
+            // Our own hitboxes overlap our footprint — pass through, no effect.
+            if (mover != null && mover.Team == Team.Boss) return Verdict.Pass;
+
             // Hostile mover → pass through, damage us, destroy them.
             if (mover != null && mover.Team == Team.Enemy)
             {
@@ -46,6 +51,19 @@ namespace BossJam.Player
                 });
             }
             return Verdict.Block;
+        }
+
+        // Attacks living on child GameObjects gate movement during windup/active via this flag.
+        // Empty list (no attacks attached) → never locked.
+        private List<IAttack> attacks = new List<IAttack>();
+        public bool IsMovementLockedByAttack
+        {
+            get
+            {
+                for (int i = 0; i < attacks.Count; i++)
+                    if (attacks[i] != null && attacks[i].LocksMovement) return true;
+                return false;
+            }
         }
 
         public void TakeDamage(int amount, IGridEntity source)
@@ -65,41 +83,62 @@ namespace BossJam.Player
 
         private GridMover mover;
         private InputAction moveAction;
+        private InputAction primaryAction;
+        private InputAction secondaryAction;
+        private InputAction ultAction;
+
+        // Cached so attacks can aim where the boss is currently facing, even when input is zero.
+        private Vector3 aimForward = Vector3.forward;
+        public Vector3 AimForward => aimForward;
 
         private void Awake()
         {
             mover = GetComponent<GridMover>();
             moveAction = BuildMoveAction();
+            primaryAction   = new InputAction(name: "AttackPrimary",   type: InputActionType.Button, binding: "<Mouse>/leftButton");
+            secondaryAction = new InputAction(name: "AttackSecondary", type: InputActionType.Button, binding: "<Mouse>/rightButton");
+            ultAction       = new InputAction(name: "AttackUlt",       type: InputActionType.Button, binding: "<Keyboard>/space");
             if (visual == null) visual = transform;
             facingTarget = Quaternion.Euler(0f, modelYawOffset, 0f);
             visual.rotation = facingTarget;
+            GetComponentsInChildren<IAttack>(includeInactive: true, attacks);
         }
 
         private void OnEnable()
         {
             ApplyTick();
             moveAction.Enable();
+            primaryAction.Enable();
+            secondaryAction.Enable();
+            ultAction.Enable();
         }
 
         private void OnDisable()
         {
             moveAction.Disable();
+            primaryAction.Disable();
+            secondaryAction.Disable();
+            ultAction.Disable();
         }
 
         private void OnDestroy()
         {
             moveAction?.Dispose();
+            primaryAction?.Dispose();
+            secondaryAction?.Dispose();
+            ultAction?.Dispose();
         }
 
         private void Update()
         {
             var raw = moveAction.ReadValue<Vector2>();
-            var dir = ToDirection(raw);
+            var dir = IsMovementLockedByAttack ? Vector2.zero : ToDirection(raw);
             mover.InputDirection = dir;
 
             if (dir.sqrMagnitude > 0.0001f)
             {
                 var forward = new Vector3(dir.x, 0f, dir.y);
+                aimForward = forward;
                 facingTarget = Quaternion.LookRotation(forward, Vector3.up) * Quaternion.Euler(0f, modelYawOffset, 0f);
             }
 
@@ -107,6 +146,24 @@ namespace BossJam.Player
                 visual.rotation,
                 facingTarget,
                 turnDegreesPerSecond * Time.deltaTime);
+
+            if (primaryAction.WasPressedThisFrame())   FireHotkey(AttackHotkey.Primary);
+            if (secondaryAction.WasPressedThisFrame()) FireHotkey(AttackHotkey.Secondary);
+            if (ultAction.WasPressedThisFrame())       FireHotkey(AttackHotkey.Ult);
+        }
+
+        private void FireHotkey(AttackHotkey hotkey)
+        {
+            // Aim point is just "boss position + facing forward"; attacks subtract & normalize.
+            var aim = transform.position + aimForward;
+            for (int i = 0; i < attacks.Count; i++)
+            {
+                var a = attacks[i];
+                if (a == null || a.Config == null) continue;
+                if (a.Config.hotkey != hotkey) continue;
+                a.TryStart(aim);
+                return;
+            }
         }
 
         // 8-way snap with normalization (so diagonals don't move faster than cardinal).
