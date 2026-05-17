@@ -7,28 +7,30 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: slash trail
-  m_Shader: {fileID: 4800000, guid: 71d6765ad72e11541bc1448c891bbcf9, type: 3}
+  m_Name: Fire
+  m_Shader: {fileID: -6465566751694194690, guid: 7a62c060de40e4b4aa0156a61cdb20a1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - PROPIXELIZER_DITHERING_ON
-  - RECEIVE_SHADOWS_ON
+  - _RECEIVE_SHADOWS_OFF
   m_InvalidKeywords:
+  - RECEIVE_SHADOWS_ON
   - USE_OBJECT_POSITION_ON
+  - _ALPHATEST_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2000
+  m_CustomRenderQueue: -1
   stringTagMap: {}
-  disabledShaderPasses: []
+  disabledShaderPasses:
+  - SHADOWCASTER
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: bd3a8b18b39461940981aa8b9676dc5f, type: 3}
-        m_Scale: {x: 0.7, y: 1}
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
@@ -59,7 +61,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _PaletteLUT:
-        m_Texture: {fileID: 2800000, guid: 1721d49aba71a2e44b1f8bc9953eb0fc, type: 3}
+        m_Texture: {fileID: 2800000, guid: 9c6831faf68a33f4081b9efac52db6ab, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SampleTexture2D_E9C4F4D0_Texture_1:
@@ -94,17 +96,19 @@ Material:
     m_Floats:
     - COLOR_GRADING: 0
     - NORMAL_MAP: 0
-    - PROPIXELIZER_DITHERING: 1
+    - PROPIXELIZER_DITHERING: 0
     - RECEIVE_SHADOWS: 1
     - USE_ALPHA: 0
     - USE_EMISSION: 0
     - USE_OBJECT_POSITION: 0
     - USE_OBJECT_POSITION_FOR_PIXEL_GRID: 0
     - Vector1_4DFF368: 3
-    - _AlphaClip: 0
-    - _AlphaClipThreshold: 0.5
+    - _AlphaClip: 1
+    - _AlphaClipThreshold: 1
+    - _AlphaToMask: 1
     - _Blend: 0
     - _BumpScale: 1
+    - _CastShadows: 0
     - _Cull: 2
     - _Cutoff: 0.5
     - _DiffuseVertexColorWeight: 1
@@ -118,23 +122,26 @@ Material:
     - _ID: 127
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _PixelSize: 2
+    - _PixelSize: 1
+    - _QueueControl: 0
     - _QueueOffset: 0
-    - _ReceiveShadows: 1
+    - _ReceiveShadows: 0
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _Surface: 0
     - _WorkflowMode: 1
+    - _ZTest: 4
     - _ZWrite: 1
+    - _ZWriteControl: 0
     m_Colors:
-    - _AmbientLight: {r: 1, g: 1, b: 1, a: 1}
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _AmbientLight: {r: 0.48855257, g: 0.43728447, b: 0.84276724, a: 1}
+    - _BaseColor: {r: 0, g: 0, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EdgeHighlightColor: {r: 1, g: 0, b: 0.07692333, a: 0}
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 0}
+    - _EdgeHighlightColor: {r: 0.21686244, g: 0.22008573, b: 0.3207547, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _PixelGridOrigin: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
   m_BuildTextureStacks: []
