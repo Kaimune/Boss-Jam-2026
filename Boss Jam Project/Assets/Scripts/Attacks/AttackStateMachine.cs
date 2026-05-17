@@ -1,57 +1,98 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BossJam.Attacks
 {
     /// <summary>
     /// Plain C# state machine driving the Idle → Windup → Active → Recovery → Cooldown → Idle
-    /// lifecycle for any attack. Each attack MonoBehaviour composes one of these and subscribes
-    /// to its phase events. Not a MonoBehaviour, not a base class — pure logic.
+    /// lifecycle for any attack. Each attack MonoBehaviour composes one of these and registers
+    /// per-phase callbacks via OnEnter. Not a MonoBehaviour, not a base class.
+    ///
+    /// All per-state data — next-on-timer-end, base duration, movement-lock — lives in the
+    /// `phases` dictionary. Every state appears exactly once; there are no switch statements.
     /// </summary>
     public sealed class AttackStateMachine
     {
+        // ---------- Per-phase descriptor ----------
+        private readonly struct PhaseInfo
+        {
+            public readonly AttackState NextOnTimerEnd;
+            public readonly Func<AttackConfig, float> DurationSec;
+            public readonly Func<AttackConfig, bool>  LocksMovement;
+
+            public PhaseInfo(AttackState next, Func<AttackConfig, float> dur, Func<AttackConfig, bool> locks)
+            { NextOnTimerEnd = next; DurationSec = dur; LocksMovement = locks; }
+        }
+
+        // Full transition graph. Idle's NextOnTimerEnd is a self-loop but Tick short-circuits
+        // before reading it — Idle exits via TryStart, not via the timer.
+        private static readonly IReadOnlyDictionary<AttackState, PhaseInfo> phases =
+            new Dictionary<AttackState, PhaseInfo>
+            {
+                { AttackState.Idle, new PhaseInfo(
+                    next:  AttackState.Idle,
+                    dur:   _ => 0f,
+                    locks: _ => false) },
+                { AttackState.Windup, new PhaseInfo(
+                    next:  AttackState.Active,
+                    dur:   c => c.windupSeconds,
+                    locks: c => c.lockMovementDuringWindup) },
+                { AttackState.Active, new PhaseInfo(
+                    next:  AttackState.Recovery,
+                    dur:   c => c.activeSeconds,
+                    locks: c => c.lockMovementDuringActive) },
+                { AttackState.Recovery, new PhaseInfo(
+                    next:  AttackState.Cooldown,
+                    dur:   c => c.recoverySeconds,
+                    locks: c => c.lockMovementDuringRecovery) },
+                { AttackState.Cooldown, new PhaseInfo(
+                    next:  AttackState.Idle,
+                    dur:   c => c.cooldownSeconds,
+                    locks: _ => false) },
+            };
+
+        // ---------- Runtime state ----------
         private AttackConfig config;
         private float tickScale = 1f;
 
         private AttackState state = AttackState.Idle;
-        private float phaseTimer;
-        private float cooldownTimer;
+        private float timer;   // unified phase + cooldown timer
 
+        // ---------- Public surface ----------
         public AttackState State => state;
-        public float CooldownRemaining => Mathf.Max(0f, cooldownTimer);
+        public float CooldownRemaining => state == AttackState.Cooldown ? Mathf.Max(0f, timer) : 0f;
         public bool IsBusy => state != AttackState.Idle;
 
         public float PhaseProgress01
         {
             get
             {
-                var total = PhaseDuration(state);
-                if (total <= 0f) return 0f;
-                return Mathf.Clamp01(1f - (phaseTimer / total));
+                if (config == null) return 0f;
+                var total = phases[state].DurationSec(config) * tickScale;
+                return total > 0f ? Mathf.Clamp01(1f - (timer / total)) : 0f;
             }
         }
 
-        public bool LocksMovement
-        {
-            get
-            {
-                if (config == null) return false;
-                switch (state)
-                {
-                    case AttackState.Windup:   return config.lockMovementDuringWindup;
-                    case AttackState.Active:   return config.lockMovementDuringActive;
-                    case AttackState.Recovery: return config.lockMovementDuringRecovery;
-                    default: return false;
-                }
-            }
-        }
+        public bool LocksMovement => config != null && phases[state].LocksMovement(config);
 
-        public event Action OnEnterWindup;
-        public event Action OnEnterActive;
-        public event Action OnEnterRecovery;
-        public event Action OnEnterCooldown;
-        public event Action OnEnterIdle;
         public event Action<AttackState, AttackState> StateChanged;
+
+        // Per-state entry callbacks. Subscribe via OnEnter(state, handler).
+        // Replaces five named events with a single table-driven dispatch.
+        private readonly Dictionary<AttackState, Action> onEnter = new Dictionary<AttackState, Action>();
+
+        public void OnEnter(AttackState s, Action handler)
+        {
+            onEnter.TryGetValue(s, out var existing);
+            onEnter[s] = existing + handler;
+        }
+
+        public void OffEnter(AttackState s, Action handler)
+        {
+            if (onEnter.TryGetValue(s, out var existing))
+                onEnter[s] = existing - handler;
+        }
 
         public void Init(AttackConfig c) => config = c;
         public void SetTickScale(float m) => tickScale = Mathf.Max(0.0001f, m);
@@ -60,86 +101,43 @@ namespace BossJam.Attacks
         {
             if (config == null) return false;
             if (state != AttackState.Idle) return false;
-            if (cooldownTimer > 0f) return false;
             EnterPhase(AttackState.Windup);
             return true;
         }
 
         public void Cancel()
         {
-            if (state == AttackState.Idle && cooldownTimer <= 0f) return;
-            cooldownTimer = 0f;
+            if (state == AttackState.Idle) return;
             EnterPhase(AttackState.Idle);
+        }
+
+        /// <summary>
+        /// End the current phase immediately, advance per the transition graph
+        /// (e.g. Active → Recovery on wall hit). No-op from Idle.
+        /// </summary>
+        public bool AdvanceNow()
+        {
+            if (state == AttackState.Idle) return false;
+            EnterPhase(phases[state].NextOnTimerEnd);
+            return true;
         }
 
         public void Tick(float dt)
         {
-            if (cooldownTimer > 0f)
-            {
-                cooldownTimer -= dt;
-                if (cooldownTimer < 0f) cooldownTimer = 0f;
-            }
-
             if (state == AttackState.Idle) return;
-
-            if (state == AttackState.Cooldown)
-            {
-                if (cooldownTimer <= 0f) EnterPhase(AttackState.Idle);
-                return;
-            }
-
-            phaseTimer -= dt;
-            if (phaseTimer > 0f) return;
-
-            switch (state)
-            {
-                case AttackState.Windup:   EnterPhase(AttackState.Active);   break;
-                case AttackState.Active:   EnterPhase(AttackState.Recovery); break;
-                case AttackState.Recovery: EnterPhase(AttackState.Cooldown); break;
-            }
+            timer -= dt;
+            if (timer > 0f) return;
+            EnterPhase(phases[state].NextOnTimerEnd);
         }
 
-        private float PhaseDuration(AttackState s)
-        {
-            if (config == null) return 0f;
-            switch (s)
-            {
-                case AttackState.Windup:   return config.windupSeconds   * tickScale;
-                case AttackState.Active:   return config.activeSeconds   * tickScale;
-                case AttackState.Recovery: return config.recoverySeconds * tickScale;
-                case AttackState.Cooldown: return config.cooldownSeconds * tickScale;
-                default: return 0f;
-            }
-        }
-
+        // ---------- Internals ----------
         private void EnterPhase(AttackState next)
         {
             var prev = state;
             state = next;
-
-            switch (next)
-            {
-                case AttackState.Cooldown:
-                    phaseTimer = 0f;
-                    cooldownTimer = PhaseDuration(AttackState.Cooldown);
-                    break;
-                case AttackState.Idle:
-                    phaseTimer = 0f;
-                    break;
-                default:
-                    phaseTimer = PhaseDuration(next);
-                    break;
-            }
-
+            timer = (config != null ? phases[next].DurationSec(config) : 0f) * tickScale;
             StateChanged?.Invoke(prev, next);
-            switch (next)
-            {
-                case AttackState.Windup:   OnEnterWindup?.Invoke();   break;
-                case AttackState.Active:   OnEnterActive?.Invoke();   break;
-                case AttackState.Recovery: OnEnterRecovery?.Invoke(); break;
-                case AttackState.Cooldown: OnEnterCooldown?.Invoke(); break;
-                case AttackState.Idle:     OnEnterIdle?.Invoke();     break;
-            }
+            if (onEnter.TryGetValue(next, out var cb)) cb?.Invoke();
         }
     }
 }
