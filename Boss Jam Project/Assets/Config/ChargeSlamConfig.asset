@@ -15,8 +15,8 @@ MonoBehaviour:
   id: charge_slam
   hotkey: 1
   windupSeconds: 0.2
-  activeSeconds: 0.4
-  recoverySeconds: 1.5
+  activeSeconds: 1.5
+  recoverySeconds: 0.5
   cooldownSeconds: 1
   damage: 4
   hitboxFootprint: {x: 4, y: 4}
@@ -24,7 +24,7 @@ MonoBehaviour:
   lockMovementDuringWindup: 1
   lockMovementDuringActive: 1
   lockMovementDuringRecovery: 0
-  chargeCellsPerSecond: 36
+  chargeCellsPerSecond: 24
   spawnCount: 12
   perSpawnTelegraphSeconds: 0.4
   perSpawnHitboxSeconds: 0.25
@@ -35,4 +35,4 @@ MonoBehaviour:
   hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}
   windupTrigger: 
   activeTrigger: attack_stepped
-  recoveryTrigger:
+  recoveryTrigger: 

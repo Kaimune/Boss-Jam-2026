@@ -15,6 +15,7 @@ namespace BossJam.Attacks
 
         private readonly AttackStateMachine fsm = new AttackStateMachine();
         private Vector3 lastAim;
+        private Vector2 lastAimDirection = Vector2.right; // captured at TryStart, fixed for whole swing
         private GameObject liveTelegraph;
         private GameObject liveHitbox;
         private GridFootprint cachedBossFootprint;
@@ -35,6 +36,10 @@ namespace BossJam.Attacks
         public bool TryStart(Vector3 aimWorldPoint)
         {
             lastAim = aimWorldPoint;
+            var bossWorld = transform.parent != null ? transform.parent.position : transform.position;
+            var d = aimWorldPoint - bossWorld;
+            var d2 = new Vector2(d.x, d.z);
+            lastAimDirection = d2.sqrMagnitude < 0.0001f ? Vector2.right : d2.normalized;
             return fsm.TryStart();
         }
 
@@ -56,7 +61,24 @@ namespace BossJam.Attacks
             fsm.OnEnter(AttackState.Idle,     DestroyLive);
         }
 
-        private void Update() => fsm.Tick(Time.deltaTime);
+        private void Update()
+        {
+            fsm.Tick(Time.deltaTime);
+            if (fsm.State == AttackState.Active) UpdateHitboxFollowBoss();
+        }
+
+        private void UpdateHitboxFollowBoss()
+        {
+            if (liveHitbox == null) return;
+            var grid = BossFootprint != null ? BossFootprint.Grid : null;
+            if (grid == null) return;
+
+            var anchor = HitboxAnchor();
+            var hbFp = liveHitbox.GetComponent<GridFootprint>();
+            if (hbFp == null) return;
+            if (hbFp.TryMoveTo(anchor))
+                liveHitbox.transform.position = grid.FootprintCenterWorld(anchor, config.hitboxFootprint);
+        }
 
         private void OnDisable() => DestroyLive();
 
@@ -66,20 +88,11 @@ namespace BossJam.Attacks
                 ? cachedBossFootprint
                 : (cachedBossFootprint = GetComponentInParent<GridFootprint>());
 
-        private Vector2 AimDirectionFromBoss()
-        {
-            var bossWorld = transform.parent != null ? transform.parent.position : transform.position;
-            var d = lastAim - bossWorld;
-            var d2 = new Vector2(d.x, d.z);
-            return d2.sqrMagnitude < 0.0001f ? Vector2.right : d2.normalized;
-        }
-
         private Vector2 HitboxAnchor()
         {
             var fp = BossFootprint;
-            var dir = AimDirectionFromBoss();
             var bossCenter = fp.Anchor + fp.Footprint * 0.5f;
-            var hbCenter = bossCenter + dir * config.hitboxForwardOffsetCells;
+            var hbCenter = bossCenter + lastAimDirection * config.hitboxForwardOffsetCells;
             return hbCenter - config.hitboxFootprint * 0.5f;
         }
 
