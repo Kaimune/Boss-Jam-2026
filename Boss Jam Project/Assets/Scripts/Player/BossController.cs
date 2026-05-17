@@ -3,6 +3,7 @@ using BossJam.Attacks;
 using BossJam.GridSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace BossJam.Player
 {
@@ -14,7 +15,12 @@ namespace BossJam.Player
         [SerializeField, Min(0.01f)] private float tickMultiplier = 1f;
 
         [Header("HP")]
-        [SerializeField, Min(1)] private int hp = 10;
+        [SerializeField, Min(1), FormerlySerializedAs("hp")] private int maxHp = 10;
+        private int currentHp;
+
+        public int MaxHp => maxHp;
+        public int CurrentHp => currentHp;
+        public event System.Action<int, int> HpChanged;
 
         [Header("Input")]
         [Tooltip("Below this magnitude the stick is treated as released.")]
@@ -68,9 +74,10 @@ namespace BossJam.Player
 
         public void TakeDamage(int amount, IGridEntity source)
         {
-            hp -= amount;
-            Debug.Log($"Boss took {amount} damage (hp={hp}, from {source})");
-            if (hp <= 0) Debug.Log("Boss would die here — no death handling yet.");
+            currentHp = Mathf.Max(0, currentHp - amount);
+            Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
+            HpChanged?.Invoke(currentHp, maxHp);
+            if (currentHp <= 0) Debug.Log("Boss would die here — no death handling yet.");
         }
 
         private void ApplyTick()
@@ -93,6 +100,7 @@ namespace BossJam.Player
 
         private void Awake()
         {
+            currentHp = maxHp;
             mover = GetComponent<GridMover>();
             moveAction = BuildMoveAction();
             primaryAction   = new InputAction(name: "AttackPrimary",   type: InputActionType.Button, binding: "<Mouse>/leftButton");
@@ -119,6 +127,11 @@ namespace BossJam.Player
             primaryAction.Disable();
             secondaryAction.Disable();
             ultAction.Disable();
+        }
+
+        private void Start()
+        {
+            HpChanged?.Invoke(currentHp, maxHp);
         }
 
         private void OnDestroy()
