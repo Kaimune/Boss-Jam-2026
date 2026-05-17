@@ -1,7 +1,0 @@
-﻿<Solution>
-  <Project Path="ProPixelizer.csproj" />
-  <Project Path="Unity.RenderPipelines.Universal.Editor.csproj" />
-  <Project Path="DOTween.Modules.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
-</Solution>
