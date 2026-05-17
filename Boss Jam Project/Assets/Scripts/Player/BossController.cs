@@ -46,7 +46,7 @@ namespace BossJam.Player
             // Our own hitboxes overlap our footprint — pass through, no effect.
             if (mover != null && mover.Team == Team.Boss) return Verdict.Pass;
 
-            // Hostile mover → pass through, damage us, destroy them.
+            // Hostile projectile (Team.Enemy) → pass, damage us, destroy it.
             if (mover != null && mover.Team == Team.Enemy)
             {
                 int damage = (mover is IDamageDealer dd) ? dd.Damage : 1;
@@ -56,6 +56,7 @@ namespace BossJam.Player
                     if (mover is MonoBehaviour mb && mb != null) Destroy(mb.gameObject);
                 });
             }
+            // Hero units → solid; the boss must use attacks to clear them.
             return Verdict.Block;
         }
 
