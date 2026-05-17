@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d14488855598f46c08f79093a8c3e7a5, type: 3}
+  m_Name: ChargeSlamConfig
+  m_EditorClassIdentifier: 
+  id: charge_slam
+  hotkey: 1
+  windupSeconds: 0.2
+  activeSeconds: 0.4
+  recoverySeconds: 0.15
+  cooldownSeconds: 1
+  damage: 4
+  hitboxFootprint: {x: 4, y: 4}
+  hitboxForwardOffsetCells: 0
+  lockMovementDuringWindup: 1
+  lockMovementDuringActive: 1
+  lockMovementDuringRecovery: 0
+  chargeCellsPerSecond: 18
+  telegraphPrefab: {fileID: 8097395814287246815, guid: 75e1c9e648a1e412f92ad9fa5bc1e4d9, type: 3}
+  hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}
+  windupTrigger: 
+  activeTrigger: 
+  recoveryTrigger: 
