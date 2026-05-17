@@ -111,6 +111,18 @@ namespace BossJam.Player
             transform.position = bossGrid.FootprintCenterWorld(AnchorPosition, footprint.Footprint);
         }
 
+        // External driver (e.g. a charge attack) requests we move to `target`.
+        // Goes through GridFootprint.TryMoveTo so grid arbitration still applies.
+        // Returns true if accepted; updates AnchorPosition + transform to match the footprint.
+        public bool DriveTo(Vector2 target)
+        {
+            if (!UseBossGrid || footprint == null) return false;
+            if (!footprint.TryMoveTo(target)) return false;
+            AnchorPosition = target;
+            transform.position = bossGrid.FootprintCenterWorld(target, footprint.Footprint);
+            return true;
+        }
+
         public void SnapToAnchor(Vector2 anchor)
         {
             AnchorPosition = anchor;
