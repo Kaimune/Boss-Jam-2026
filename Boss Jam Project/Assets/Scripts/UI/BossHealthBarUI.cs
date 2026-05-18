@@ -26,7 +26,7 @@ namespace BossJam.UI
 
         private void Start()
         {
-            Build(boss.MaxHp);
+            if (!built) Build(boss.MaxHp);
             SyncFromBoss();
         }
 
@@ -45,6 +45,9 @@ namespace BossJam.UI
 
         private void Build(int max)
         {
+            for (int i = segmentRow.childCount - 1; i >= 0; i--)
+                Destroy(segmentRow.GetChild(i).gameObject);
+            segments.Clear();
             for (int i = 0; i < max; i++)
             {
                 var seg = Instantiate(segmentPrefab, segmentRow);
