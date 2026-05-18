@@ -41,6 +41,7 @@ namespace BossJam.Player
         private void Awake()
         {
             footprint = GetComponent<GridFootprint>();
+            if (bossGrid == null) bossGrid = FindFirstObjectByType<BossGrid>();
 
             if (UseBossGrid)
             {
