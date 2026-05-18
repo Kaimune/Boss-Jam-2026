@@ -16,6 +16,7 @@ namespace BossJam.UI
 
         private void Awake()
         {
+            if (boss == null) boss = FindFirstObjectByType<BossController>();
             if (boss == null || segmentPrefab == null || segmentRow == null)
             {
                 Debug.LogWarning($"{nameof(BossHealthBarUI)}: missing reference; disabling.", this);
