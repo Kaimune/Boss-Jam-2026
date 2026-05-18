@@ -33,6 +33,10 @@ namespace BossJam.GridSystem
         [SerializeField] private bool devMode = true;
         [SerializeField] private Color devColor = new Color(1f, 0.15f, 0.15f, 1f);
         [SerializeField, Min(0.005f)] private float devLineWidth = 0.06f;
+        [Tooltip("Also draw all cell borders in the Game view (not just occupied ones). Driven by devMode.")]
+        [SerializeField] private bool showAllCells = true;
+        [SerializeField] private Color allCellsColor = new Color(1f, 1f, 1f, 0.15f);
+        [SerializeField, Min(0.001f)] private float allCellsLineWidth = 0.015f;
 
         public int Width => width;
         public int Height => height;
@@ -52,6 +56,10 @@ namespace BossJam.GridSystem
         }
 
         private readonly List<LineRenderer> debugLines = new();
+        private readonly List<LineRenderer> gridLines = new();
+        private int gridLinesBuiltForWidth = -1;
+        private int gridLinesBuiltForHeight = -1;
+        private float gridLinesBuiltForCellSize = -1f;
         private Material debugLineMaterial;
 
         // ---------------------------------------------------------------- collision API (delegates)
@@ -107,9 +115,11 @@ namespace BossJam.GridSystem
             if (!devMode)
             {
                 foreach (var lr in debugLines) if (lr != null) lr.enabled = false;
+                foreach (var lr in gridLines) if (lr != null) lr.enabled = false;
                 return;
             }
             EnsureDebugMaterial();
+            UpdateAllCellsLines();
 
             int needed = Collisions.OccupiedCellCount;
             while (debugLines.Count < needed) debugLines.Add(CreateDebugLine());
@@ -142,6 +152,79 @@ namespace BossJam.GridSystem
             lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             lr.receiveShadows = false;
             return lr;
+        }
+
+        // Row + column lines forming the full cell grid. Rebuilt only when size changes.
+        private void UpdateAllCellsLines()
+        {
+            if (!showAllCells)
+            {
+                foreach (var lr in gridLines) if (lr != null) lr.enabled = false;
+                return;
+            }
+            EnsureGridLines();
+            foreach (var lr in gridLines)
+            {
+                if (lr == null) continue;
+                lr.enabled = true;
+                lr.startColor = lr.endColor = allCellsColor;
+                lr.startWidth = lr.endWidth = allCellsLineWidth;
+            }
+        }
+
+        private void EnsureGridLines()
+        {
+            if (width == gridLinesBuiltForWidth
+                && height == gridLinesBuiltForHeight
+                && Mathf.Approximately(cellSize, gridLinesBuiltForCellSize)
+                && gridLines.Count == (width + 1) + (height + 1))
+                return;
+
+            foreach (var lr in gridLines) if (lr != null) DestroyDebugChild(lr.gameObject);
+            gridLines.Clear();
+
+            const float yLift = 0.01f;
+            float w = width * cellSize;
+            float h = height * cellSize;
+
+            for (int x = 0; x <= width; x++)
+            {
+                var lr = CreateGridLine();
+                lr.SetPosition(0, transform.TransformPoint(new Vector3(x * cellSize, yLift, 0f)));
+                lr.SetPosition(1, transform.TransformPoint(new Vector3(x * cellSize, yLift, h)));
+                gridLines.Add(lr);
+            }
+            for (int y = 0; y <= height; y++)
+            {
+                var lr = CreateGridLine();
+                lr.SetPosition(0, transform.TransformPoint(new Vector3(0f, yLift, y * cellSize)));
+                lr.SetPosition(1, transform.TransformPoint(new Vector3(w,  yLift, y * cellSize)));
+                gridLines.Add(lr);
+            }
+
+            gridLinesBuiltForWidth = width;
+            gridLinesBuiltForHeight = height;
+            gridLinesBuiltForCellSize = cellSize;
+        }
+
+        private LineRenderer CreateGridLine()
+        {
+            var go = new GameObject("BossGridLine") { hideFlags = HideFlags.HideAndDontSave };
+            go.transform.SetParent(transform, false);
+            var lr = go.AddComponent<LineRenderer>();
+            lr.useWorldSpace = true;
+            lr.loop = false;
+            lr.positionCount = 2;
+            lr.material = debugLineMaterial;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.receiveShadows = false;
+            return lr;
+        }
+
+        private void DestroyDebugChild(GameObject go)
+        {
+            if (Application.isPlaying) Destroy(go);
+            else DestroyImmediate(go);
         }
 
         private void EnsureDebugMaterial()
