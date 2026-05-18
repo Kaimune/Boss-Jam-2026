@@ -39,6 +39,16 @@ namespace BossJam.Enemies
         [Tooltip("If movement is requested but blocked for this long, flip orbit direction.")]
         [SerializeField, Min(0.05f)] private float stuckFlipSeconds = 0.25f;
 
+        [Header("Reaction")]
+        [Tooltip("How long the hero is fooled by a sudden direction change. Under steady motion the prediction cancels this lag out.")]
+        [SerializeField, Min(0f)] private float reactionTimeSeconds = 0.25f;
+        [Tooltip("Velocity-estimate smoothing window. Bigger = steadier estimate but slower to pick up new motion.")]
+        [SerializeField, Min(0.01f)] private float velocityWindowSeconds = 0.1f;
+        [Tooltip("Optional cap on extrapolation magnitude (cells). 0 disables. Stops teleports / huge spikes from launching the predicted point off the map.")]
+        [SerializeField, Min(0f)] private float maxExtrapolationCells = 0f;
+        [Tooltip("How far back perception samples are retained. Should comfortably exceed reaction + velocity window.")]
+        [SerializeField, Min(0.1f)] private float perceptionBufferSeconds = 1f;
+
         [Header("Debug")]
         [SerializeField] private bool drawKiteVisual = true;
         [SerializeField] private Color kiteVisualColor = new Color(0.2f, 1f, 0.6f, 0.9f);
@@ -93,6 +103,8 @@ namespace BossJam.Enemies
         private float stuckTimer;
         private Vector2 kiteTarget;
         private bool hasKiteTarget;
+        private BossPredictor predictor;
+        private Vector2 predictedBossCenter;
 
         // Runtime debug visual (visible in Game view without needing Gizmos toggle).
         private LineRenderer kiteLine;
@@ -105,6 +117,14 @@ namespace BossJam.Enemies
             currentHp = maxHp;
             mover = GetComponent<GridMover>();
             if (grid == null && Footprint != null) grid = Footprint.Grid;
+
+            float buffer = Mathf.Max(perceptionBufferSeconds, reactionTimeSeconds + velocityWindowSeconds + 0.1f);
+            predictor = new BossPredictor(buffer)
+            {
+                ReactionTimeSeconds = reactionTimeSeconds,
+                VelocityWindowSeconds = velocityWindowSeconds,
+                MaxExtrapolationCells = maxExtrapolationCells,
+            };
         }
 
         private void OnEnable() => ApplyTick();
@@ -128,20 +148,27 @@ namespace BossJam.Enemies
         {
             if (target == null) { mover.InputDirection = Vector2.zero; return; }
 
+            UpdatePerception();
             mover.InputDirection = ComputeSteering();
             TickStuckDetector();
             TickFireball();
         }
 
+        private void UpdatePerception()
+        {
+            Vector2 realBossCenter = (targetFootprint != null)
+                ? targetFootprint.Anchor + targetFootprint.Footprint * 0.5f
+                : WorldToCellCenter(target.position);
+            predictor.Observe(Time.time, realBossCenter);
+            predictedBossCenter = predictor.Predict(Time.time, realBossCenter);
+        }
+
         private Vector2 ComputeSteering()
         {
             Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
-            Vector2 bossCenter = (targetFootprint != null)
-                ? targetFootprint.Anchor + targetFootprint.Footprint * 0.5f
-                : WorldToCellCenter(target.position);
 
             var r = HeroKiteSteering.Solve(
-                myCenter, bossCenter, preferredDistanceCells, grid,
+                myCenter, predictedBossCenter, preferredDistanceCells, grid,
                 Footprint.Footprint, orbitSign);
 
             kiteTarget = r.TargetPoint;
@@ -178,8 +205,10 @@ namespace BossJam.Enemies
             Vector2 anchor = Footprint.Anchor;
             Vector3 worldPos = grid.FootprintCenterWorld(anchor, fireballSize);
 
-            Vector3 d3 = target.position - worldPos;
-            Vector2 dir = new Vector2(d3.x, d3.z);
+            // Aim at the predicted boss position (lag + extrapolation), so juking
+            // dodges shots the same way it dodges movement.
+            Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
+            Vector2 dir = predictedBossCenter - myCenter;
             if (dir.sqrMagnitude < 0.0001f) dir = Vector2.left;
             dir.Normalize();
 
