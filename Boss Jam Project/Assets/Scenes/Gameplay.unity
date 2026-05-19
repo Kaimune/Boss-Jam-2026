@@ -26777,6 +26777,10 @@ PrefabInstance:
       propertyPath: target
       value: 
       objectReference: {fileID: 2100364673}
+    - target: {fileID: 1982423208079333074, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
+      propertyPath: preferredDistanceCells
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 9164063348812491718, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 3
