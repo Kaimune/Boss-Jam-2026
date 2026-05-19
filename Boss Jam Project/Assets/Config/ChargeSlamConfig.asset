@@ -15,11 +15,11 @@ MonoBehaviour:
   id: charge_slam
   hotkey: 1
   windupSeconds: 0.2
-  activeSeconds: 1.5
+  activeSeconds: 3
   recoverySeconds: 0.5
   cooldownSeconds: 1
   damage: 4
-  hitboxFootprint: {x: 4, y: 4}
+  hitboxFootprint: {x: 5, y: 5}
   hitboxForwardOffsetCells: 0
   lockMovementDuringWindup: 1
   lockMovementDuringActive: 1
