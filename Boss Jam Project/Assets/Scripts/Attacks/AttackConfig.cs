@@ -50,5 +50,8 @@ namespace BossJam.Attacks
         public string windupTrigger;
         public string activeTrigger;
         public string recoveryTrigger;
+        [Tooltip("If set, plays this Animator state continuously across Windup+Active+Recovery, " +
+                 "scaled to the combined duration. When non-empty, overrides windup/active/recoveryTrigger.")]
+        public string continuousStateName;
     }
 }

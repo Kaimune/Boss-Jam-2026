@@ -65,6 +65,14 @@ namespace BossJam.Attacks
         private void OnPhase(AttackState prev, AttackState next)
         {
             if (animator == null || attack.Config == null) return;
+
+            var continuous = attack.Config.continuousStateName;
+            if (!string.IsNullOrEmpty(continuous))
+            {
+                HandleContinuous(next, continuous);
+                return;
+            }
+
             var stateName = StateNameFor(next);
             if (string.IsNullOrEmpty(stateName)) return;
 
@@ -72,6 +80,34 @@ namespace BossJam.Attacks
                 ? ComputeFitSpeed(stateName, next)
                 : 1f;
             animator.CrossFadeInFixedTime(stateName, crossfadeSeconds);
+        }
+
+        private void HandleContinuous(AttackState next, string stateName)
+        {
+            switch (next)
+            {
+                case AttackState.Windup:
+                {
+                    var c = attack.Config;
+                    var total = c.windupSeconds + c.activeSeconds + c.recoverySeconds;
+                    animator.speed = (autoFitAnimationSpeed
+                        && clipLengthByName.TryGetValue(stateName, out var len)
+                        && len > 0f && total > 0f)
+                            ? len / total
+                            : 1f;
+                    animator.CrossFadeInFixedTime(stateName, crossfadeSeconds);
+                    return;
+                }
+                case AttackState.Active:
+                case AttackState.Recovery:
+                    return;
+                case AttackState.Cooldown:
+                case AttackState.Idle:
+                    animator.speed = 1f;
+                    if (!string.IsNullOrEmpty(idleStateName))
+                        animator.CrossFadeInFixedTime(idleStateName, crossfadeSeconds);
+                    return;
+            }
         }
 
         private float ComputeFitSpeed(string stateName, AttackState phase)

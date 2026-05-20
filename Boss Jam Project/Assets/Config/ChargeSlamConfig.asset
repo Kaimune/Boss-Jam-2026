@@ -35,4 +35,5 @@ MonoBehaviour:
   hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}
   windupTrigger: run_stepped
   activeTrigger: attack_stepped
-  recoveryTrigger: 
+  recoveryTrigger:
+  continuousStateName: attack_stepped
