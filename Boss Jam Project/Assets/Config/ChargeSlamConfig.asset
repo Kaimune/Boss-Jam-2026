@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: charge_slam
   hotkey: 1
-  windupSeconds: 0.2
-  activeSeconds: 3
-  recoverySeconds: 0.5
+  windupSeconds: 1
+  activeSeconds: 1
+  recoverySeconds: 0
   cooldownSeconds: 1
   damage: 4
-  hitboxFootprint: {x: 5, y: 5}
+  hitboxFootprint: {x: 9, y: 9}
   hitboxForwardOffsetCells: 0
   lockMovementDuringWindup: 1
   lockMovementDuringActive: 1
@@ -33,6 +33,6 @@ MonoBehaviour:
   fallStartHeight: 10
   telegraphPrefab: {fileID: 8097395814287246815, guid: 75e1c9e648a1e412f92ad9fa5bc1e4d9, type: 3}
   hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}
-  windupTrigger: 
+  windupTrigger: run_stepped
   activeTrigger: attack_stepped
   recoveryTrigger: 
