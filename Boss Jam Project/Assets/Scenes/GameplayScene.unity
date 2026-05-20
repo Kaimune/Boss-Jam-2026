@@ -49160,11 +49160,11 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: -14.7
+  near clip plane: -100
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5.5
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -63217,6 +63217,10 @@ PrefabInstance:
       propertyPath: bossGrid
       value: 
       objectReference: {fileID: 1980397631}
+    - target: {fileID: 3443990155727221842, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: runStateName
+      value: run_stepped
+      objectReference: {fileID: 0}
     - target: {fileID: 8312937714101972278, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
       propertyPath: m_Name
       value: Boss

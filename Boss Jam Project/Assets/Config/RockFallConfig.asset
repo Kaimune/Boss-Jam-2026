@@ -33,6 +33,6 @@ MonoBehaviour:
   fallStartHeight: 10
   telegraphPrefab: {fileID: 8097395814287246815, guid: 75e1c9e648a1e412f92ad9fa5bc1e4d9, type: 3}
   hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}
-  windupTrigger: 
+  windupTrigger: ult_stepped
   activeTrigger: 
   recoveryTrigger: 
