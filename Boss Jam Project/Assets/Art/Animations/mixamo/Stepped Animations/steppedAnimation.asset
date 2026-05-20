@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: steppedAnimation
   m_EditorClassIdentifier: 
   SourceClips:
-  - {fileID: 7400000, guid: a278266509860ac448da33990c146524, type: 2}
-  - {fileID: 7400000, guid: c3b6063f5a7091149bcff7eae9c80424, type: 2}
-  - {fileID: 7400000, guid: 804539157da47c3498742e1effa7ea6a, type: 2}
+  - {fileID: -203655887218126122, guid: 032e4f20bcae0774297c8d4364b05780, type: 3}
+  - {fileID: -203655887218126122, guid: 6f41e1bd5529c99498e06d6c0c8ae9bb, type: 3}
+  - {fileID: -203655887218126122, guid: 13618cd17686b234d9883bfe2729fe1a, type: 3}
+  - {fileID: -203655887218126122, guid: f52c301a7f00ff04c8bd6635b2fad162, type: 3}
+  - {fileID: -203655887218126122, guid: bc4dc8f9d2549924bbefed684fbaa466, type: 3}
+  - {fileID: -203655887218126122, guid: b6ecd3fcc4c160d49bc59ec781f31b40, type: 3}
   KeyframeMode: 0
   KeyframeRate: 12
   ManualKeyframeTimes: []
