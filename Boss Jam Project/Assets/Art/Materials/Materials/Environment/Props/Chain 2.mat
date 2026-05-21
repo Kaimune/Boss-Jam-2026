@@ -7,12 +7,13 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Foor 1
+  m_Name: Chain 2
   m_Shader: {fileID: 4800000, guid: 71d6765ad72e11541bc1448c891bbcf9, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - COLOR_GRADING_ON
+  - PROPIXELIZER_DITHERING_ON
   - RECEIVE_SHADOWS_ON
   m_InvalidKeywords:
   - USE_OBJECT_POSITION_ON
@@ -27,8 +28,8 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 887c19892199e7b47b1aaa447e0ffb6f, type: 3}
-        m_Scale: {x: 2.5, y: 2.5}
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
@@ -43,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LightingRamp:
-        m_Texture: {fileID: 2800000, guid: 211497300d75d8e4b9b3e2913a93e908, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0a7ebf1b416d4d045b028a804724ed56, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -94,7 +95,7 @@ Material:
     m_Floats:
     - COLOR_GRADING: 1
     - NORMAL_MAP: 0
-    - PROPIXELIZER_DITHERING: 0
+    - PROPIXELIZER_DITHERING: 1
     - RECEIVE_SHADOWS: 1
     - USE_ALPHA: 0
     - USE_EMISSION: 0
@@ -102,7 +103,7 @@ Material:
     - USE_OBJECT_POSITION_FOR_PIXEL_GRID: 0
     - Vector1_4DFF368: 3
     - _AlphaClip: 0
-    - _AlphaClipThreshold: 1
+    - _AlphaClipThreshold: 0.216
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
@@ -115,7 +116,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _ID: 0
+    - _ID: 255
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _PixelSize: 2
@@ -129,12 +130,12 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
-    - _AmbientLight: {r: 0.80515003, g: 0.80515003, b: 0.8679245, a: 1}
-    - _BaseColor: {r: 0.24521661, g: 0.2451445, b: 0.42138356, a: 1}
+    - _AmbientLight: {r: 0.48855266, g: 0.4372848, b: 0.84276724, a: 1}
+    - _BaseColor: {r: 0.8490566, g: 0.58437794, b: 0.3764684, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EdgeHighlightColor: {r: 0.6855345, g: 0.5324749, b: 0.54445404, a: 1}
-    - _EmissionColor: {r: 0.11949676, g: 0.11160546, b: 0.11160546, a: 0.9137255}
-    - _OutlineColor: {r: 0.012578547, g: 0.01000746, b: 0.01000746, a: 0}
+    - _EdgeHighlightColor: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _OutlineColor: {r: 0.012578547, g: 0.01000746, b: 0.01000746, a: 1}
     - _PixelGridOrigin: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
   m_BuildTextureStacks: []
