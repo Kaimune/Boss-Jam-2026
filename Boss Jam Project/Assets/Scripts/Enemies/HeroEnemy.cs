@@ -158,6 +158,18 @@ namespace BossJam.Enemies
             float tickMul = Eff(Target.HeroTickMultiplier, config.tickMultiplier);
             foreach (var t in GetComponentsInChildren<ITickScalable>(includeInactive: true))
                 t.ApplyTick(tickMul);
+
+            // Movement uses an explicit cells/sec baseline (moveSpeed * moveSpeedMultiplier),
+            // back-solved into the tick scale GridMover already consumes:
+            //   CellsPerSecond = 1 / (TickDuration * tickScale)  ⇒  tickScale = 1 / (TickDuration * speed)
+            var m = GetComponent<GridMover>();
+            var g = grid != null ? grid : (Footprint != null ? Footprint.Grid : null);
+            if (m != null && g != null)
+            {
+                float speed = config.moveSpeed * Mathf.Max(0.01f, config.moveSpeedMultiplier);
+                if (speed > 0.0001f && g.TickDuration > 0.0001f)
+                    m.ApplyTick(1f / (g.TickDuration * speed));
+            }
         }
 
         private void Start()

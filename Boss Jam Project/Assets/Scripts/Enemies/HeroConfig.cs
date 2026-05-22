@@ -9,8 +9,15 @@ namespace BossJam.Enemies
         [Min(1)] public int maxHp = 3;
 
         [Header("Tick")]
-        [Tooltip("Drives GridMover speed. <1 = faster than tick baseline, >1 = slower.")]
+        [Tooltip("Drives ITickScalable children (non-movement). <1 = faster than tick baseline, >1 = slower. Hero has no attacks so this currently affects nothing on the hero itself.")]
         [Min(0.01f)] public float tickMultiplier = 1f;
+
+        [Header("Movement")]
+        [Tooltip("Baseline movement speed in cells per second. Default 8.33 matches the previous tick-derived speed (1 cell per 0.12s tick).")]
+        [Min(0.01f)] public float moveSpeed = 8.33f;
+
+        [Tooltip("Scalar applied on top of moveSpeed. 1 = baseline, 2 = twice as fast, 0.5 = half speed.")]
+        [Min(0.01f)] public float moveSpeedMultiplier = 1f;
 
         [Header("Kiting")]
         [Tooltip("Distance in cells the hero tries to maintain from the boss.")]
