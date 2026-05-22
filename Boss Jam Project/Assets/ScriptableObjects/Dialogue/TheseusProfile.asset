@@ -16,5 +16,5 @@ MonoBehaviour:
   displayName: Theseus
   nameplateColor: {r: 0.416, g: 0.655, b: 0.831, a: 1}
   portraitTexture: {fileID: 0}
-  letterTickClip: {fileID: 0}
+  letterTickClip: {fileID: 8300000, guid: 128ac93f63abe4dcc8a017d4a0ce13e4, type: 3}
   pitchJitter: 0.08
