@@ -2,7 +2,6 @@ using BossJam.Difficulty;
 using BossJam.Game;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace BossJam.UI
 {
@@ -44,7 +43,7 @@ namespace BossJam.UI
             }
 
             if (promptLabel != null) promptLabel.text = promptText;
-            panelRoot.SetActive(controller.State == GameState.Death);
+            panelRoot.SetActive(false);
         }
 
         private void OnEnable()
@@ -59,16 +58,9 @@ namespace BossJam.UI
 
         private void OnStateChanged(GameState state)
         {
-            switch (state)
-            {
-                case GameState.Death:
-                    RefreshLabels();
-                    panelRoot.SetActive(true);
-                    break;
-                case GameState.Playing:
-                    panelRoot.SetActive(false);
-                    break;
-            }
+            // The press-Space tier-advance panel is superseded by the auto cutscene
+            // driven by OutroDirector. Never show this panel.
+            if (panelRoot != null) panelRoot.SetActive(false);
         }
 
         private void RefreshLabels()
@@ -86,15 +78,6 @@ namespace BossJam.UI
 
             if (tierDescriptionLabel != null)
                 tierDescriptionLabel.text = next != null ? next.tierDescription : "";
-        }
-
-        private void Update()
-        {
-            if (controller == null || controller.State != GameState.Death) return;
-            // Direct keyboard polling so this works at Time.timeScale = 0 and
-            // doesn't fight the boss's Space-bound ult (boss is disabled here).
-            var kb = Keyboard.current;
-            if (kb != null && kb.spaceKey.wasPressedThisFrame) controller.Resume();
         }
     }
 }
