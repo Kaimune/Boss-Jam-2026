@@ -8,8 +8,11 @@ namespace BossJam.GridSystem
         [Tooltip("Footprint size in cell units. Fractional values give wiggle room before walls (e.g. 5.5 vs 6).")]
         [SerializeField] private Vector2 footprint = new Vector2(1f, 1f);
 
-        [Tooltip("Starting position of the bottom-left of the footprint, in cell-space (sub-cell allowed).")]
+        [Tooltip("Starting position of the bottom-left of the footprint, in cell-space (sub-cell allowed). Ignored when useTransformAsInitialAnchor is true.")]
         [SerializeField] private Vector2 initialAnchor = Vector2.zero;
+
+        [Tooltip("If true, derive the initial anchor from the GameObject's world position via BossGrid.WorldToCell on enable. Use this when the entity is hand-placed in the scene and you want it to stay where you put it.")]
+        [SerializeField] private bool useTransformAsInitialAnchor = false;
 
         [SerializeField] private BossGrid grid;
 
@@ -41,12 +44,18 @@ namespace BossJam.GridSystem
         private void OnEnable()
         {
             if (grid == null) return;
-            if (!grid.Register(this, initialAnchor))
+            Vector2 anchor = initialAnchor;
+            if (useTransformAsInitialAnchor)
             {
-                Debug.LogWarning($"{nameof(GridFootprint)} on '{name}' failed to register at {initialAnchor} — out of bounds or overlapping.", this);
+                var cell = grid.WorldToCell(transform.position);
+                anchor = new Vector2(cell.x, cell.y);
+            }
+            if (!grid.Register(this, anchor))
+            {
+                Debug.LogWarning($"{nameof(GridFootprint)} on '{name}' failed to register at {anchor} — out of bounds or overlapping.", this);
                 return;
             }
-            Anchor = initialAnchor;
+            Anchor = anchor;
             transform.position = grid.FootprintCenterWorld(Anchor, footprint);
         }
 

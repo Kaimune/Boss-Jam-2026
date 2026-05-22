@@ -305,6 +305,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   footprint: {x: 3.5, y: 3.5}
   initialAnchor: {x: 0, y: 0}
+  useTransformAsInitialAnchor: 1
   grid: {fileID: 0}
 --- !u!114 &3443990155727221842
 MonoBehaviour:
