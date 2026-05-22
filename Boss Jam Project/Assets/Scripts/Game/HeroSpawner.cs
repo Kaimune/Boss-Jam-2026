@@ -51,9 +51,10 @@ namespace BossJam.Game
 
         private void OnStateChanged(GameState next)
         {
-            // Spawn when transitioning *into* Playing — that covers both
-            // Startup→Playing (game start) and Death→Playing (tier advance).
-            if (next == GameState.Playing && lastState != GameState.Playing)
+            // Spawn on the *entry* to CutsceneIntro. That covers:
+            //   Startup       -> CutsceneIntro (first wave)
+            //   Death/GameOver -> CutsceneIntro (next wave, via Begin() loop)
+            if (next == GameState.CutsceneIntro && lastState != GameState.CutsceneIntro)
             {
                 SpawnHero();
             }
@@ -67,13 +68,20 @@ namespace BossJam.Game
                 Debug.LogWarning($"{nameof(HeroSpawner)}: heroPrefab not assigned.", this);
                 return;
             }
-            // Clean up any existing hero — covers the GameOver → Playing case
-            // where the hero who killed the boss is still alive on screen.
+            // Clean up any existing hero — covers the "previous wave hero still alive" case.
             var existing = FindObjectsByType<HeroEnemy>(FindObjectsSortMode.None);
             for (int i = 0; i < existing.Length; i++) Destroy(existing[i].gameObject);
 
-            var pos = spawnPoint != null ? spawnPoint.position : transform.position;
-            var rot = spawnPoint != null ? spawnPoint.rotation : Quaternion.identity;
+            // Prefer the cutscene intro spawn point when an IntroDirector is in the scene.
+            Transform overridePoint = null;
+            var intro = FindFirstObjectByType<BossJam.Cutscene.IntroDirector>();
+            if (intro != null && intro.HeroIntroSpawn != null)
+                overridePoint = intro.HeroIntroSpawn;
+
+            var sp = overridePoint != null ? overridePoint : spawnPoint;
+            var pos = sp != null ? sp.position : transform.position;
+            var rot = sp != null ? sp.rotation : Quaternion.identity;
+
             CurrentHero = Instantiate(heroPrefab, pos, rot);
             HeroSpawned?.Invoke(CurrentHero);
         }
