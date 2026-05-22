@@ -1,5 +1,6 @@
 using System;
 using BossJam.Difficulty;
+using BossJam.Dialogue;
 using BossJam.Player;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ namespace BossJam.Game
     public enum GameState
     {
         Startup,
+        Dialogue,    // pre- or post-fight dialogue is playing
         Playing,
         Death,       // hero killed — tier-advance screen pending
         GameOver,    // boss killed — restart-from-current-tier screen pending
@@ -29,6 +31,13 @@ namespace BossJam.Game
 
         public GameState State { get; private set; } = GameState.Startup;
         public event Action<GameState> StateChanged;
+
+        [Header("Dialogue")]
+        [SerializeField] private DialogueRig dialogueRig;
+        [SerializeField] private string preFightScript = "boss_pre_fight";
+        [SerializeField] private string postFightVictoryScript = "boss_post_fight_victory";
+
+        private GameState postDialogueTarget = GameState.Playing;
 
         // Auto-set by BossController.Awake. The setter syncs the boss's enabled
         // flag to the current state so registration order with Awake doesn't
@@ -63,11 +72,15 @@ namespace BossJam.Game
         private void OnEnable()
         {
             if (runtime != null) runtime.HeroKilled += OnHeroKilled;
+            if (dialogueRig != null && dialogueRig.Controller != null)
+                dialogueRig.Controller.Finished += OnDialogueFinished;
         }
 
         private void OnDisable()
         {
             if (runtime != null) runtime.HeroKilled -= OnHeroKilled;
+            if (dialogueRig != null && dialogueRig.Controller != null)
+                dialogueRig.Controller.Finished -= OnDialogueFinished;
         }
 
         private void OnDestroy()
@@ -91,7 +104,14 @@ namespace BossJam.Game
         public void Begin()
         {
             if (State != GameState.Startup) return;
-            EnterPlaying();
+            postDialogueTarget = GameState.Playing;
+            if (dialogueRig == null)
+            {
+                EnterPlaying();
+                return;
+            }
+            EnterDialogue();
+            dialogueRig.Play(preFightScript);
         }
 
         // Single source of truth for "transitioning into Playing". Anything
@@ -102,6 +122,42 @@ namespace BossJam.Game
             if (Boss != null) Boss.enabled = true;
             Time.timeScale = 1f;
             State = GameState.Playing;
+            StateChanged?.Invoke(State);
+        }
+
+        private void EnterDialogue()
+        {
+            // Pause the boss + freeze time during dialogue so the fight doesn't
+            // start under the cutscene. Dialogue uses WaitForSecondsRealtime so
+            // a frozen timescale doesn't break the typewriter.
+            if (Boss != null) Boss.enabled = false;
+            Time.timeScale = 0f;
+            State = GameState.Dialogue;
+            StateChanged?.Invoke(State);
+        }
+
+        private void OnDialogueFinished()
+        {
+            switch (postDialogueTarget)
+            {
+                case GameState.Playing:
+                    EnterPlaying();
+                    break;
+                case GameState.GameOver:
+                    EnterGameOverFinal();
+                    break;
+                default:
+                    EnterPlaying();
+                    break;
+            }
+        }
+
+        private void EnterGameOverFinal()
+        {
+            postDialogueTarget = GameState.Playing;
+            State = GameState.GameOver;
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
             StateChanged?.Invoke(State);
         }
 
@@ -116,11 +172,15 @@ namespace BossJam.Game
 
         public void TriggerGameOver()
         {
-            if (State == GameState.GameOver) return;
-            State = GameState.GameOver;
-            Time.timeScale = 0f;
-            if (Boss != null) Boss.enabled = false;
-            StateChanged?.Invoke(State);
+            if (State == GameState.GameOver || State == GameState.Dialogue) return;
+            if (dialogueRig == null)
+            {
+                EnterGameOverFinal();
+                return;
+            }
+            postDialogueTarget = GameState.GameOver;
+            EnterDialogue();
+            dialogueRig.Play(postFightVictoryScript);
         }
 
         /// <summary>

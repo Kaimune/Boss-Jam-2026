@@ -1488,6 +1488,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 667db3ba0a74848bbbcefb7d134ee1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dialogueRig: {fileID: 2035568464}
+  preFightScript: boss_pre_fight
+  postFightVictoryScript: boss_post_fight_victory
 --- !u!4 &273611937
 Transform:
   m_ObjectHideFlags: 0
