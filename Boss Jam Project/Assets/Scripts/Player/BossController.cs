@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BossJam.Attacks;
+using BossJam.Difficulty;
 using BossJam.GridSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,10 +18,15 @@ namespace BossJam.Player
         [Header("HP")]
         [SerializeField, Min(1), FormerlySerializedAs("hp")] private int maxHp = 10;
         private int currentHp;
+        private int spawnedMaxHp;
 
-        public int MaxHp => maxHp;
+        public int MaxHp => spawnedMaxHp;
         public int CurrentHp => currentHp;
         public event System.Action<int, int> HpChanged;
+
+        private DifficultyRuntime rt;
+        private float Eff(Target t, float b) => rt != null ? rt.Get(t, b) : b;
+        private int   EffI(Target t, int b)  => rt != null ? rt.GetInt(t, b) : b;
 
         [Header("Input")]
         [Tooltip("Below this magnitude the stick is treated as released.")]
@@ -38,7 +44,7 @@ namespace BossJam.Player
         private GridFootprint cachedFootprint;
         public GridFootprint Footprint =>
             cachedFootprint != null ? cachedFootprint : (cachedFootprint = GetComponent<GridFootprint>());
-        public float TickMultiplier => tickMultiplier;
+        public float TickMultiplier => Eff(Target.BossTickMultiplier, tickMultiplier);
         public Team Team => Team.Boss;
 
         public Verdict OnEnteredBy(IGridEntity mover)
@@ -77,14 +83,16 @@ namespace BossJam.Player
         {
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
-            HpChanged?.Invoke(currentHp, maxHp);
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            rt?.RaiseBossDamaged(amount, source);
             if (currentHp <= 0) Debug.Log("Boss would die here — no death handling yet.");
         }
 
         private void ApplyTick()
         {
+            float tickMul = Eff(Target.BossTickMultiplier, tickMultiplier);
             foreach (var t in GetComponentsInChildren<ITickScalable>(includeInactive: true))
-                t.ApplyTick(tickMultiplier);
+                t.ApplyTick(tickMul);
         }
 
         private void OnValidate() => ApplyTick();
@@ -101,7 +109,14 @@ namespace BossJam.Player
 
         private void Awake()
         {
-            currentHp = maxHp;
+            rt = FindFirstObjectByType<DifficultyRuntime>();
+            if (rt != null) rt.Boss = this;
+
+            // Snapshot effective MaxHp at spawn — debuffs that later raise/lower
+            // BossMaxHp don't retroactively change the live boss's max.
+            spawnedMaxHp = EffI(Target.BossMaxHp, maxHp);
+            currentHp = spawnedMaxHp;
+
             mover = GetComponent<GridMover>();
             moveAction = BuildMoveAction();
             primaryAction   = new InputAction(name: "AttackPrimary",   type: InputActionType.Button, binding: "<Mouse>/leftButton");
@@ -132,11 +147,12 @@ namespace BossJam.Player
 
         private void Start()
         {
-            HpChanged?.Invoke(currentHp, maxHp);
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
         }
 
         private void OnDestroy()
         {
+            if (rt != null && rt.Boss == this) rt.Boss = null;
             moveAction?.Dispose();
             primaryAction?.Dispose();
             secondaryAction?.Dispose();

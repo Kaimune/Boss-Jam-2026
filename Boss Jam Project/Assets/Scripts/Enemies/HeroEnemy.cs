@@ -1,7 +1,7 @@
+using BossJam.Difficulty;
 using BossJam.GridSystem;
 using BossJam.Player;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace BossJam.Enemies
 {
@@ -18,36 +18,26 @@ namespace BossJam.Enemies
         [SerializeField] private Transform target;
         [SerializeField] private Fireball fireballPrefab;
         [SerializeField] private BossGrid grid;
+        [Tooltip("Tunable hero stats. If unassigned, falls back to a runtime-created default with the values defined in HeroConfig.cs.")]
+        [SerializeField] private HeroConfig config;
 
-        [Header("HP")]
-        [SerializeField, Min(1), FormerlySerializedAs("hp")] private int maxHp = 3;
         private int currentHp;
+        private int spawnedMaxHp;
 
-        public int MaxHp => maxHp;
+        public int MaxHp => spawnedMaxHp;
         public int CurrentHp => currentHp;
         public event System.Action<int, int> HpChanged;
 
-        [Header("Tick")]
-        [Tooltip("Drives GridMover speed. <1 = faster than tick baseline, >1 = slower.")]
-        [SerializeField, Min(0.01f)] private float tickMultiplier = 1f;
+        // Static so subscribers (e.g. DifficultyRuntime) survive hero respawns.
+        public static event System.Action HeroKilledStatic;
 
-        [Header("Kiting")]
-        [Tooltip("Distance in cells the hero tries to maintain from the boss.")]
-        [SerializeField, Min(0.5f)] private float preferredDistanceCells = 8f;
+        private DifficultyRuntime rt;
+        private float Eff(Target t, float b)  => rt != null ? rt.Get(t, b)    : b;
+        private int   EffI(Target t, int b)   => rt != null ? rt.GetInt(t, b) : b;
+
+        [Header("Kiting (runtime-only)")]
         [Tooltip("+1 rotates the off-grid search CCW around the boss, -1 CW. Flipped when stuck.")]
         [SerializeField] private int orbitSign = 1;
-        [Tooltip("If movement is requested but blocked for this long, flip orbit direction.")]
-        [SerializeField, Min(0.05f)] private float stuckFlipSeconds = 0.25f;
-
-        [Header("Reaction")]
-        [Tooltip("How long the hero is fooled by a sudden direction change. Under steady motion the prediction cancels this lag out.")]
-        [SerializeField, Min(0f)] private float reactionTimeSeconds = 0.25f;
-        [Tooltip("Velocity-estimate smoothing window. Bigger = steadier estimate but slower to pick up new motion.")]
-        [SerializeField, Min(0.01f)] private float velocityWindowSeconds = 0.1f;
-        [Tooltip("Optional cap on extrapolation magnitude (cells). 0 disables. Stops teleports / huge spikes from launching the predicted point off the map.")]
-        [SerializeField, Min(0f)] private float maxExtrapolationCells = 0f;
-        [Tooltip("How far back perception samples are retained. Should comfortably exceed reaction + velocity window.")]
-        [SerializeField, Min(0.1f)] private float perceptionBufferSeconds = 1f;
 
         [Header("Debug")]
         [SerializeField] private bool drawKiteVisual = true;
@@ -57,17 +47,11 @@ namespace BossJam.Enemies
         [Tooltip("World-space Y lift so the visual draws above the ground plane.")]
         [SerializeField, Min(0f)] private float kiteVisualYLift = 0.1f;
 
-        [Header("Fireball")]
-        [SerializeField, Min(0.1f)] private float fireballIntervalSeconds = 2.5f;
-        [SerializeField] private Vector2 fireballSize = Vector2.one;
-        [Tooltip("Delay before the first shot after spawning.")]
-        [SerializeField, Min(0f)] private float firstShotDelay = 1f;
-
         private GridFootprint cachedFootprint;
         public GridFootprint Footprint =>
             cachedFootprint != null ? cachedFootprint : (cachedFootprint = GetComponent<GridFootprint>());
 
-        public float TickMultiplier => tickMultiplier;
+        public float TickMultiplier => Eff(Target.HeroTickMultiplier, config.tickMultiplier);
         public Team Team => Team.Hero;
 
         public Verdict OnEnteredBy(IGridEntity mover)
@@ -93,8 +77,12 @@ namespace BossJam.Enemies
         {
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"HeroEnemy '{name}' took {amount} damage (hp={currentHp})");
-            HpChanged?.Invoke(currentHp, maxHp);
-            if (currentHp <= 0) Destroy(gameObject);
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            if (currentHp <= 0)
+            {
+                HeroKilledStatic?.Invoke();
+                Destroy(gameObject);
+            }
         }
 
         private GridMover mover;
@@ -114,34 +102,70 @@ namespace BossJam.Enemies
 
         private void Awake()
         {
-            currentHp = maxHp;
+            EnsureConfig();
+            rt = FindFirstObjectByType<DifficultyRuntime>();
+            if (rt != null) rt.Hero = this;
+
+            // HP is snapshotted at spawn: debuffs that later raise/lower HeroMaxHp
+            // affect the NEXT hero, not this living one.
+            spawnedMaxHp = EffI(Target.HeroMaxHp, config.maxHp);
+            currentHp = spawnedMaxHp;
+
             mover = GetComponent<GridMover>();
             if (grid == null && Footprint != null) grid = Footprint.Grid;
 
-            float buffer = Mathf.Max(perceptionBufferSeconds, reactionTimeSeconds + velocityWindowSeconds + 0.1f);
+            // Predictor tuning is read-once at spawn. Reaction/velocity-window
+            // debuffs apply to heroes spawned after the debuff lands; the existing
+            // predictor's stored values aren't reactively updated.
+            float react   = Eff(Target.HeroReactionTimeSeconds,   config.reactionTimeSeconds);
+            float velWin  = Eff(Target.HeroVelocityWindowSeconds, config.velocityWindowSeconds);
+            float buffer  = Mathf.Max(config.perceptionBufferSeconds, react + velWin + 0.1f);
             predictor = new BossPredictor(buffer)
             {
-                ReactionTimeSeconds = reactionTimeSeconds,
-                VelocityWindowSeconds = velocityWindowSeconds,
-                MaxExtrapolationCells = maxExtrapolationCells,
+                ReactionTimeSeconds   = react,
+                VelocityWindowSeconds = velWin,
+                MaxExtrapolationCells = config.maxExtrapolationCells,
             };
+        }
+
+        private void OnDestroy()
+        {
+            if (rt != null && rt.Hero == this) rt.Hero = null;
+            if (kiteLineMaterial != null) Destroy(kiteLineMaterial);
+            if (kiteDotMaterial != null) Destroy(kiteDotMaterial);
         }
 
         private void OnEnable() => ApplyTick();
         private void OnValidate() => ApplyTick();
 
+        // The HeroConfig field can be left unassigned in the Inspector during early dev;
+        // we synthesize a default in-memory instance at play time so the hero still
+        // runs with the class-default values. Skipped in edit mode so OnValidate
+        // doesn't spam warnings or leak SO instances every time the prefab is opened.
+        private void EnsureConfig()
+        {
+            if (config != null) return;
+            if (!Application.isPlaying) return;
+            config = ScriptableObject.CreateInstance<HeroConfig>();
+            config.hideFlags = HideFlags.HideAndDontSave;
+            Debug.LogWarning($"HeroEnemy '{name}' has no HeroConfig assigned; using runtime defaults.", this);
+        }
+
         private void ApplyTick()
         {
+            EnsureConfig();
+            if (config == null) return; // edit mode + unassigned: nothing to scale yet
+            float tickMul = Eff(Target.HeroTickMultiplier, config.tickMultiplier);
             foreach (var t in GetComponentsInChildren<ITickScalable>(includeInactive: true))
-                t.ApplyTick(tickMultiplier);
+                t.ApplyTick(tickMul);
         }
 
         private void Start()
         {
             // Awake-order between root GameObjects is undefined; resolve in Start.
             if (target != null) targetFootprint = target.GetComponent<GridFootprint>();
-            nextShotTime = Time.time + firstShotDelay;
-            HpChanged?.Invoke(currentHp, maxHp);
+            nextShotTime = Time.time + Eff(Target.HeroFirstShotDelay, config.firstShotDelay);
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
         }
 
         private void Update()
@@ -167,8 +191,9 @@ namespace BossJam.Enemies
         {
             Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
 
+            float kiteDist = Eff(Target.HeroPreferredDistanceCells, config.preferredDistanceCells);
             var r = HeroKiteSteering.Solve(
-                myCenter, predictedBossCenter, preferredDistanceCells, grid,
+                myCenter, predictedBossCenter, kiteDist, grid,
                 Footprint.Footprint, orbitSign);
 
             kiteTarget = r.TargetPoint;
@@ -185,7 +210,7 @@ namespace BossJam.Enemies
             else
                 stuckTimer = 0f;
 
-            if (stuckTimer >= stuckFlipSeconds)
+            if (stuckTimer >= Eff(Target.HeroStuckFlipSeconds, config.stuckFlipSeconds))
             {
                 orbitSign = -orbitSign;
                 stuckTimer = 0f;
@@ -196,14 +221,18 @@ namespace BossJam.Enemies
         {
             if (fireballPrefab == null || grid == null) return;
             if (Time.time < nextShotTime) return;
-            nextShotTime = Time.time + fireballIntervalSeconds;
+            nextShotTime = Time.time + Eff(Target.HeroFireballIntervalSeconds, config.fireballIntervalSeconds);
             SpawnFireball();
         }
 
         private void SpawnFireball()
         {
+            Vector2 fireSize = new Vector2(
+                Eff(Target.HeroFireballSizeX, config.fireballSize.x),
+                Eff(Target.HeroFireballSizeY, config.fireballSize.y));
+
             Vector2 anchor = Footprint.Anchor;
-            Vector3 worldPos = grid.FootprintCenterWorld(anchor, fireballSize);
+            Vector3 worldPos = grid.FootprintCenterWorld(anchor, fireSize);
 
             // Aim at the predicted boss position (lag + extrapolation), so juking
             // dodges shots the same way it dodges movement.
@@ -217,7 +246,7 @@ namespace BossJam.Enemies
             instance.transform.position = worldPos;
 
             GridFootprint fp = instance.GetComponent<GridFootprint>();
-            if (fp != null) fp.Configure(anchor, fireballSize, grid);
+            if (fp != null) fp.Configure(anchor, fireSize, grid);
 
             instance.Direction = dir;
             instance.gameObject.SetActive(true);
@@ -304,10 +333,5 @@ namespace BossJam.Enemies
             }
         }
 
-        private void OnDestroy()
-        {
-            if (kiteLineMaterial != null) Destroy(kiteLineMaterial);
-            if (kiteDotMaterial != null) Destroy(kiteDotMaterial);
-        }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BossJam.Difficulty;
 using BossJam.GridSystem;
 using UnityEngine;
 
@@ -31,6 +32,25 @@ namespace BossJam.Attacks
         private BossGrid cachedGrid;
         private float tickScale = 1f;
 
+        private DifficultyRuntime rt;
+        private float Eff(Target t, float b, string ext = null)
+            => rt != null ? rt.Get(t, b, config != null ? config.id : null, ext) : b;
+        private int EffI(Target t, int b, string ext = null)
+            => rt != null ? rt.GetInt(t, b, config != null ? config.id : null, ext) : b;
+        private PhaseTimings BuildTimings() => new PhaseTimings
+        {
+            windupSeconds              = Eff(Target.BossAttackWindupSeconds,    config.windupSeconds),
+            activeSeconds              = Eff(Target.BossAttackActiveSeconds,    config.activeSeconds),
+            recoverySeconds            = Eff(Target.BossAttackRecoverySeconds,  config.recoverySeconds),
+            cooldownSeconds            = Eff(Target.BossAttackCooldownSeconds,  config.cooldownSeconds),
+            lockMovementDuringWindup   = config.lockMovementDuringWindup,
+            lockMovementDuringActive   = config.lockMovementDuringActive,
+            lockMovementDuringRecovery = config.lockMovementDuringRecovery,
+        };
+        private Vector2 EffHitboxFootprint() => new Vector2(
+            Eff(Target.BossAttackHitboxFootprintX, config.hitboxFootprint.x),
+            Eff(Target.BossAttackHitboxFootprintY, config.hitboxFootprint.y));
+
         // ---- IAttack forwarders ----
         public AttackConfig Config => config;
         public AttackState State => fsm.State;
@@ -44,7 +64,13 @@ namespace BossJam.Attacks
             remove { fsm.StateChanged -= value; }
         }
 
-        public bool TryStart(Vector3 aimWorldPoint) => fsm.TryStart();
+        public bool TryStart(Vector3 aimWorldPoint)
+        {
+            if (config == null) return false;
+            fsm.Init(BuildTimings());
+            rt?.RaiseAttackStarted(config);
+            return fsm.TryStart();
+        }
 
         public void Cancel()
         {
@@ -61,7 +87,8 @@ namespace BossJam.Attacks
         // ---- Lifecycle ----
         private void Awake()
         {
-            fsm.Init(config);
+            rt = FindFirstObjectByType<DifficultyRuntime>();
+            if (config != null) fsm.Init(BuildTimings());
             fsm.OnEnter(AttackState.Active, BuildSpawnSchedule);
             fsm.OnEnter(AttackState.Idle,   DestroyLive);
         }
@@ -103,12 +130,18 @@ namespace BossJam.Attacks
             activePhaseStartTime = Time.time;
             nextSpawnIndex = 0;
 
-            int n = Mathf.Max(1, config != null ? config.spawnCount : 1);
+            int n = Mathf.Max(1, config != null
+                ? EffI(Target.AttackExtension, config.spawnCount, ext: "spawnCount")
+                : 1);
             spawnTimes = new float[n];
 
-            var activeDur = (config != null ? config.activeSeconds : 0f) * tickScale;
+            var activeDur = (config != null
+                ? Eff(Target.BossAttackActiveSeconds, config.activeSeconds)
+                : 0f) * tickScale;
             var step = n > 0 ? activeDur / n : 0f;
-            var jitter = config != null ? config.spawnTimeJitter * tickScale : 0f;
+            var jitter = config != null
+                ? Eff(Target.AttackExtension, config.spawnTimeJitter, ext: "spawnTimeJitter") * tickScale
+                : 0f;
 
             for (int i = 0; i < n; i++)
             {
@@ -123,7 +156,7 @@ namespace BossJam.Attacks
         private void SpawnRock()
         {
             if (Grid == null || config == null) return;
-            var fp = config.hitboxFootprint;
+            var fp = EffHitboxFootprint();
             float maxX = Mathf.Max(0f, Grid.Width  - fp.x);
             float maxY = Mathf.Max(0f, Grid.Height - fp.y);
             var anchor = new Vector2(UnityEngine.Random.Range(0f, maxX), UnityEngine.Random.Range(0f, maxY));
@@ -133,8 +166,8 @@ namespace BossJam.Attacks
             var fallingRock = SpawnFallingRock(worldImpact);
 
             var now = Time.time;
-            var telegraphDur = config.perSpawnTelegraphSeconds * tickScale;
-            var hitboxDur    = config.perSpawnHitboxSeconds    * tickScale;
+            var telegraphDur = Eff(Target.AttackExtension, config.perSpawnTelegraphSeconds, ext: "perSpawnTelegraphSeconds") * tickScale;
+            var hitboxDur    = Eff(Target.AttackExtension, config.perSpawnHitboxSeconds,    ext: "perSpawnHitboxSeconds")    * tickScale;
             liveRocks.Add(new LiveRock
             {
                 anchor       = anchor,
@@ -164,7 +197,8 @@ namespace BossJam.Attacks
         private GameObject SpawnFallingRock(Vector3 worldImpact)
         {
             if (config.fallingRockPrefab == null) return null;
-            var spawnPos = worldImpact + new Vector3(0f, config.fallStartHeight, 0f);
+            float fallH = Eff(Target.AttackExtension, config.fallStartHeight, ext: "fallStartHeight");
+            var spawnPos = worldImpact + new Vector3(0f, fallH, 0f);
             return Instantiate(config.fallingRockPrefab, spawnPos, Quaternion.identity);
         }
 
@@ -182,7 +216,8 @@ namespace BossJam.Attacks
                     {
                         var tNorm = Mathf.InverseLerp(r.spawnTime, r.impactTime, now);
                         var eased = tNorm * tNorm * tNorm;
-                        var startPos = r.worldImpact + new Vector3(0f, config.fallStartHeight, 0f);
+                        float fallH = Eff(Target.AttackExtension, config.fallStartHeight, ext: "fallStartHeight");
+                        var startPos = r.worldImpact + new Vector3(0f, fallH, 0f);
                         r.fallingRock.transform.position = Vector3.Lerp(startPos, r.worldImpact, eased);
                     }
 
@@ -208,7 +243,7 @@ namespace BossJam.Attacks
         private GameObject SpawnHitbox(Vector2 anchor, Vector3 worldImpact)
         {
             if (config.hitboxPrefab == null) return null;
-            var fp = config.hitboxFootprint;
+            var fp = EffHitboxFootprint();
             var go = Instantiate(config.hitboxPrefab);
             go.SetActive(false);
 
@@ -216,7 +251,7 @@ namespace BossJam.Attacks
             if (hbFootprint != null) hbFootprint.Configure(anchor, fp, Grid);
 
             var hb = go.GetComponent<AttackHitbox>();
-            if (hb != null) hb.SetDamage(config.damage);
+            if (hb != null) hb.SetDamage(EffI(Target.BossAttackDamage, config.damage));
 
             go.transform.position = worldImpact;
             var vis = go.transform.Find("Visual");

@@ -79,17 +79,13 @@ MonoBehaviour:
   target: {fileID: 0}
   fireballPrefab: {fileID: 5340630882246654578, guid: c6b5382f5ee7f4b64a1bef0f1dbf3403, type: 3}
   grid: {fileID: 0}
-  maxHp: 3
-  tickMultiplier: 1
-  preferredDistanceCells: 8
-  distanceBand: 1.5
-  strafeStrength: 0.7
-  fleeStrafeStrength: 0.3
+  config: {fileID: 11400000, guid: 4978d48ee606748c89f956fe01dc2978, type: 2}
   orbitSign: 1
-  stuckFlipSeconds: 0.25
-  fireballIntervalSeconds: 2.5
-  fireballSize: {x: 1, y: 1}
-  firstShotDelay: 1
+  drawKiteVisual: 1
+  kiteVisualColor: {r: 0.2, g: 1, b: 0.6, a: 0.9}
+  kiteLineWidth: 0.08
+  kiteDotScale: 0.35
+  kiteVisualYLift: 0.1
 --- !u!1 &913564841878613043
 GameObject:
   m_ObjectHideFlags: 0
