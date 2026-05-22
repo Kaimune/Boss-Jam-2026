@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: steppedAnimation
   m_EditorClassIdentifier: 
   SourceClips:
-  - {fileID: -203655887218126122, guid: 032e4f20bcae0774297c8d4364b05780, type: 3}
-  - {fileID: -203655887218126122, guid: 6f41e1bd5529c99498e06d6c0c8ae9bb, type: 3}
-  - {fileID: -203655887218126122, guid: 13618cd17686b234d9883bfe2729fe1a, type: 3}
-  - {fileID: -203655887218126122, guid: f52c301a7f00ff04c8bd6635b2fad162, type: 3}
-  - {fileID: -203655887218126122, guid: bc4dc8f9d2549924bbefed684fbaa466, type: 3}
-  - {fileID: -203655887218126122, guid: b6ecd3fcc4c160d49bc59ec781f31b40, type: 3}
+  - {fileID: -203655887218126122, guid: afbbcffc49bc75d44af15b77f5ea6c24, type: 3}
+  - {fileID: -203655887218126122, guid: 30f5305a3504bbf4399d6754906bb7c2, type: 3}
+  - {fileID: -203655887218126122, guid: 348b1f252a68cb14c84c5689f3cd5de6, type: 3}
+  - {fileID: -203655887218126122, guid: 0e4b488012b9d814dbf4391a21ad5dcd, type: 3}
+  - {fileID: -203655887218126122, guid: aa808bcdc9a7fce4db0055adf0efd023, type: 3}
+  - {fileID: -203655887218126122, guid: 29dcd863a7def34499b34862f445a09a, type: 3}
   KeyframeMode: 0
   KeyframeRate: 12
   ManualKeyframeTimes: []
