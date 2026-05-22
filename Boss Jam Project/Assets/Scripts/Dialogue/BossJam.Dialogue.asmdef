@@ -1,7 +1,9 @@
 {
     "name": "BossJam.Dialogue",
     "rootNamespace": "BossJam.Dialogue",
-    "references": [],
+    "references": [
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
