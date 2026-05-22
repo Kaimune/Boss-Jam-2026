@@ -1,3 +1,4 @@
+using System;
 using BossJam.Enemies;
 using UnityEngine;
 
@@ -19,6 +20,15 @@ namespace BossJam.Game
         [SerializeField] private HeroEnemy heroPrefab;
         [Tooltip("World position to spawn at. If null, uses this transform's position.")]
         [SerializeField] private Transform spawnPoint;
+
+        /// <summary>
+        /// Fires after a fresh hero is instantiated, with the new instance as
+        /// payload. Health bars / camera target trackers / etc. subscribe so
+        /// they can rebind when the hero changes.
+        /// </summary>
+        public event Action<HeroEnemy> HeroSpawned;
+
+        public HeroEnemy CurrentHero { get; private set; }
 
         private GameStateController controller;
         private GameState lastState;
@@ -64,7 +74,8 @@ namespace BossJam.Game
 
             var pos = spawnPoint != null ? spawnPoint.position : transform.position;
             var rot = spawnPoint != null ? spawnPoint.rotation : Quaternion.identity;
-            Instantiate(heroPrefab, pos, rot);
+            CurrentHero = Instantiate(heroPrefab, pos, rot);
+            HeroSpawned?.Invoke(CurrentHero);
         }
     }
 }

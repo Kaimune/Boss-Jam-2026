@@ -1401,7 +1401,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5855126965066511219}
-  - {fileID: 3344357145525270621}
   - {fileID: 6077876723365473835}
   - {fileID: 5562611643464560901}
   - {fileID: 7799045496462639242}
@@ -2015,7 +2014,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72f4712f1e507438fbf4eae26dfcd143, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hero: {fileID: 0}
+  spawner: {fileID: 0}
   segmentPrefab: {fileID: 2769331683903923981, guid: 7c4c11fb4b339447685e1aa3f42ecc51, type: 3}
   segmentRow: {fileID: 3600545014704304708}
 --- !u!1 &6639080884309902261
@@ -2072,37 +2071,6 @@ MonoBehaviour:
   promptLabel: {fileID: 6055898341228700201}
   titleText: Boss Jam
   promptText: Press SPACE to play
---- !u!1 &6861581959145763977
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3344357145525270621}
-  m_Layer: 0
-  m_Name: HeroHealthBar
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3344357145525270621
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6861581959145763977}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -960, y: -540, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 9066771635181248367}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7549639191539467748
 GameObject:
   m_ObjectHideFlags: 0

@@ -472,7 +472,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 6861581959145763977, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
@@ -3161,7 +3162,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 6861581959145763977, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
@@ -7069,7 +7071,7 @@ MonoBehaviour:
   cellColor: {r: 1, g: 1, b: 1, a: 0.35}
   occupiedColor: {r: 1, g: 0.3, b: 0.3, a: 0.45}
   config: {fileID: 11400000, guid: c8e18a3215fd94a9888840cc1b961b8e, type: 2}
-  devMode: 0
+  devMode: 1
   devColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   devLineWidth: 0.06
   showAllCells: 1
@@ -7786,6 +7788,30 @@ PrefabInstance:
       propertyPath: maxHp
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: diedSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: 0e54795246c1ab648b13f1a8a0a81078, type: 3}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: damagedSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: e5ab12e3ca1059b468ad6de535aa2cae, type: 3}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: attackUltSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: 502cbff6cb23c63439807b8ad34c7677, type: 3}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: respawnedSfx
+      value: 
+      objectReference: {fileID: 8300000, guid: e0fa257a53a54e7429979a0695c56bcf, type: 3}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: attackPrimarySfx
+      value: 
+      objectReference: {fileID: 8300000, guid: 502cbff6cb23c63439807b8ad34c7677, type: 3}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: attackSecondarySfx
+      value: 
+      objectReference: {fileID: 8300000, guid: 502cbff6cb23c63439807b8ad34c7677, type: 3}
     - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
       propertyPath: OnDamagedSfx.m_PersistentCalls.m_Calls.Array.size
       value: 1
