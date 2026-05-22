@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using BossJam.Attacks;
+using BossJam.Audio;
 using BossJam.Difficulty;
 using BossJam.Game;
 using BossJam.GridSystem;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
@@ -38,19 +38,19 @@ namespace BossJam.Player
         [Tooltip("Below this magnitude the stick is treated as released.")]
         [SerializeField, Range(0f, 0.9f)] private float deadzone = 0.3f;
 
-        [Header("SFX Hooks")]
-        [Tooltip("Fires when the boss takes any non-zero damage (before the killing-blow death event).")]
-        public UnityEvent OnDamagedSfx;
-        [Tooltip("Fires once when the boss dies.")]
-        public UnityEvent OnDiedSfx;
-        [Tooltip("Fires when the boss respawns for another life.")]
-        public UnityEvent OnRespawnedSfx;
-        [Tooltip("Fires when the primary attack successfully initiates.")]
-        public UnityEvent OnAttackPrimarySfx;
-        [Tooltip("Fires when the secondary attack successfully initiates.")]
-        public UnityEvent OnAttackSecondarySfx;
-        [Tooltip("Fires when the ult attack successfully initiates.")]
-        public UnityEvent OnAttackUltSfx;
+        [Header("SFX (routed through AudioDirector)")]
+        [Tooltip("Plays when the boss takes any non-zero damage (before the killing blow).")]
+        [SerializeField] private AudioClip damagedSfx;
+        [Tooltip("Plays once when the boss dies.")]
+        [SerializeField] private AudioClip diedSfx;
+        [Tooltip("Plays when the boss respawns for another life.")]
+        [SerializeField] private AudioClip respawnedSfx;
+        [Tooltip("Plays when the primary attack successfully initiates.")]
+        [SerializeField] private AudioClip attackPrimarySfx;
+        [Tooltip("Plays when the secondary attack successfully initiates.")]
+        [SerializeField] private AudioClip attackSecondarySfx;
+        [Tooltip("Plays when the ult attack successfully initiates.")]
+        [SerializeField] private AudioClip attackUltSfx;
 
         [Header("Facing")]
         [Tooltip("Transform that rotates to face movement. Leave null to rotate the root.")]
@@ -106,7 +106,7 @@ namespace BossJam.Player
             Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             rt?.RaiseBossDamaged(amount, source);
-            if (amount > 0) OnDamagedSfx?.Invoke();
+            if (amount > 0) AudioDirector.Sfx(damagedSfx);
             if (currentHp <= 0) Die();
         }
 
@@ -115,7 +115,7 @@ namespace BossJam.Player
             isDead = true;
             Debug.Log("Boss died — entering GameOver.");
             BossDied?.Invoke();
-            OnDiedSfx?.Invoke();
+            AudioDirector.Sfx(diedSfx);
             // GameStateController handles the pause + GameOver screen; the
             // boss is brought back via Respawn() when the player presses Space.
             if (gameState != null) gameState.TriggerGameOver();
@@ -134,7 +134,7 @@ namespace BossJam.Player
             currentHp = spawnedMaxHp;
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             enabled = true;
-            OnRespawnedSfx?.Invoke();
+            AudioDirector.Sfx(respawnedSfx);
         }
 
         private void ApplyTick()
@@ -163,9 +163,10 @@ namespace BossJam.Player
             rt = FindFirstObjectByType<DifficultyRuntime>();
             if (rt != null) rt.Boss = this;
 
-            // Use Find rather than Instance so registration is order-independent.
+            // Find the controller now, but defer registration until after
+            // InputActions are built — the setter on Boss can flip our
+            // enabled flag, which would fire OnDisable before init.
             gameState = FindFirstObjectByType<GameStateController>();
-            if (gameState != null) gameState.Boss = this;
 
             // Snapshot effective MaxHp at spawn — debuffs that later raise/lower
             // BossMaxHp don't retroactively change the live boss's max.
@@ -181,6 +182,10 @@ namespace BossJam.Player
             facingTarget = Quaternion.Euler(0f, modelYawOffset, 0f);
             visual.rotation = facingTarget;
             GetComponentsInChildren<IAttack>(includeInactive: true, attacks);
+
+            // Safe to register now — if the setter flips enabled=false, the
+            // resulting OnDisable will find the InputActions ready to disable.
+            if (gameState != null) gameState.Boss = this;
         }
 
         private void OnEnable()
@@ -247,18 +252,18 @@ namespace BossJam.Player
                 var a = attacks[i];
                 if (a == null || a.Config == null) continue;
                 if (a.Config.hotkey != hotkey) continue;
-                if (a.TryStart(aim)) SfxFor(hotkey)?.Invoke();
+                if (a.TryStart(aim)) AudioDirector.Sfx(SfxFor(hotkey));
                 return;
             }
         }
 
-        private UnityEvent SfxFor(AttackHotkey hotkey)
+        private AudioClip SfxFor(AttackHotkey hotkey)
         {
             switch (hotkey)
             {
-                case AttackHotkey.Primary:   return OnAttackPrimarySfx;
-                case AttackHotkey.Secondary: return OnAttackSecondarySfx;
-                case AttackHotkey.Ult:       return OnAttackUltSfx;
+                case AttackHotkey.Primary:   return attackPrimarySfx;
+                case AttackHotkey.Secondary: return attackSecondarySfx;
+                case AttackHotkey.Ult:       return attackUltSfx;
                 default: return null;
             }
         }
