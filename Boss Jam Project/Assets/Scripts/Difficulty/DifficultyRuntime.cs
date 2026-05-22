@@ -74,6 +74,33 @@ namespace BossJam.Difficulty
         public string CurrentTierName { get; private set; } = ImmortalTierName;
         public DebuffEntry CurrentTierEntry { get; private set; }
 
+        // ── Cutscene-facing surface ──────────────────────────────────
+        /// <summary>1-based wave counter. Starts at 1, increments inside ApplyNextDebuff.</summary>
+        public int CurrentWaveIndex { get; private set; } = 1;
+
+        /// <summary>Tier label shown on the tier card during the hero-death cutscene.</summary>
+        public string NextTierLabel => $"TIER {CurrentWaveIndex + 1}";
+
+        /// <summary>One-line description of the debuff that's about to be applied. "(final wave)" when none queued.</summary>
+        public string NextDebuffDescription
+        {
+            get
+            {
+                if (!HasNextDebuff) return "(final wave)";
+                return PeekNextDebuffDescription();
+            }
+        }
+
+        private string PeekNextDebuffDescription()
+        {
+            var entry = NextPreview;
+            if (entry == null) return "(final wave)";
+            if (!string.IsNullOrWhiteSpace(entry.description)) return entry.description;
+            if (!string.IsNullOrWhiteSpace(entry.tierDescription)) return entry.tierDescription;
+            if (!string.IsNullOrWhiteSpace(entry.name)) return entry.name;
+            return "(unnamed debuff)";
+        }
+
         // ── Wire-up ──────────────────────────────────────────────────
         private void OnEnable()
         {
@@ -119,6 +146,8 @@ namespace BossJam.Difficulty
             Debug.Log($"[Difficulty] Applied #{AppliedCount} '{entry.name}' — {entry.description}");
 
             if (tierPromoted) TierChanged?.Invoke(CurrentTierEntry);
+
+            CurrentWaveIndex++;
         }
 
         public bool HasNextDebuff =>
