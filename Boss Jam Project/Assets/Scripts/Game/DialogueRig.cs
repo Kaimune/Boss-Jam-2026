@@ -1,51 +1,29 @@
 using BossJam.Dialogue;
-using BossJam.Enemies;
-using BossJam.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace BossJam.Game
 {
     /// <summary>
-    /// Scene-level glue: reparents the two portrait cameras to the live hero
-    /// and boss HeadAnchors, forwards advance/skip input to the
-    /// DialogueController, and toggles the cameras on/off around playback.
-    /// Sits on the same GameObject as DialogueController in GameplayScene.
+    /// Scene-level glue around DialogueController: toggles the two portrait
+    /// cameras during playback, polls the keyboard for fast-forward (Space)
+    /// and skip (Esc). Camera transforms are authored by hand in the scene —
+    /// this script never reparents or repositions them.
     /// </summary>
     [RequireComponent(typeof(DialogueController))]
     public sealed class DialogueRig : MonoBehaviour
     {
         [SerializeField] private Camera heroPortraitCam;
         [SerializeField] private Camera bossPortraitCam;
-        [SerializeField] private string headAnchorName = "HeadAnchor";
-
-        [Header("Input")]
-        [SerializeField] private InputActionReference advanceAction;
-        [SerializeField] private InputActionReference skipAction;
 
         private DialogueController controller;
-        private HeroSpawner spawner;
+        public DialogueController Controller => controller;
 
         private void Awake()
         {
             controller = GetComponent<DialogueController>();
-            spawner = FindFirstObjectByType<HeroSpawner>();
             if (controller != null) controller.Finished += OnDialogueFinished;
-        }
-
-        private void OnEnable()
-        {
-            if (spawner != null) spawner.HeroSpawned += OnHeroSpawned;
-            if (advanceAction != null) { advanceAction.action.Enable(); advanceAction.action.performed += OnAdvance; }
-            if (skipAction != null)    { skipAction.action.Enable();    skipAction.action.performed    += OnSkip; }
-            AttachBossCamera();
-        }
-
-        private void OnDisable()
-        {
-            if (spawner != null) spawner.HeroSpawned -= OnHeroSpawned;
-            if (advanceAction != null) advanceAction.action.performed -= OnAdvance;
-            if (skipAction != null)    skipAction.action.performed    -= OnSkip;
+            EnableCameras(false);
         }
 
         private void OnDestroy()
@@ -53,13 +31,14 @@ namespace BossJam.Game
             if (controller != null) controller.Finished -= OnDialogueFinished;
         }
 
-        public void EnableCameras(bool on)
+        private void Update()
         {
-            if (heroPortraitCam != null) heroPortraitCam.gameObject.SetActive(on);
-            if (bossPortraitCam != null) bossPortraitCam.gameObject.SetActive(on);
+            if (controller == null || !controller.IsPlaying) return;
+            var kb = Keyboard.current;
+            if (kb == null) return;
+            controller.IsFastForwarding = kb.spaceKey.isPressed;
+            if (kb.escapeKey.wasPressedThisFrame) controller.SkipAll();
         }
-
-        public DialogueController Controller => controller;
 
         public void Play(string scriptName)
         {
@@ -67,60 +46,12 @@ namespace BossJam.Game
             controller.Play(scriptName);
         }
 
-        private void OnDialogueFinished()
-        {
-            EnableCameras(false);
-        }
+        private void OnDialogueFinished() => EnableCameras(false);
 
-        private void OnHeroSpawned(HeroEnemy hero)
+        public void EnableCameras(bool on)
         {
-            if (heroPortraitCam == null || hero == null) return;
-            ReparentCameraTo(heroPortraitCam, hero.transform);
+            if (heroPortraitCam != null) heroPortraitCam.gameObject.SetActive(on);
+            if (bossPortraitCam != null) bossPortraitCam.gameObject.SetActive(on);
         }
-
-        private void AttachBossCamera()
-        {
-            if (bossPortraitCam == null) return;
-            var boss = FindFirstObjectByType<BossController>();
-            if (boss == null) return;
-            ReparentCameraTo(bossPortraitCam, boss.transform);
-        }
-
-        private void ReparentCameraTo(Camera cam, Transform root)
-        {
-            var anchor = FindChildRecursive(root, headAnchorName);
-            if (anchor == null)
-            {
-                Debug.LogWarning($"{nameof(DialogueRig)}: '{headAnchorName}' not found under {root.name}; falling back to root + (0,1.6,0).");
-                cam.transform.SetParent(root, false);
-                cam.transform.localPosition = new Vector3(0f, 1.6f, -0.6f);
-                cam.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-                return;
-            }
-            cam.transform.SetParent(anchor, false);
-            cam.transform.localPosition = new Vector3(0f, 0f, -0.6f);
-            cam.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-        }
-
-        private static Transform FindChildRecursive(Transform root, string name)
-        {
-            if (root == null) return null;
-            if (root.name == name) return root;
-            for (int i = 0; i < root.childCount; i++)
-            {
-                var match = FindChildRecursive(root.GetChild(i), name);
-                if (match != null) return match;
-            }
-            return null;
-        }
-
-        private void Update()
-        {
-            if (controller == null) return;
-            controller.IsFastForwarding = advanceAction != null && advanceAction.action.IsPressed();
-        }
-
-        private void OnAdvance(InputAction.CallbackContext ctx) { /* fast-forward handled in Update via IsPressed */ }
-        private void OnSkip(InputAction.CallbackContext ctx)    => controller?.SkipAll();
     }
 }
