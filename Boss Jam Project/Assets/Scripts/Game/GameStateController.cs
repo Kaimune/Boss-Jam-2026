@@ -134,9 +134,10 @@ namespace BossJam.Game
             switch (State)
             {
                 case GameState.Death:
-                    // Tier-advance: commit the queued debuff. Boss stays
-                    // alive; EnterPlaying re-enables its controller.
+                    // Tier-advance: commit the queued debuff, then refill the
+                    // boss so the new tier starts with full HP.
                     if (runtime != null) runtime.ApplyNextDebuff();
+                    if (Boss != null) Boss.Respawn();
                     break;
                 case GameState.GameOver:
                     // Restart from current tier: refill the boss, debuff state
