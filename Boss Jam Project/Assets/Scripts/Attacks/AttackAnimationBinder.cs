@@ -4,25 +4,19 @@ using UnityEngine;
 namespace BossJam.Attacks
 {
     /// <summary>
-    /// Watches an IAttack on the same GameObject and plays Animator states on phase
-    /// transitions. Reads state-name strings from AttackConfig (windupTrigger /
-    /// activeTrigger / recoveryTrigger — the strings are interpreted as state names,
-    /// not Animator trigger parameters, so no controller surgery is needed).
-    ///
-    /// Auto-fits playback: each phase's animation is sped/slowed so it completes in
-    /// exactly the phase duration. animator.speed is reset to 1 when returning to idle.
-    ///
-    /// Composition: no inheritance, just a phase-event subscriber. Drop next to any
-    /// IAttack to give it animations; leave the Config trigger fields blank to skip.
+    /// Watches an IAttack on the same GameObject and plays a single Animator state
+    /// when the attack successfully initiates (Idle/Cooldown → Windup), then returns
+    /// to idle when the attack finishes. The state name is read from
+    /// <see cref="AttackConfig.attackStateName"/>; leave it blank to skip animation.
     /// </summary>
     [DisallowMultipleComponent]
     public class AttackAnimationBinder : MonoBehaviour
     {
         [SerializeField] private Animator animator;
         [SerializeField, Min(0f)] private float crossfadeSeconds = 0.05f;
-        [Tooltip("State to fade back to on Cooldown/Idle. Leave blank to do nothing.")]
+        [Tooltip("State to fade back to when the attack returns to Cooldown/Idle. Blank = do nothing.")]
         [SerializeField] private string idleStateName = "idle_stepped";
-        [Tooltip("If false, animator.speed stays 1 and animations may get truncated when phases end.")]
+        [Tooltip("If true, animator.speed is set so the clip finishes in exactly Windup+Active+Recovery.")]
         [SerializeField] private bool autoFitAnimationSpeed = true;
 
         private IAttack attack;
@@ -66,86 +60,32 @@ namespace BossJam.Attacks
         {
             if (animator == null || attack.Config == null) return;
 
-            var continuous = attack.Config.continuousStateName;
-            if (!string.IsNullOrEmpty(continuous))
+            // Initiate: any transition INTO Windup is a "boss successfully started an attack".
+            if (next == AttackState.Windup)
             {
-                HandleContinuous(next, continuous);
+                var stateName = attack.Config.attackStateName;
+                if (string.IsNullOrEmpty(stateName)) return;
+
+                animator.speed = autoFitAnimationSpeed ? ComputeFitSpeed(stateName) : 1f;
+                animator.CrossFadeInFixedTime(stateName, crossfadeSeconds);
                 return;
             }
 
-            var stateName = StateNameFor(next);
-            if (string.IsNullOrEmpty(stateName)) return;
-
-            animator.speed = autoFitAnimationSpeed
-                ? ComputeFitSpeed(stateName, next)
-                : 1f;
-            animator.CrossFadeInFixedTime(stateName, crossfadeSeconds);
-        }
-
-        private void HandleContinuous(AttackState next, string stateName)
-        {
-            switch (next)
+            // Done: anything returning to Cooldown/Idle fades back to idle.
+            if (next == AttackState.Cooldown || next == AttackState.Idle)
             {
-                case AttackState.Windup:
-                {
-                    var c = attack.Config;
-                    var total = c.windupSeconds + c.activeSeconds + c.recoverySeconds;
-                    animator.speed = (autoFitAnimationSpeed
-                        && clipLengthByName.TryGetValue(stateName, out var len)
-                        && len > 0f && total > 0f)
-                            ? len / total
-                            : 1f;
-                    animator.CrossFadeInFixedTime(stateName, crossfadeSeconds);
-                    return;
-                }
-                case AttackState.Active:
-                case AttackState.Recovery:
-                    return;
-                case AttackState.Cooldown:
-                case AttackState.Idle:
-                    animator.speed = 1f;
-                    if (!string.IsNullOrEmpty(idleStateName))
-                        animator.CrossFadeInFixedTime(idleStateName, crossfadeSeconds);
-                    return;
+                animator.speed = 1f;
+                if (!string.IsNullOrEmpty(idleStateName))
+                    animator.CrossFadeInFixedTime(idleStateName, crossfadeSeconds);
             }
         }
 
-        private float ComputeFitSpeed(string stateName, AttackState phase)
+        private float ComputeFitSpeed(string stateName)
         {
-            // Idle/Cooldown play at natural speed — no auto-fit.
-            if (phase == AttackState.Idle || phase == AttackState.Cooldown) return 1f;
             if (!clipLengthByName.TryGetValue(stateName, out var clipLength) || clipLength <= 0f) return 1f;
-
-            var phaseDuration = PhaseDurationSeconds(phase);
-            if (phaseDuration <= 0f) return 1f;
-            return clipLength / phaseDuration;
-        }
-
-        private float PhaseDurationSeconds(AttackState phase)
-        {
             var c = attack.Config;
-            switch (phase)
-            {
-                case AttackState.Windup:   return c.windupSeconds;
-                case AttackState.Active:   return c.activeSeconds;
-                case AttackState.Recovery: return c.recoverySeconds;
-                case AttackState.Cooldown: return c.cooldownSeconds;
-                default: return 0f;
-            }
-        }
-
-        private string StateNameFor(AttackState s)
-        {
-            var c = attack.Config;
-            switch (s)
-            {
-                case AttackState.Windup:   return c.windupTrigger;
-                case AttackState.Active:   return c.activeTrigger;
-                case AttackState.Recovery: return c.recoveryTrigger;
-                case AttackState.Cooldown: return idleStateName;
-                case AttackState.Idle:     return idleStateName;
-                default: return null;
-            }
+            var total = c.windupSeconds + c.activeSeconds + c.recoverySeconds;
+            return total > 0f ? clipLength / total : 1f;
         }
     }
 }

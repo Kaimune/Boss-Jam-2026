@@ -4,6 +4,7 @@ using BossJam.Difficulty;
 using BossJam.Game;
 using BossJam.GridSystem;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
@@ -36,6 +37,20 @@ namespace BossJam.Player
         [Header("Input")]
         [Tooltip("Below this magnitude the stick is treated as released.")]
         [SerializeField, Range(0f, 0.9f)] private float deadzone = 0.3f;
+
+        [Header("SFX Hooks")]
+        [Tooltip("Fires when the boss takes any non-zero damage (before the killing-blow death event).")]
+        public UnityEvent OnDamagedSfx;
+        [Tooltip("Fires once when the boss dies.")]
+        public UnityEvent OnDiedSfx;
+        [Tooltip("Fires when the boss respawns for another life.")]
+        public UnityEvent OnRespawnedSfx;
+        [Tooltip("Fires when the primary attack successfully initiates.")]
+        public UnityEvent OnAttackPrimarySfx;
+        [Tooltip("Fires when the secondary attack successfully initiates.")]
+        public UnityEvent OnAttackSecondarySfx;
+        [Tooltip("Fires when the ult attack successfully initiates.")]
+        public UnityEvent OnAttackUltSfx;
 
         [Header("Facing")]
         [Tooltip("Transform that rotates to face movement. Leave null to rotate the root.")]
@@ -91,6 +106,7 @@ namespace BossJam.Player
             Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             rt?.RaiseBossDamaged(amount, source);
+            if (amount > 0) OnDamagedSfx?.Invoke();
             if (currentHp <= 0) Die();
         }
 
@@ -99,6 +115,7 @@ namespace BossJam.Player
             isDead = true;
             Debug.Log("Boss died — entering GameOver.");
             BossDied?.Invoke();
+            OnDiedSfx?.Invoke();
             // GameStateController handles the pause + GameOver screen; the
             // boss is brought back via Respawn() when the player presses Space.
             if (gameState != null) gameState.TriggerGameOver();
@@ -117,6 +134,7 @@ namespace BossJam.Player
             currentHp = spawnedMaxHp;
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             enabled = true;
+            OnRespawnedSfx?.Invoke();
         }
 
         private void ApplyTick()
@@ -229,8 +247,19 @@ namespace BossJam.Player
                 var a = attacks[i];
                 if (a == null || a.Config == null) continue;
                 if (a.Config.hotkey != hotkey) continue;
-                a.TryStart(aim);
+                if (a.TryStart(aim)) SfxFor(hotkey)?.Invoke();
                 return;
+            }
+        }
+
+        private UnityEvent SfxFor(AttackHotkey hotkey)
+        {
+            switch (hotkey)
+            {
+                case AttackHotkey.Primary:   return OnAttackPrimarySfx;
+                case AttackHotkey.Secondary: return OnAttackSecondarySfx;
+                case AttackHotkey.Ult:       return OnAttackUltSfx;
+                default: return null;
             }
         }
 
