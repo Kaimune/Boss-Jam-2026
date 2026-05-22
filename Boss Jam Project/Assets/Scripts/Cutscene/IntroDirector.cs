@@ -104,14 +104,19 @@ namespace BossJam.Cutscene
         private void ToggleCombatComponents(bool enabledFlag)
         {
             if (hero == null) return;
-            ToggleByTypeName(hero.gameObject, "BossJam.Enemies.HeroKiteSteering", enabledFlag);
-            ToggleByTypeName(hero.gameObject, "BossJam.Enemies.FireballSpawner",   enabledFlag);
+            // HeroKiteSteering is a static utility (not a component) — nothing to toggle there.
+            // HeroEnemy.Update already early-returns when state != Playing, so the static
+            // helper isn't called during the cutscene anyway.
+            ToggleByTypeName(hero.gameObject, "BossJam.Enemies.FireballSpawner", enabledFlag);
         }
 
         private static void ToggleByTypeName(GameObject go, string fullName, bool enabledFlag)
         {
             var t = System.Type.GetType(fullName + ", Assembly-CSharp");
             if (t == null) return;
+            // Skip non-component types — guards against static utility classes living
+            // in the same assembly accidentally matching by name.
+            if (!typeof(Component).IsAssignableFrom(t)) return;
             var c = go.GetComponent(t) as Behaviour;
             if (c != null) c.enabled = enabledFlag;
         }
