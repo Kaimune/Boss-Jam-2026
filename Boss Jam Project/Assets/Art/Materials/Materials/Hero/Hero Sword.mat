@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Skin 1
+  m_Name: Hero Sword
   m_Shader: {fileID: 4800000, guid: 71d6765ad72e11541bc1448c891bbcf9, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -59,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _PaletteLUT:
-        m_Texture: {fileID: 2800000, guid: 1721d49aba71a2e44b1f8bc9953eb0fc, type: 3}
+        m_Texture: {fileID: 2800000, guid: 983cd8db3c423b04b92e7e5ddaa71f19, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SampleTexture2D_E9C4F4D0_Texture_1:
@@ -130,7 +130,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _AmbientLight: {r: 0.48855266, g: 0.4372848, b: 0.84276724, a: 1}
-    - _BaseColor: {r: 0, g: 0, b: 0, a: 1}
+    - _BaseColor: {r: 0.2099402, g: 0.2589073, b: 0.34591186, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EdgeHighlightColor: {r: 1, g: 1, b: 1, a: 0.7529412}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
