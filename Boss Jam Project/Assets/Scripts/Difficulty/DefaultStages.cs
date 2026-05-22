@@ -21,7 +21,7 @@ namespace BossJam.Difficulty
             {
                 name = "Quickening",
                 description = "Boss acts 15% faster.",
-                tierName = "Tier 1 — Awakened",
+                tierName = "Tier 1 Awakened",
                 tierDescription = "The boss begins to move with purpose.",
                 tint = new Color(1f, 0.85f, 0.5f),
                 effect = new StatModifierEffect
@@ -35,7 +35,7 @@ namespace BossJam.Difficulty
             {
                 name = "Hardened",
                 description = "Boss gains +2 max HP.",
-                tierName = "Tier 2 — Hardened",
+                tierName = "Tier 2 Hardened",
                 tierDescription = "Its hide thickens.",
                 tint = new Color(0.7f, 0.9f, 1f),
                 effect = new StatModifierEffect
@@ -49,7 +49,7 @@ namespace BossJam.Difficulty
             {
                 name = "Frenzy",
                 description = "Boss acts 25% faster and gains +3 HP.",
-                tierName = "Tier 3 — Frenzied",
+                tierName = "Tier 3 Frenzied",
                 tierDescription = "Pain becomes fuel.",
                 tint = new Color(1f, 0.5f, 0.5f),
                 effect = new CompositeEffect

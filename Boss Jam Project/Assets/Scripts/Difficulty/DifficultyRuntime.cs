@@ -86,10 +86,18 @@ namespace BossJam.Difficulty
         }
 
         // ── Trigger ──────────────────────────────────────────────────
-        private void OnHeroKilled()
-        {
-            HeroKilled?.Invoke();
+        // Hero death just raises the event now — debuff application is
+        // gated by ApplyNextDebuff() so the game can pause + show a
+        // next-tier preview screen first.
+        private void OnHeroKilled() => HeroKilled?.Invoke();
 
+        /// <summary>
+        /// Commit the next debuff from the profile. Called by
+        /// GameStateController.Resume() after the player presses Space on the
+        /// tier-advance screen. No-op if the curve is exhausted.
+        /// </summary>
+        public void ApplyNextDebuff()
+        {
             if (profile == null) return;
             if (AppliedCount >= profile.debuffs.Count) return;
 
@@ -112,6 +120,9 @@ namespace BossJam.Difficulty
 
             if (tierPromoted) TierChanged?.Invoke(CurrentTierEntry);
         }
+
+        public bool HasNextDebuff =>
+            profile != null && AppliedCount < profile.debuffs.Count;
 
         // ── Effect-side helpers ──────────────────────────────────────
         public void AddModifier(Target target, Op op, float value,

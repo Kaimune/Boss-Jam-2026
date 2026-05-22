@@ -7,12 +7,14 @@ using UnityEngine.InputSystem;
 namespace BossJam.UI
 {
     /// <summary>
-    /// Full-screen overlay shown while GameStateController is in Death. Displays
-    /// the current tier name (falling back to "Immortal" before any debuff has
-    /// landed) and waits for Space to call GameStateController.Resume().
+    /// Full-screen overlay shown while GameStateController is in Death. Death
+    /// here means a hero was killed and a new tier is about to be applied —
+    /// the panel previews the upcoming tier (from runtime.NextPreview) so the
+    /// player sees what's coming before pressing Space to continue.
     ///
-    /// The controller owns pause / boss respawn / state transition; this UI is
-    /// purely display + one input. Wire panelRoot + tierLabel in the Inspector.
+    /// The controller owns pause / debuff apply / state transition; this UI
+    /// is purely display + one input. Wire panelRoot + tierLabel in the
+    /// Inspector.
     /// </summary>
     public class DeathScreenUI : MonoBehaviour
     {
@@ -71,14 +73,19 @@ namespace BossJam.UI
 
         private void RefreshLabels()
         {
-            string tierName = runtime != null ? runtime.CurrentTierName : DifficultyRuntime.ImmortalTierName;
-            var entry = runtime != null ? runtime.CurrentTierEntry : null;
+            // Show the upcoming tier — the next debuff in line that Resume()
+            // will apply. Falls back to the current tier name if there is no
+            // queued next (curve exhausted).
+            var next = runtime != null ? runtime.NextPreview : null;
+            string nextName = next != null && !string.IsNullOrEmpty(next.tierName)
+                ? next.tierName
+                : (runtime != null ? runtime.CurrentTierName : DifficultyRuntime.ImmortalTierName);
 
-            tierLabel.text = tierName;
-            tierLabel.color = entry != null ? entry.tint : Color.white;
+            tierLabel.text = nextName;
+            tierLabel.color = next != null ? next.tint : Color.white;
 
             if (tierDescriptionLabel != null)
-                tierDescriptionLabel.text = entry != null ? entry.tierDescription : "";
+                tierDescriptionLabel.text = next != null ? next.tierDescription : "";
         }
 
         private void Update()

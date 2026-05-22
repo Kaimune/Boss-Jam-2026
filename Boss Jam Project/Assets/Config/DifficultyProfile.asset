@@ -23,30 +23,30 @@ MonoBehaviour:
     description: Boss acts 15% faster.
     icon: {fileID: 0}
     tint: {r: 1, g: 0.85, b: 0.5, a: 1}
-    tierName: "Tier 1 \u2014 Awakened"
+    tierName: Tier 1 Awakened
     tierDescription: The boss begins to move with purpose.
     effect:
-      rid: 5190052726517006601
+      rid: 5190052726517006752
   - name: Hardened
     description: Boss gains +2 max HP.
     icon: {fileID: 0}
     tint: {r: 0.7, g: 0.9, b: 1, a: 1}
-    tierName: "Tier 2 \u2014 Hardened"
+    tierName: Tier 2 Hardened
     tierDescription: Its hide thickens.
     effect:
-      rid: 5190052726517006602
+      rid: 5190052726517006753
   - name: Frenzy
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
     tint: {r: 1, g: 0.5, b: 0.5, a: 1}
-    tierName: "Tier 3 \u2014 Frenzied"
+    tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
     effect:
-      rid: 5190052726517006603
+      rid: 5190052726517006754
   references:
     version: 2
     RefIds:
-    - rid: 5190052726517006601
+    - rid: 5190052726517006752
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 11
@@ -54,7 +54,7 @@ MonoBehaviour:
         value: 1.15
         attackId: 
         extensionKey: 
-    - rid: 5190052726517006602
+    - rid: 5190052726517006753
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 10
@@ -62,13 +62,13 @@ MonoBehaviour:
         value: 2
         attackId: 
         extensionKey: 
-    - rid: 5190052726517006603
+    - rid: 5190052726517006754
       type: {class: CompositeEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         effects:
-        - rid: 5190052726517006604
-        - rid: 5190052726517006605
-    - rid: 5190052726517006604
+        - rid: 5190052726517006755
+        - rid: 5190052726517006756
+    - rid: 5190052726517006755
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 11
@@ -76,7 +76,7 @@ MonoBehaviour:
         value: 1.25
         attackId: 
         extensionKey: 
-    - rid: 5190052726517006605
+    - rid: 5190052726517006756
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 10

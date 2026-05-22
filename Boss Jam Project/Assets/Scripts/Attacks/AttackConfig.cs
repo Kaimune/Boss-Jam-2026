@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace BossJam.Attacks
 {
@@ -46,12 +47,11 @@ namespace BossJam.Attacks
         public GameObject telegraphPrefab;
         public GameObject hitboxPrefab;
 
-        [Header("Animation (reserved; no-op until Animator wired)")]
-        public string windupTrigger;
-        public string activeTrigger;
-        public string recoveryTrigger;
-        [Tooltip("If set, plays this Animator state continuously across Windup+Active+Recovery, " +
-                 "scaled to the combined duration. When non-empty, overrides windup/active/recoveryTrigger.")]
-        public string continuousStateName;
+        [Header("Animation")]
+        [Tooltip("Animator state to crossfade to when the attack successfully initiates. " +
+                 "Auto-fit speed (on AttackAnimationBinder) stretches/squashes it to the " +
+                 "combined Windup+Active+Recovery duration. Leave blank to skip animation.")]
+        [FormerlySerializedAs("continuousStateName")]
+        public string attackStateName;
     }
 }

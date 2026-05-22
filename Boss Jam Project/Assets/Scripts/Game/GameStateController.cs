@@ -1,4 +1,5 @@
 using System;
+using BossJam.Difficulty;
 using BossJam.Player;
 using UnityEngine;
 
@@ -8,7 +9,8 @@ namespace BossJam.Game
     {
         Startup,
         Playing,
-        Death,
+        Death,       // hero killed — tier-advance screen pending
+        GameOver,    // boss killed — restart-from-current-tier screen pending
     }
 
     /// <summary>
@@ -42,6 +44,8 @@ namespace BossJam.Game
             }
         }
 
+        private DifficultyRuntime runtime;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -52,6 +56,18 @@ namespace BossJam.Game
             Instance = this;
             // Default state is Startup → time is paused until Begin().
             Time.timeScale = 0f;
+
+            runtime = FindFirstObjectByType<DifficultyRuntime>();
+        }
+
+        private void OnEnable()
+        {
+            if (runtime != null) runtime.HeroKilled += OnHeroKilled;
+        }
+
+        private void OnDisable()
+        {
+            if (runtime != null) runtime.HeroKilled -= OnHeroKilled;
         }
 
         private void OnDestroy()
@@ -64,12 +80,28 @@ namespace BossJam.Game
             }
         }
 
+        private void OnHeroKilled()
+        {
+            // Only pause for a tier-advance screen if there's a debuff queued
+            // to apply. Once the curve is exhausted, hero deaths are silent.
+            if (runtime == null || !runtime.HasNextDebuff) return;
+            TriggerDeath();
+        }
+
         public void Begin()
         {
             if (State != GameState.Startup) return;
-            State = GameState.Playing;
-            Time.timeScale = 1f;
+            EnterPlaying();
+        }
+
+        // Single source of truth for "transitioning into Playing". Anything
+        // that resumes gameplay routes through here so the boss is re-enabled
+        // and time resumes consistently.
+        private void EnterPlaying()
+        {
             if (Boss != null) Boss.enabled = true;
+            Time.timeScale = 1f;
+            State = GameState.Playing;
             StateChanged?.Invoke(State);
         }
 
@@ -82,15 +114,39 @@ namespace BossJam.Game
             StateChanged?.Invoke(State);
         }
 
+        public void TriggerGameOver()
+        {
+            if (State == GameState.GameOver) return;
+            State = GameState.GameOver;
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
+            StateChanged?.Invoke(State);
+        }
+
+        /// <summary>
+        /// Single resume path used by both the death (hero-killed) screen and
+        /// the game-over (boss-killed) screen. Each branch does the state-
+        /// specific commit, then we hand off to Playing — the HeroSpawner
+        /// reacts to the StateChanged event and spawns a fresh hero.
+        /// </summary>
         public void Resume()
         {
-            if (State != GameState.Death) return;
-            // Boss.Respawn() re-enables the controller and refills HP through
-            // the current difficulty ledger.
-            if (Boss != null) Boss.Respawn();
-            Time.timeScale = 1f;
-            State = GameState.Playing;
-            StateChanged?.Invoke(State);
+            switch (State)
+            {
+                case GameState.Death:
+                    // Tier-advance: commit the queued debuff. Boss stays
+                    // alive; EnterPlaying re-enables its controller.
+                    if (runtime != null) runtime.ApplyNextDebuff();
+                    break;
+                case GameState.GameOver:
+                    // Restart from current tier: refill the boss, debuff state
+                    // is preserved (so debuffs already applied still apply).
+                    if (Boss != null) Boss.Respawn();
+                    break;
+                default:
+                    return;
+            }
+            EnterPlaying();
         }
     }
 }

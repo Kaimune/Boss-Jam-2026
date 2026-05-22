@@ -114,6 +114,14 @@ namespace BossJam.Enemies
             mover = GetComponent<GridMover>();
             if (grid == null && Footprint != null) grid = Footprint.Grid;
 
+            // When spawned from a prefab the scene-bound target ref is null —
+            // resolve to the boss in the scene.
+            if (target == null)
+            {
+                var boss = FindFirstObjectByType<BossJam.Player.BossController>();
+                if (boss != null) target = boss.transform;
+            }
+
             // Predictor tuning is read-once at spawn. Reaction/velocity-window
             // debuffs apply to heroes spawned after the debuff lands; the existing
             // predictor's stored values aren't reactively updated.

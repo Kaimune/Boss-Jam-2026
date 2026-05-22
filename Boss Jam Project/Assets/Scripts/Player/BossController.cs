@@ -97,11 +97,12 @@ namespace BossJam.Player
         private void Die()
         {
             isDead = true;
-            Debug.Log("Boss died.");
+            Debug.Log("Boss died — entering GameOver.");
             BossDied?.Invoke();
-            // GameStateController owns the pause + disable; it will flip
-            // enabled = false on us as part of TriggerDeath.
-            if (gameState != null) gameState.TriggerDeath();
+            // GameStateController handles the pause + GameOver screen; the
+            // boss is brought back via Respawn() when the player presses Space.
+            if (gameState != null) gameState.TriggerGameOver();
+            else Respawn(); // fallback if no controller in scene
         }
 
         /// <summary>
