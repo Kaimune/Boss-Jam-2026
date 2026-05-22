@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54e9fb27cae24421194e1540de422b14, type: 3}
+  m_Name: TheseusProfile
+  m_EditorClassIdentifier: 
+  speakerToken: theseus
+  displayName: Theseus
+  nameplateColor: {r: 0.416, g: 0.655, b: 0.831, a: 1}
+  portraitTexture: {fileID: 0}
+  letterTickClip: {fileID: 0}
+  pitchJitter: 0.08
