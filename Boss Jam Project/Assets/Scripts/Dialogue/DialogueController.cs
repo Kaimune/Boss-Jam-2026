@@ -7,10 +7,6 @@ using UnityEngine.UI;
 
 namespace BossJam.Dialogue
 {
-    /// <summary>
-    /// Plain-data iterator over a DialogueScriptAsset. Lives in this file so
-    /// the controller and its EditMode tests share the same definition.
-    /// </summary>
     public sealed class DialogueRunner
     {
         private readonly List<DialogueLine> lines;
@@ -26,7 +22,6 @@ namespace BossJam.Dialogue
 
         public bool IsFinished => index >= lines.Count;
         public DialogueLine Current => IsFinished ? null : lines[index];
-
         public bool SpeakerChangedSincePrevious =>
             !IsFinished && (previousSpeaker == null || previousSpeaker != Current.speaker);
 
@@ -38,13 +33,6 @@ namespace BossJam.Dialogue
         }
     }
 
-    /// <summary>
-    /// Drives the dialogue UI in GameplayScene. Loads a script by name, walks
-    /// lines, types text character-by-character into a TMP_Text, plays letter
-    /// ticks, and swaps the portrait RawImage's texture on speaker change.
-    /// Other systems pause gameplay around Play(...) — this script doesn't
-    /// touch Time.timeScale or BossController.
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class DialogueController : MonoBehaviour
     {
@@ -53,7 +41,6 @@ namespace BossJam.Dialogue
         [SerializeField] private TMP_Text nameplateText;
         [SerializeField] private Image nameplateBackground;
         [SerializeField] private RawImage portraitImage;
-        [SerializeField] private GameObject advanceIndicator;
         [SerializeField] private CanvasGroup canvasGroup;
 
         [Header("Audio")]
@@ -64,92 +51,66 @@ namespace BossJam.Dialogue
         [SerializeField] private List<SpeakerProfile> profiles;
 
         [Header("Typewriter")]
-        [Tooltip("Seconds per character.")]
         [SerializeField] private float secondsPerChar = 0.032f;
+        [Tooltip("How long to hold each fully-typed line before auto-advancing.")]
+        [SerializeField] private float interLineHoldSeconds = 0.75f;
+        [Tooltip("Multiplier applied to typing + inter-line wait while IsFastForwarding is true.")]
+        [SerializeField] private float fastForwardMultiplier = 8f;
 
         public bool IsPlaying { get; private set; }
+        public bool IsFastForwarding { get; set; }
         public event Action Finished;
 
         private DialogueRunner runner;
-        private Coroutine typingRoutine;
-        private bool skipRequested;
-        private bool completeLineRequested;
+        private bool skipAllRequested;
         private string currentLineText;
 
-        private void Awake()
-        {
-            HideUi();
-        }
+        private void Awake() { HideUi(); }
 
         public void Play(string scriptName)
         {
-            if (IsPlaying)
-            {
-                Debug.LogWarning($"{nameof(DialogueController)}: Play called while already playing — ignoring.");
-                return;
-            }
+            if (IsPlaying) { Debug.LogWarning($"{nameof(DialogueController)}: Play while playing — ignoring."); return; }
             var asset = DialogueScriptLoader.Load(scriptName);
             if (asset == null)
             {
-                Debug.LogWarning($"{nameof(DialogueController)}: script '{scriptName}' not found. Skipping dialogue.");
+                Debug.LogWarning($"{nameof(DialogueController)}: script '{scriptName}' not found.");
                 Finished?.Invoke();
                 return;
             }
             runner = new DialogueRunner(asset);
+            skipAllRequested = false;
             IsPlaying = true;
             ShowUi();
-            typingRoutine = StartCoroutine(RunScript());
+            StartCoroutine(RunScript());
         }
 
-        public void RequestAdvance()
-        {
-            if (!IsPlaying) return;
-            completeLineRequested = true;
-        }
-
-        public void RequestSkip()
-        {
-            skipRequested = true;
-            completeLineRequested = true;
-        }
+        public void SkipAll() { skipAllRequested = true; }
 
         private IEnumerator RunScript()
         {
             while (!runner.IsFinished)
             {
+                if (skipAllRequested) break;
                 if (runner.SpeakerChangedSincePrevious) ApplySpeakerProfile(runner.Current.speaker);
                 currentLineText = runner.Current.text ?? string.Empty;
                 yield return TypeLine(runner.Current);
-
-                if (advanceIndicator != null) advanceIndicator.SetActive(true);
-                completeLineRequested = false;
-                while (!completeLineRequested) yield return null;
-                if (advanceIndicator != null) advanceIndicator.SetActive(false);
-                completeLineRequested = false;
-
+                if (skipAllRequested) break;
+                yield return WaitInterLine();
                 runner.Advance();
             }
             HideUi();
             IsPlaying = false;
-            typingRoutine = null;
             Finished?.Invoke();
         }
 
         private IEnumerator TypeLine(DialogueLine line)
         {
-            if (advanceIndicator != null) advanceIndicator.SetActive(false);
             if (dialogueText == null) yield break;
             dialogueText.text = string.Empty;
-            completeLineRequested = false;
             var profile = ResolveProfile(line.speaker);
             for (int i = 0; i < currentLineText.Length; i++)
             {
-                if (completeLineRequested)
-                {
-                    dialogueText.text = currentLineText;
-                    completeLineRequested = false;
-                    break;
-                }
+                if (skipAllRequested) { dialogueText.text = currentLineText; yield break; }
                 char c = currentLineText[i];
                 dialogueText.text += c;
                 if (!char.IsWhiteSpace(c) && letterSfxEnabled && profile != null && profile.letterTickClip != null && letterAudioSource != null)
@@ -157,19 +118,27 @@ namespace BossJam.Dialogue
                     letterAudioSource.pitch = 1f + UnityEngine.Random.Range(-profile.pitchJitter, profile.pitchJitter);
                     letterAudioSource.PlayOneShot(profile.letterTickClip);
                 }
-                yield return new WaitForSecondsRealtime(secondsPerChar);
-                if (skipRequested) { dialogueText.text = currentLineText; skipRequested = false; break; }
+                float delay = IsFastForwarding ? secondsPerChar / fastForwardMultiplier : secondsPerChar;
+                if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+            }
+        }
+
+        private IEnumerator WaitInterLine()
+        {
+            float remaining = interLineHoldSeconds;
+            while (remaining > 0f)
+            {
+                if (skipAllRequested) yield break;
+                float step = IsFastForwarding ? Time.unscaledDeltaTime * fastForwardMultiplier : Time.unscaledDeltaTime;
+                remaining -= step;
+                yield return null;
             }
         }
 
         private void ApplySpeakerProfile(string speakerToken)
         {
             var profile = ResolveProfile(speakerToken);
-            if (profile == null)
-            {
-                Debug.LogWarning($"{nameof(DialogueController)}: no SpeakerProfile for token '{speakerToken}'.");
-                return;
-            }
+            if (profile == null) { Debug.LogWarning($"{nameof(DialogueController)}: no profile for '{speakerToken}'."); return; }
             if (nameplateText != null) nameplateText.text = profile.displayName;
             if (nameplateBackground != null) nameplateBackground.color = profile.nameplateColor;
             if (portraitImage != null && profile.portraitTexture != null) portraitImage.texture = profile.portraitTexture;
@@ -185,24 +154,12 @@ namespace BossJam.Dialogue
 
         private void ShowUi()
         {
-            if (canvasGroup != null)
-            {
-                canvasGroup.alpha = 1f;
-                canvasGroup.blocksRaycasts = true;
-                canvasGroup.interactable = true;
-            }
-            gameObject.SetActive(true);
+            if (canvasGroup != null) { canvasGroup.alpha = 1f; canvasGroup.blocksRaycasts = true; canvasGroup.interactable = true; }
         }
 
         private void HideUi()
         {
-            if (canvasGroup != null)
-            {
-                canvasGroup.alpha = 0f;
-                canvasGroup.blocksRaycasts = false;
-                canvasGroup.interactable = false;
-            }
-            if (advanceIndicator != null) advanceIndicator.SetActive(false);
+            if (canvasGroup != null) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; canvasGroup.interactable = false; }
         }
     }
 }

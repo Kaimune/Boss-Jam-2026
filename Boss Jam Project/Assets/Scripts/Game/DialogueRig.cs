@@ -114,7 +114,13 @@ namespace BossJam.Game
             return null;
         }
 
-        private void OnAdvance(InputAction.CallbackContext ctx) => controller?.RequestAdvance();
-        private void OnSkip(InputAction.CallbackContext ctx)    => controller?.RequestSkip();
+        private void Update()
+        {
+            if (controller == null) return;
+            controller.IsFastForwarding = advanceAction != null && advanceAction.action.IsPressed();
+        }
+
+        private void OnAdvance(InputAction.CallbackContext ctx) { /* fast-forward handled in Update via IsPressed */ }
+        private void OnSkip(InputAction.CallbackContext ctx)    => controller?.SkipAll();
     }
 }
