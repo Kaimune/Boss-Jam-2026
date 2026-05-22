@@ -134,7 +134,7 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EdgeHighlightColor: {r: 0.6855345, g: 0.5324749, b: 0.54445404, a: 1}
     - _EmissionColor: {r: 0.11949676, g: 0.11160546, b: 0.11160546, a: 0.9137255}
-    - _OutlineColor: {r: 0.012578547, g: 0.01000746, b: 0.01000746, a: 0.81960785}
+    - _OutlineColor: {r: 0.012578547, g: 0.01000746, b: 0.01000746, a: 0}
     - _PixelGridOrigin: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
   m_BuildTextureStacks: []
