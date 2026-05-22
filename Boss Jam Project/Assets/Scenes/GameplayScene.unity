@@ -1360,6 +1360,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1876132520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &273611935
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 273611937}
+  - component: {fileID: 273611936}
+  m_Layer: 0
+  m_Name: GameStateController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &273611936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 273611935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 667db3ba0a74848bbbcefb7d134ee1a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &273611937
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 273611935}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &302332638
 GameObject:
   m_ObjectHideFlags: 0
@@ -8533,23 +8577,13 @@ MonoBehaviour:
   target: {fileID: 2100364673}
   fireballPrefab: {fileID: 5340630882246654578, guid: c6b5382f5ee7f4b64a1bef0f1dbf3403, type: 3}
   grid: {fileID: 1980397631}
-  maxHp: 3
-  tickMultiplier: 1
-  preferredDistanceCells: 13
+  config: {fileID: 0}
   orbitSign: 1
-  stuckFlipSeconds: 0.25
-  reactionTimeSeconds: 0.25
-  velocityWindowSeconds: 0.1
-  maxExtrapolationCells: 0
-  perceptionBufferSeconds: 1
   drawKiteVisual: 1
   kiteVisualColor: {r: 0.2, g: 1, b: 0.6, a: 0.9}
   kiteLineWidth: 0.08
   kiteDotScale: 0.35
   kiteVisualYLift: 0.1
-  fireballIntervalSeconds: 2.5
-  fireballSize: {x: 1, y: 1}
-  firstShotDelay: 1
 --- !u!1 &2020598471964347123
 GameObject:
   m_ObjectHideFlags: 0
@@ -10275,3 +10309,4 @@ SceneRoots:
   - {fileID: 741907027}
   - {fileID: 9164063348059943431}
   - {fileID: 256225436}
+  - {fileID: 273611937}
