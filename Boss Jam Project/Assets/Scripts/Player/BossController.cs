@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using BossJam.Attacks;
 using BossJam.Difficulty;
+using BossJam.Game;
 using BossJam.GridSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -22,7 +23,11 @@ namespace BossJam.Player
 
         public int MaxHp => spawnedMaxHp;
         public int CurrentHp => currentHp;
+        public bool IsDead => isDead;
         public event System.Action<int, int> HpChanged;
+        public event System.Action BossDied;
+
+        private bool isDead;
 
         private DifficultyRuntime rt;
         private float Eff(Target t, float b) => rt != null ? rt.Get(t, b) : b;
@@ -81,11 +86,36 @@ namespace BossJam.Player
 
         public void TakeDamage(int amount, IGridEntity source)
         {
+            if (isDead) return;
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             rt?.RaiseBossDamaged(amount, source);
-            if (currentHp <= 0) Debug.Log("Boss would die here — no death handling yet.");
+            if (currentHp <= 0) Die();
+        }
+
+        private void Die()
+        {
+            isDead = true;
+            Debug.Log("Boss died.");
+            BossDied?.Invoke();
+            // GameStateController owns the pause + disable; it will flip
+            // enabled = false on us as part of TriggerDeath.
+            if (gameState != null) gameState.TriggerDeath();
+        }
+
+        /// <summary>
+        /// Restore the boss to a fresh state for another life. Re-snapshots
+        /// MaxHp through the difficulty runtime so any debuffs that landed
+        /// during the previous life are baked into the new spawn.
+        /// </summary>
+        public void Respawn()
+        {
+            isDead = false;
+            spawnedMaxHp = EffI(Target.BossMaxHp, maxHp);
+            currentHp = spawnedMaxHp;
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            enabled = true;
         }
 
         private void ApplyTick()
@@ -107,10 +137,16 @@ namespace BossJam.Player
         private Vector3 aimForward = Vector3.forward;
         public Vector3 AimForward => aimForward;
 
+        private GameStateController gameState;
+
         private void Awake()
         {
             rt = FindFirstObjectByType<DifficultyRuntime>();
             if (rt != null) rt.Boss = this;
+
+            // Use Find rather than Instance so registration is order-independent.
+            gameState = FindFirstObjectByType<GameStateController>();
+            if (gameState != null) gameState.Boss = this;
 
             // Snapshot effective MaxHp at spawn — debuffs that later raise/lower
             // BossMaxHp don't retroactively change the live boss's max.
@@ -153,6 +189,7 @@ namespace BossJam.Player
         private void OnDestroy()
         {
             if (rt != null && rt.Boss == this) rt.Boss = null;
+            if (gameState != null && gameState.Boss == this) gameState.Boss = null;
             moveAction?.Dispose();
             primaryAction?.Dispose();
             secondaryAction?.Dispose();

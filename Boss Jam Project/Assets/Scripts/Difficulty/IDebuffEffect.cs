@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BossJam.Difficulty
@@ -38,5 +39,23 @@ namespace BossJam.Difficulty
 
         public void Apply(DifficultyRuntime rt)
             => rt.AddModifier(target, op, value, attackId, extensionKey);
+    }
+
+    /// <summary>
+    /// Bundles multiple effects under one DebuffEntry slot so a single hero
+    /// kill can trigger several stat changes or behaviors at once. Nested
+    /// effects are stored via [SerializeReference] so the Inspector dropdown
+    /// works the same as the top-level effect field.
+    /// </summary>
+    [Serializable]
+    public sealed class CompositeEffect : IDebuffEffect
+    {
+        [SerializeReference] public List<IDebuffEffect> effects = new();
+
+        public void Apply(DifficultyRuntime rt)
+        {
+            if (effects == null) return;
+            for (int i = 0; i < effects.Count; i++) effects[i]?.Apply(rt);
+        }
     }
 }

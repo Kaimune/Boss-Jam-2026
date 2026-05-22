@@ -64,9 +64,15 @@ namespace BossJam.Difficulty
 
         // UI-facing events
         public event Action<DebuffEntry> DebuffApplied;
-        public event Action<string> TierChanged;
+        public event Action<DebuffEntry> TierChanged;
 
-        public string CurrentTierName { get; private set; } = "";
+        // Default tier name shown before any debuff has been applied.
+        // Anything asking the runtime for the tier prior to the first hero
+        // kill sees this string.
+        public const string ImmortalTierName = "Immortal";
+
+        public string CurrentTierName { get; private set; } = ImmortalTierName;
+        public DebuffEntry CurrentTierEntry { get; private set; }
 
         // ── Wire-up ──────────────────────────────────────────────────
         private void OnEnable()
@@ -91,10 +97,20 @@ namespace BossJam.Difficulty
             appliedEntries.Add(entry);
             entry.effect?.Apply(this);
 
+            // Promote tier if this entry names a new one. Blank tierName
+            // inherits the previous label (lets multiple debuffs share a tier).
+            bool tierPromoted = false;
+            if (!string.IsNullOrEmpty(entry.tierName) && entry.tierName != CurrentTierName)
+            {
+                CurrentTierName = entry.tierName;
+                CurrentTierEntry = entry;
+                tierPromoted = true;
+            }
+
             DebuffApplied?.Invoke(entry);
             Debug.Log($"[Difficulty] Applied #{AppliedCount} '{entry.name}' — {entry.description}");
 
-            RecomputeTier();
+            if (tierPromoted) TierChanged?.Invoke(CurrentTierEntry);
         }
 
         // ── Effect-side helpers ──────────────────────────────────────
@@ -146,24 +162,6 @@ namespace BossJam.Difficulty
             => Mathf.RoundToInt(Get(target, baseValue, attackId, extensionKey));
 
         // ── Internals ────────────────────────────────────────────────
-        private void RecomputeTier()
-        {
-            string newName = "";
-            if (profile != null)
-            {
-                for (int i = 0; i < profile.tiers.Count; i++)
-                {
-                    var tier = profile.tiers[i];
-                    if (AppliedCount >= tier.startsAtDebuffCount) newName = tier.name;
-                }
-            }
-            if (newName != CurrentTierName)
-            {
-                CurrentTierName = newName;
-                TierChanged?.Invoke(newName);
-            }
-        }
-
         private struct Modifier
         {
             public Target target;
