@@ -1,4 +1,5 @@
 using System;
+using BossJam.Cutscene;
 using BossJam.Difficulty;
 using BossJam.Dialogue;
 using BossJam.Player;
@@ -9,10 +10,11 @@ namespace BossJam.Game
     public enum GameState
     {
         Startup,
-        Dialogue,    // pre- or post-fight dialogue is playing
+        CutsceneIntro,   // letterbox + hero walks in
+        Dialogue,        // pre-fight typewriter; timescale 0
         Playing,
-        Death,       // hero killed — tier-advance screen pending
-        GameOver,    // boss killed — restart-from-current-tier screen pending
+        Death,           // hero killed; OutroDirector auto-cutscene running
+        GameOver,        // boss killed; OutroDirector auto-cutscene running
     }
 
     /// <summary>
@@ -34,8 +36,10 @@ namespace BossJam.Game
 
         [Header("Dialogue")]
         [SerializeField] private DialogueRig dialogueRig;
-        [SerializeField] private string preFightScript = "boss_pre_fight";
-        [SerializeField] private string postFightVictoryScript = "boss_post_fight_victory";
+
+        [Header("Cutscene")]
+        [SerializeField] private IntroDirector introDirector;
+        [SerializeField] private OutroDirector outroDirector;
 
         private GameState postDialogueTarget = GameState.Playing;
 
@@ -104,14 +108,49 @@ namespace BossJam.Game
         public void Begin()
         {
             if (State != GameState.Startup) return;
-            postDialogueTarget = GameState.Playing;
-            if (dialogueRig == null)
+            EnterCutsceneIntro();
+        }
+
+        private void EnterCutsceneIntro()
+        {
+            Time.timeScale = 1f;
+            if (Boss != null) Boss.enabled = false;
+            State = GameState.CutsceneIntro;
+            StateChanged?.Invoke(State);
+
+            if (introDirector == null)
             {
-                EnterPlaying();
+                EnterPreFightDialogue();
                 return;
             }
+            introDirector.IntroComplete += OnIntroComplete;
+            // HeroSpawner spawns on the StateChanged event we just fired (CS9 wires this).
+            // Grab the hero one frame later, then ask the director to begin the walk.
+            StartCoroutine(BeginIntroNextFrame());
+        }
+
+        private System.Collections.IEnumerator BeginIntroNextFrame()
+        {
+            yield return null;
+            var spawner = FindFirstObjectByType<HeroSpawner>();
+            var hero = spawner != null ? spawner.CurrentHero : null;
+            introDirector.Begin(hero);
+        }
+
+        private void OnIntroComplete()
+        {
+            if (introDirector != null) introDirector.IntroComplete -= OnIntroComplete;
+            EnterPreFightDialogue();
+        }
+
+        private void EnterPreFightDialogue()
+        {
+            int wave = (runtime != null) ? runtime.CurrentWaveIndex : 1;
+            string scriptName = $"intro_wave_{wave}";
+            postDialogueTarget = GameState.Playing;
             EnterDialogue();
-            dialogueRig.Play(preFightScript);
+            if (dialogueRig != null) dialogueRig.Play(scriptName);
+            else EnterPlaying();
         }
 
         // Single source of truth for "transitioning into Playing". Anything
@@ -138,76 +177,82 @@ namespace BossJam.Game
 
         private void OnDialogueFinished()
         {
-            switch (postDialogueTarget)
-            {
-                case GameState.Playing:
-                    EnterPlaying();
-                    break;
-                case GameState.GameOver:
-                    EnterGameOverFinal();
-                    break;
-                default:
-                    EnterPlaying();
-                    break;
-            }
-        }
-
-        private void EnterGameOverFinal()
-        {
-            postDialogueTarget = GameState.Playing;
-            State = GameState.GameOver;
-            Time.timeScale = 0f;
-            if (Boss != null) Boss.enabled = false;
-            StateChanged?.Invoke(State);
+            if (postDialogueTarget == GameState.Playing) EnterPlaying();
+            else if (postDialogueTarget == GameState.Death) EnterDeathOutro();
+            else if (postDialogueTarget == GameState.GameOver) EnterGameOverOutro();
+            else EnterPlaying();
         }
 
         public void TriggerDeath()
         {
             if (State == GameState.Death) return;
+            EnterDeathOutro();
+        }
+
+        private void EnterDeathOutro()
+        {
             State = GameState.Death;
             Time.timeScale = 0f;
             if (Boss != null) Boss.enabled = false;
             StateChanged?.Invoke(State);
+
+            if (outroDirector == null) { ResumeAfterDeathOutro(); return; }
+            outroDirector.OutroComplete += OnDeathOutroComplete;
+            int wave = (runtime != null) ? runtime.CurrentWaveIndex : 1;
+            outroDirector.PlayHeroDeath(wave);
+        }
+
+        private void OnDeathOutroComplete()
+        {
+            if (outroDirector != null) outroDirector.OutroComplete -= OnDeathOutroComplete;
+            ResumeAfterDeathOutro();
+        }
+
+        private void ResumeAfterDeathOutro()
+        {
+            // Commit the queued debuff + respawn boss (existing Resume() logic),
+            // then loop back through CutsceneIntro for the next wave.
+            if (runtime != null) runtime.ApplyNextDebuff();
+            if (Boss != null) Boss.Respawn();
+            State = GameState.Startup; // satisfy the Begin() guard
+            Begin();
         }
 
         public void TriggerGameOver()
         {
-            if (State == GameState.GameOver || State == GameState.Dialogue) return;
-            if (dialogueRig == null)
-            {
-                EnterGameOverFinal();
-                return;
-            }
-            postDialogueTarget = GameState.GameOver;
-            EnterDialogue();
-            dialogueRig.Play(postFightVictoryScript);
+            if (State == GameState.GameOver) return;
+            EnterGameOverOutro();
+        }
+
+        private void EnterGameOverOutro()
+        {
+            State = GameState.GameOver;
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
+            StateChanged?.Invoke(State);
+
+            if (outroDirector == null) return;
+            outroDirector.OutroComplete += OnGameOverOutroComplete;
+            outroDirector.PlayBossDeath();
+        }
+
+        private void OnGameOverOutroComplete()
+        {
+            if (outroDirector != null) outroDirector.OutroComplete -= OnGameOverOutroComplete;
+            // State stays GameOver. GameOverScreenUI listens for StateChanged
+            // and shows its panel; player presses Space to call Resume().
         }
 
         /// <summary>
-        /// Single resume path used by both the death (hero-killed) screen and
-        /// the game-over (boss-killed) screen. Each branch does the state-
-        /// specific commit, then we hand off to Playing — the HeroSpawner
-        /// reacts to the StateChanged event and spawns a fresh hero.
+        /// Resume from the GameOver screen. Refills the boss (debuff state is
+        /// preserved) and loops back through the intro cutscene.
         /// </summary>
         public void Resume()
         {
-            switch (State)
-            {
-                case GameState.Death:
-                    // Tier-advance: commit the queued debuff, then refill the
-                    // boss so the new tier starts with full HP.
-                    if (runtime != null) runtime.ApplyNextDebuff();
-                    if (Boss != null) Boss.Respawn();
-                    break;
-                case GameState.GameOver:
-                    // Restart from current tier: refill the boss, debuff state
-                    // is preserved (so debuffs already applied still apply).
-                    if (Boss != null) Boss.Respawn();
-                    break;
-                default:
-                    return;
-            }
-            EnterPlaying();
+            if (State != GameState.GameOver) return;
+            if (Boss != null) Boss.Respawn();
+            State = GameState.Startup; // satisfy the Begin() guard
+            Begin();
         }
     }
 }
