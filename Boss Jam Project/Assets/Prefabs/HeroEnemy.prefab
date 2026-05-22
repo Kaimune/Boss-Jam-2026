@@ -33,6 +33,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7857960097535012513}
+  - {fileID: 2974191284882127775}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6141999145694484533
@@ -79,7 +80,7 @@ MonoBehaviour:
   target: {fileID: 0}
   fireballPrefab: {fileID: 5340630882246654578, guid: c6b5382f5ee7f4b64a1bef0f1dbf3403, type: 3}
   grid: {fileID: 0}
-  config: {fileID: 0}
+  config: {fileID: 11400000, guid: 4978d48ee606748c89f956fe01dc2978, type: 2}
   orbitSign: 1
   drawKiteVisual: 1
   kiteVisualColor: {r: 0.2, g: 1, b: 0.6, a: 0.9}
@@ -407,6 +408,37 @@ SkinnedMeshRenderer:
     m_Center: {x: -0.048133478, y: 0.03836165, z: -0.0012793243}
     m_Extent: {x: 0.087773606, y: 0.10149638, z: 0.18755007}
   m_DirtyAABB: 0
+--- !u!1 &2826200335855552795
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2974191284882127775}
+  m_Layer: 0
+  m_Name: HeadAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2974191284882127775
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2826200335855552795}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9164063348812491718}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2920688841838865332
 GameObject:
   m_ObjectHideFlags: 0
