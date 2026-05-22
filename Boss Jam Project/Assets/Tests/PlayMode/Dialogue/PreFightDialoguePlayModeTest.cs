@@ -44,7 +44,7 @@ namespace BossJam.Dialogue.PlayModeTests
             bool finished = false;
             controller.Finished += () => finished = true;
 
-            controller.Play("boss_pre_fight");
+            controller.Play("intro_wave_1");
             Assert.IsTrue(controller.IsPlaying);
 
             float timeout = 5f;
@@ -62,7 +62,7 @@ namespace BossJam.Dialogue.PlayModeTests
             bool finished = false;
             controller.Finished += () => finished = true;
 
-            controller.Play("boss_pre_fight");
+            controller.Play("intro_wave_1");
             yield return null;
             controller.SkipAll();
 

@@ -8,7 +8,7 @@ namespace BossJam.Dialogue.EditModeTests
         [Test]
         public void Load_ReturnsParsedLines_ForExistingScript()
         {
-            var asset = DialogueScriptLoader.Load("boss_pre_fight");
+            var asset = DialogueScriptLoader.Load("intro_wave_1");
             Assert.IsNotNull(asset, "Loader should return a non-null asset for an existing script.");
             Assert.IsNotNull(asset.lines, "Parsed asset should expose a lines list.");
             Assert.Greater(asset.lines.Count, 0, "Pre-fight script should contain at least one line.");
