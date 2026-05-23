@@ -107,18 +107,22 @@ namespace BossJam.Enemies
         }
 
         // ── Hit reaction ─────────────────────────────────────────────
+        // Two-phase model so the player can combo:
+        //   T=0       hit lands. Hero stunned, NO iframes, NO push yet.
+        //   T=combo   big knockback fires + iframes start. The combo window
+        //             between T=0 and T=combo is when chained player hits
+        //             can stack damage.
         [Header("Hit reaction")]
-        [Tooltip("Seconds the hero is shoved in the random push direction after a non-killing hit.")]
-        [SerializeField, Min(0f)] private float pushDurationSeconds = 0.15f;
-        [Tooltip("Seconds the hero is stunned (no kiting, no abilities) after a non-killing hit. Push runs inside this window.")]
-        [SerializeField, Min(0.05f)] private float stunDurationSeconds = 0.5f;
-        [Tooltip("Iframe window granted after a hit. Usually matches stun so chained boss hits can't connect mid-stun.")]
-        [SerializeField, Min(0f)] private float iframesOnHitSeconds = 0.5f;
+        [Tooltip("Combo window after a hit. Hero is stunned but vulnerable — chained player attacks landing in this window all do damage. When it lapses, the big knockback fires.")]
+        [SerializeField, Min(0f)] private float comboWindowSeconds = 0.5f;
+        [Tooltip("Cells the hero teleports along the knockback direction when the combo window ends. The shove is instant, not a per-frame push.")]
+        [SerializeField, Min(0)] private int knockbackDistanceCells = 6;
+        [Tooltip("Iframe + stun window that begins when the knockback fires (after the combo window). The brain resumes once this lapses.")]
+        [SerializeField, Min(0f)] private float iframesAfterKnockbackSeconds = 0.5f;
 
         private float invulnUntil = -1f;
         private float stunUntil = -1f;
-        private float pushUntil = -1f;
-        private Vector2 pushDir;
+        private float knockbackFiresAt = -1f;
 
         public bool IsInvulnerable => Time.time < invulnUntil;
         public bool IsStunned => Time.time < stunUntil;
@@ -132,18 +136,36 @@ namespace BossJam.Enemies
 
         private void BeginHitReaction()
         {
-            // Push direction is "away from the boss" — reads as knockback and
-            // can't accidentally shove the hero deeper into trouble. Snapped
-            // to the nearest cardinal so the shove stays grid-aligned.
-            pushDir = ComputeKnockbackDirection();
-            pushUntil = Time.time + pushDurationSeconds;
-            stunUntil = Time.time + stunDurationSeconds;
-            SetInvulnFor(iframesOnHitSeconds);
+            // Hero plants in place for the combo window — no iframes — so
+            // chained player attacks can stack damage. FireDelayedKnockback
+            // teleports the hero away and flips on iframes when the window ends.
+            float now = Time.time;
+            knockbackFiresAt = now + comboWindowSeconds;
+            stunUntil = now + comboWindowSeconds + iframesAfterKnockbackSeconds;
 
             // Abort any in-progress ability so the brain isn't mid-dodge or
             // mid-fireball-spawn when control resumes. Brain.CancelAll calls
             // Cancel() on each registered ability.
             if (brain != null) brain.CancelAll();
+        }
+
+        // Instant displacement. Tries the full knockback distance first, then
+        // walks the target closer one cell at a time until GridFootprint
+        // accepts (walls, other actors). No-op if even a one-cell shove is
+        // blocked.
+        private void FireDelayedKnockback()
+        {
+            knockbackFiresAt = -1f;
+            SetInvulnFor(iframesAfterKnockbackSeconds);
+
+            if (mover == null || Footprint == null || knockbackDistanceCells <= 0) return;
+            Vector2 dir = ComputeKnockbackDirection();
+            Vector2 origin = Footprint.Anchor;
+            for (int d = knockbackDistanceCells; d > 0; d--)
+            {
+                Vector2 target = origin + dir * d;
+                if (mover.DriveTo(target)) return;
+            }
         }
 
         private Vector2 ComputeKnockbackDirection()
@@ -314,13 +336,17 @@ namespace BossJam.Enemies
                 return;
             if (target == null) { mover.InputDirection = Vector2.zero; return; }
 
-            // Stun gate: brain ignored, kiting paused. Push direction drives
-            // the mover for the first slice of the stun, then the hero sits
-            // until iframes/stun lapse together.
+            // Fire the deferred knockback once the combo window lapses.
+            if (knockbackFiresAt > 0f && Time.time >= knockbackFiresAt)
+                FireDelayedKnockback();
+
+            // Stun gate: brain ignored, kiting paused. The hero plants for the
+            // whole combo window + post-knockback iframe period — the actual
+            // shove is an instant teleport inside FireDelayedKnockback, not a
+            // per-frame push.
             if (IsStunned)
             {
-                mover.InputDirection = (Time.time < pushUntil) ? pushDir : Vector2.zero;
-                ApplyFacing(mover.InputDirection);
+                mover.InputDirection = Vector2.zero;
                 return;
             }
 

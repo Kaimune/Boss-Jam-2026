@@ -98,9 +98,9 @@ MonoBehaviour:
   kiteLineWidth: 0.08
   kiteDotScale: 0.35
   kiteVisualYLift: 0.1
-  pushDurationSeconds: 0.15
-  stunDurationSeconds: 0.5
-  iframesOnHitSeconds: 0.5
+  comboWindowSeconds: 0.5
+  knockbackDistanceCells: 6
+  iframesAfterKnockbackSeconds: 0.5
 --- !u!114 &4241545259068807302
 MonoBehaviour:
   m_ObjectHideFlags: 0
