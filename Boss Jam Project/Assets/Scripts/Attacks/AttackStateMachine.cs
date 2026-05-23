@@ -95,6 +95,30 @@ namespace BossJam.Attacks
 
         public bool LocksMovement => hasTimings && phases[state].LocksMovement(timings);
 
+        /// <summary>
+        /// Total seconds (tick-scaled) until the state machine returns to Idle —
+        /// current phase remainder plus every subsequent phase duration. Returns
+        /// 0 when already Idle. Used by the cooldown UI to drive a single sweep
+        /// from cast to next-cast-ready, League-style.
+        /// </summary>
+        public float TimeToIdle
+        {
+            get
+            {
+                if (!hasTimings || state == AttackState.Idle) return 0f;
+                float total = Mathf.Max(0f, timer);
+                var s = phases[state].NextOnTimerEnd;
+                // Bound the walk defensively — the legal chain is at most
+                // Windup → Active → Recovery → Cooldown → Idle (4 hops).
+                for (int i = 0; i < 8 && s != AttackState.Idle; i++)
+                {
+                    total += phases[s].DurationSec(timings) * tickScale;
+                    s = phases[s].NextOnTimerEnd;
+                }
+                return total;
+            }
+        }
+
         public event Action<AttackState, AttackState> StateChanged;
 
         // Per-state entry callbacks. Subscribe via OnEnter(state, handler).

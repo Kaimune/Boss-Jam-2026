@@ -27,7 +27,7 @@ namespace BossJam.UI
         [SerializeField] private BossController boss;
 
         private IAttack attack;
-        private float cooldownTotal;
+        private float castTotal;
         private Coroutine tickCo;
 
         private void Awake()
@@ -82,16 +82,18 @@ namespace BossJam.UI
 
         private void OnAttackStateChanged(AttackState prev, AttackState next)
         {
-            if (next == AttackState.Cooldown)
+            // Cast begins the moment we leave Idle (TryStart → Windup). League-style:
+            // the radial sweep starts draining now and runs until the state machine
+            // returns to Idle — Windup + Active + Recovery + Cooldown all included.
+            if (prev == AttackState.Idle && next != AttackState.Idle)
             {
-                // CooldownRemaining is already tick-scaled — captured once per swing.
-                cooldownTotal = Mathf.Max(0.0001f, attack.CooldownRemaining);
+                castTotal = Mathf.Max(0.0001f, attack.TimeToIdle);
                 if (cooldownText != null) cooldownText.gameObject.SetActive(true);
                 if (iconFill != null) iconFill.fillAmount = 1f;
                 if (tickCo != null) StopCoroutine(tickCo);
                 tickCo = StartCoroutine(TickCooldown());
             }
-            else if (prev == AttackState.Cooldown)
+            else if (next == AttackState.Idle)
             {
                 if (tickCo != null) { StopCoroutine(tickCo); tickCo = null; }
                 ResetVisual();
@@ -100,16 +102,16 @@ namespace BossJam.UI
 
         private IEnumerator TickCooldown()
         {
-            while (attack.CooldownRemaining > 0f)
+            while (attack.TimeToIdle > 0f)
             {
-                float r = attack.CooldownRemaining;
-                if (iconFill != null) iconFill.fillAmount = Mathf.Clamp01(r / cooldownTotal);
+                float r = attack.TimeToIdle;
+                if (iconFill != null) iconFill.fillAmount = Mathf.Clamp01(r / castTotal);
                 if (cooldownText != null) cooldownText.text = FormatCooldown(r);
                 yield return null;
             }
             tickCo = null;
-            // Visual cleanup happens via the Cooldown→Idle StateChanged callback,
-            // which fires the same frame this coroutine exits.
+            // Visual cleanup happens via the *→Idle StateChanged callback, which
+            // fires the same frame this coroutine exits.
         }
 
         private void ResetVisual()

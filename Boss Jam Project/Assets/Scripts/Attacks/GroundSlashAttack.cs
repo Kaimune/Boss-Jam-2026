@@ -54,6 +54,7 @@ namespace BossJam.Attacks
         public AttackState State => fsm.State;
         public float PhaseProgress01 => fsm.PhaseProgress01;
         public float CooldownRemaining => fsm.CooldownRemaining;
+        public float TimeToIdle => fsm.TimeToIdle;
         public bool IsBusy => fsm.IsBusy;
         public bool LocksMovement => fsm.LocksMovement;
         public event Action<AttackState, AttackState> StateChanged
