@@ -15,16 +15,16 @@ MonoBehaviour:
   id: charge_slam
   hotkey: 1
   windupSeconds: 0.3
-  activeSeconds: 1
+  activeSeconds: 0.5
   recoverySeconds: 0
   cooldownSeconds: 1
-  damage: 4
+  damage: 10
   hitboxFootprint: {x: 9, y: 9}
   hitboxForwardOffsetCells: 0
   lockMovementDuringWindup: 1
   lockMovementDuringActive: 1
   lockMovementDuringRecovery: 0
-  chargeCellsPerSecond: 24
+  chargeCellsPerSecond: 40
   spawnCount: 12
   perSpawnTelegraphSeconds: 0.4
   perSpawnHitboxSeconds: 0.25
@@ -33,7 +33,4 @@ MonoBehaviour:
   fallStartHeight: 10
   telegraphPrefab: {fileID: 8097395814287246815, guid: 75e1c9e648a1e412f92ad9fa5bc1e4d9, type: 3}
   hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}
-  windupTrigger: 
-  activeTrigger: 
-  recoveryTrigger: 
-  continuousStateName: run_stepped
+  attackStateName: run_stepped

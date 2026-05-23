@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07ab57981bc944f51834869f9bbe6844, type: 3}
   m_Name: HeroConfig
   m_EditorClassIdentifier: 
-  maxHp: 3
+  maxHp: 20
   tickMultiplier: 1
-  preferredDistanceCells: 13
+  moveSpeed: 10
+  moveSpeedMultiplier: 1
+  preferredDistanceCells: 20
   stuckFlipSeconds: 0.25
   reactionTimeSeconds: 0.25
   velocityWindowSeconds: 0.1

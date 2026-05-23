@@ -190,6 +190,9 @@ namespace BossJam.Enemies
 
         private void Update()
         {
+            if (BossJam.Game.GameStateController.Instance != null &&
+                BossJam.Game.GameStateController.Instance.State != BossJam.Game.GameState.Playing)
+                return;
             if (target == null) { mover.InputDirection = Vector2.zero; return; }
 
             UpdatePerception();

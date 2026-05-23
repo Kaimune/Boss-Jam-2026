@@ -56,7 +56,10 @@ namespace BossJam.GridSystem
                 return;
             }
             Anchor = anchor;
-            transform.position = grid.FootprintCenterWorld(Anchor, footprint);
+            if (!useTransformAsInitialAnchor)
+            {
+                transform.position = grid.FootprintCenterWorld(Anchor, footprint);
+            }
         }
 
         private void OnDisable()
