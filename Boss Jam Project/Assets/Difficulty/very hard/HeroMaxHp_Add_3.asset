@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp:BossJam.Difficulty:StatModifierEffect
   target: 0
   op: 1
-  value: 3
+  value: 10
   attackId: 
   extensionKey: 
