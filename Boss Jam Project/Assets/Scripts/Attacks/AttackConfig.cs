@@ -29,6 +29,8 @@ namespace BossJam.Attacks
 
         [Header("Charge attack (used by ChargeSlamAttack; ignored by others)")]
         [Min(0.1f)] public float chargeCellsPerSecond = 18f;
+        [Tooltip("Extra invulnerability granted after the Active+Recovery window closes. Use this as the 'grace period' so the boss can't be punished the instant the charge ends.")]
+        [Min(0f)] public float invulnTrailSeconds = 0.25f;
 
         [Header("Multi-spawn (used by RockFallAttack; ignored by others)")]
         [Min(1)] public int spawnCount = 12;

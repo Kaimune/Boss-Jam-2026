@@ -24,6 +24,7 @@ namespace BossJam.Attacks
         private GameObject liveHitbox;
         private GridFootprint cachedBossFootprint;
         private GridMover cachedMover;
+        private BossController cachedBoss;
         private float tickScale = 1f;
 
         private DifficultyRuntime rt;
@@ -91,6 +92,7 @@ namespace BossJam.Attacks
             rt = FindFirstObjectByType<DifficultyRuntime>();
             if (config != null) fsm.Init(BuildTimings());
             fsm.OnEnter(AttackState.Windup,   SpawnTelegraph);
+            fsm.OnEnter(AttackState.Active,   ArmInvulnerability);
             fsm.OnEnter(AttackState.Recovery, SpawnHitboxAndClearTelegraph);
             fsm.OnEnter(AttackState.Cooldown, DestroyHitbox);
             fsm.OnEnter(AttackState.Idle,     DestroyLive);
@@ -114,6 +116,23 @@ namespace BossJam.Attacks
             cachedMover != null
                 ? cachedMover
                 : (cachedMover = GetComponentInParent<GridMover>());
+
+        private BossController BossControllerRef =>
+            cachedBoss != null
+                ? cachedBoss
+                : (cachedBoss = GetComponentInParent<BossController>());
+
+        // Boss is invulnerable for the whole charge (Active+Recovery, tick-scaled)
+        // plus a fixed grace trail. If the charge ends early on a wall hit, the
+        // already-armed window keeps protecting the boss for the buffered time.
+        private void ArmInvulnerability()
+        {
+            var boss = BossControllerRef;
+            if (boss == null || config == null) return;
+            float activeSec   = Eff(Target.BossAttackActiveSeconds,   config.activeSeconds);
+            float recoverySec = Eff(Target.BossAttackRecoverySeconds, config.recoverySeconds);
+            boss.SetInvulnFor(activeSec * tickScale + recoverySec * tickScale + config.invulnTrailSeconds);
+        }
 
         private Vector2 AimDirectionFromBoss()
         {
@@ -165,6 +184,18 @@ namespace BossJam.Attacks
             return endCenter - fpSize * 0.5f;
         }
 
+        // Keep an anchor's footprint fully inside the grid so spawns never fail Register().
+        private Vector2 ClampAnchor(Vector2 anchor, Vector2 fpSize)
+        {
+            var grid = BossFootprint != null ? BossFootprint.Grid : null;
+            if (grid == null) return anchor;
+            float maxX = Mathf.Max(0f, grid.Width  - fpSize.x);
+            float maxY = Mathf.Max(0f, grid.Height - fpSize.y);
+            return new Vector2(
+                Mathf.Clamp(anchor.x, 0f, maxX),
+                Mathf.Clamp(anchor.y, 0f, maxY));
+        }
+
         private void SpawnTelegraph()
         {
             if (config == null || config.telegraphPrefab == null) return;
@@ -172,7 +203,7 @@ namespace BossJam.Attacks
             if (grid == null) return;
 
             var fpSize = EffHitboxFootprint();
-            var anchor = TelegraphAnchor(fpSize);
+            var anchor = ClampAnchor(TelegraphAnchor(fpSize), fpSize);
             var world = grid.FootprintCenterWorld(anchor, fpSize);
             liveTelegraph = Instantiate(config.telegraphPrefab, world, Quaternion.identity);
             var vis = liveTelegraph.transform.Find("Visual");
@@ -191,7 +222,7 @@ namespace BossJam.Attacks
             if (grid == null) return;
 
             var fpSize = EffHitboxFootprint();
-            var anchor = HitboxAnchorAtBoss(fpSize);
+            var anchor = ClampAnchor(HitboxAnchorAtBoss(fpSize), fpSize);
             var go = Instantiate(config.hitboxPrefab);
             go.SetActive(false);
 

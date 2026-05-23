@@ -1,6 +1,7 @@
 using System;
 using BossJam.Difficulty;
 using BossJam.GridSystem;
+using BossJam.Player;
 using UnityEngine;
 
 namespace BossJam.Attacks
@@ -14,12 +15,18 @@ namespace BossJam.Attacks
     {
         [SerializeField] private AttackConfig config;
 
+        [SerializeField, Tooltip("If true, Strike() fires automatically at the start of Active. " +
+                                 "Set false to drive Strike() from an AnimationEvent for frame-precise damage.")]
+        private bool autoStrikeOnActive = true;
+
         private readonly AttackStateMachine fsm = new AttackStateMachine();
         private Vector3 lastAim;
-        private Vector2 lastAimDirection = Vector2.right; // captured at TryStart, fixed for whole swing
+        private Vector2 lastAimDirection = Vector2.right; // fallback if no live boss aim
         private GameObject liveTelegraph;
         private GameObject liveHitbox;
+        private bool hasStruck;
         private GridFootprint cachedBossFootprint;
+        private BossController cachedBoss;
 
         private DifficultyRuntime rt;
         private float Eff(Target t, float b, string ext = null)
@@ -82,7 +89,7 @@ namespace BossJam.Attacks
             rt = FindFirstObjectByType<DifficultyRuntime>();
             if (config != null) fsm.Init(BuildTimings());
             fsm.OnEnter(AttackState.Windup,   SpawnTelegraph);
-            fsm.OnEnter(AttackState.Active,   SpawnHitboxAndClearTelegraph);
+            fsm.OnEnter(AttackState.Active,   OnActiveEnter);
             fsm.OnEnter(AttackState.Recovery, DestroyHitbox);
             fsm.OnEnter(AttackState.Idle,     DestroyLive);
         }
@@ -90,21 +97,32 @@ namespace BossJam.Attacks
         private void Update()
         {
             fsm.Tick(Time.deltaTime);
-            if (fsm.State == AttackState.Active) UpdateHitboxFollowBoss();
+            // Refresh aim from the boss each frame so the telegraph (and the eventual
+            // Strike) reflect the player's current facing. The hitbox itself does NOT
+            // follow — once Strike() spawns it, it stays put. Sliding it under the
+            // hero used to retrigger overlap-entry damage on aim wobble.
+            RefreshAimFromBoss();
+            if (fsm.State == AttackState.Windup) UpdateTelegraphFollowBoss();
         }
 
-        private void UpdateHitboxFollowBoss()
+        private void RefreshAimFromBoss()
         {
-            if (liveHitbox == null) return;
+            var boss = BossControllerRef;
+            if (boss == null) return;
+            var fwd = boss.AimForward;
+            var d2 = new Vector2(fwd.x, fwd.z);
+            if (d2.sqrMagnitude > 0.0001f) lastAimDirection = d2.normalized;
+        }
+
+        private void UpdateTelegraphFollowBoss()
+        {
+            if (liveTelegraph == null) return;
             var grid = BossFootprint != null ? BossFootprint.Grid : null;
             if (grid == null) return;
 
             var fpSize = EffHitboxFootprint();
-            var anchor = HitboxAnchor(fpSize);
-            var hbFp = liveHitbox.GetComponent<GridFootprint>();
-            if (hbFp == null) return;
-            if (hbFp.TryMoveTo(anchor))
-                liveHitbox.transform.position = grid.FootprintCenterWorld(anchor, fpSize);
+            var anchor = ClampAnchor(HitboxAnchor(fpSize), fpSize);
+            liveTelegraph.transform.position = grid.FootprintCenterWorld(anchor, fpSize);
         }
 
         private void OnDisable() => DestroyLive();
@@ -115,12 +133,30 @@ namespace BossJam.Attacks
                 ? cachedBossFootprint
                 : (cachedBossFootprint = GetComponentInParent<GridFootprint>());
 
+        private BossController BossControllerRef =>
+            cachedBoss != null
+                ? cachedBoss
+                : (cachedBoss = GetComponentInParent<BossController>());
+
         private Vector2 HitboxAnchor(Vector2 fpSize)
         {
             var fp = BossFootprint;
             var bossCenter = fp.Anchor + fp.Footprint * 0.5f;
             var hbCenter = bossCenter + lastAimDirection * EffHitboxForwardOffset();
             return hbCenter - fpSize * 0.5f;
+        }
+
+        // Keep the anchor's footprint fully inside the grid. Without this, near-edge
+        // spawns fail Register() silently and the hitbox never deals damage.
+        private Vector2 ClampAnchor(Vector2 anchor, Vector2 fpSize)
+        {
+            var grid = BossFootprint != null ? BossFootprint.Grid : null;
+            if (grid == null) return anchor;
+            float maxX = Mathf.Max(0f, grid.Width  - fpSize.x);
+            float maxY = Mathf.Max(0f, grid.Height - fpSize.y);
+            return new Vector2(
+                Mathf.Clamp(anchor.x, 0f, maxX),
+                Mathf.Clamp(anchor.y, 0f, maxY));
         }
 
         private void SpawnTelegraph()
@@ -130,7 +166,7 @@ namespace BossJam.Attacks
             if (grid == null) return;
 
             var fpSize = EffHitboxFootprint();
-            var anchor = HitboxAnchor(fpSize);
+            var anchor = ClampAnchor(HitboxAnchor(fpSize), fpSize);
             var world = grid.FootprintCenterWorld(anchor, fpSize);
             liveTelegraph = Instantiate(config.telegraphPrefab, world, Quaternion.identity);
             var vis = liveTelegraph.transform.Find("Visual");
@@ -141,15 +177,40 @@ namespace BossJam.Attacks
             }
         }
 
-        private void SpawnHitboxAndClearTelegraph()
+        private void OnActiveEnter()
         {
             DestroyTelegraph();
+            hasStruck = false;
+            if (autoStrikeOnActive) Strike();
+        }
+
+        /// <summary>
+        /// Deal the slash damage at the current aim. Idempotent within a single
+        /// attack instance — only the first call during Active spawns a hitbox.
+        /// Call from a Unity AnimationEvent (see <see cref="GroundSlashStrikeRelay"/>)
+        /// for frame-precise timing, or leave <c>autoStrikeOnActive</c> = true to
+        /// fire at the start of the Active phase.
+        ///
+        /// The spawned hitbox is stationary — it does NOT follow the boss. It
+        /// lives for the remainder of the Active phase as a VFX window, then
+        /// the FSM destroys it on Recovery.
+        /// </summary>
+        public void Strike()
+        {
+            if (fsm.State != AttackState.Active) return;
+            if (hasStruck) return;
+            hasStruck = true;
+            SpawnHitboxAtCurrentAim();
+        }
+
+        private void SpawnHitboxAtCurrentAim()
+        {
             if (config == null || config.hitboxPrefab == null) return;
             var grid = BossFootprint != null ? BossFootprint.Grid : null;
             if (grid == null) return;
 
             var fpSize = EffHitboxFootprint();
-            var anchor = HitboxAnchor(fpSize);
+            var anchor = ClampAnchor(HitboxAnchor(fpSize), fpSize);
             var go = Instantiate(config.hitboxPrefab);
             go.SetActive(false);
 

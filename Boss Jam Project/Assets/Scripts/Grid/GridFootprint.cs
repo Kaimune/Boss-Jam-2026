@@ -47,7 +47,11 @@ namespace BossJam.GridSystem
             Vector2 anchor = initialAnchor;
             if (useTransformAsInitialAnchor)
             {
-                var cell = grid.WorldToCell(transform.position);
+                // The transform position represents the entity's visual centre,
+                // not its footprint corner. AnchorForCenter rounds back to the
+                // nearest integer anchor whose footprint centre is closest to
+                // the authored position — the round-trip drift is <= half a cell.
+                var cell = grid.AnchorForCenter(transform.position, footprint);
                 anchor = new Vector2(cell.x, cell.y);
             }
             if (!grid.Register(this, anchor))
@@ -56,10 +60,12 @@ namespace BossJam.GridSystem
                 return;
             }
             Anchor = anchor;
-            if (!useTransformAsInitialAnchor)
-            {
-                transform.position = grid.FootprintCenterWorld(Anchor, footprint);
-            }
+            // Always snap the transform to the registered anchor's centre.
+            // Previously skipped when useTransformAsInitialAnchor was true to
+            // "preserve" the authored position — but GridMover.Start then
+            // re-anchors to its own derived cell, producing a visible jump.
+            // Snap here so we share GridMover's coordinate convention.
+            transform.position = grid.FootprintCenterWorld(Anchor, footprint);
         }
 
         private void OnDisable()

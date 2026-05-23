@@ -94,6 +94,19 @@ namespace BossJam.GridSystem
                 Mathf.FloorToInt(local.z / cellSize));
         }
 
+        // Inverse of FootprintCenterWorld: given a world position that represents
+        // the centre of a footprint of the given size, return the integer anchor
+        // (bottom-left corner) that places the footprint as close as possible.
+        // Rounds to nearest — the round-trip FootprintCenterWorld(result, footprint)
+        // lands within half a cell of `worldCenter` in each axis.
+        public Vector2Int AnchorForCenter(Vector3 worldCenter, Vector2 footprint)
+        {
+            var local = transform.InverseTransformPoint(worldCenter);
+            return new Vector2Int(
+                Mathf.RoundToInt(local.x / cellSize - footprint.x * 0.5f),
+                Mathf.RoundToInt(local.z / cellSize - footprint.y * 0.5f));
+        }
+
         // ---------------------------------------------------------------- lifecycle / debug
 
         private void OnValidate()

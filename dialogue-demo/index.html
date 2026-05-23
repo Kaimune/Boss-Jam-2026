@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Boss Jam — Full Cutscene Loop Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="stage" id="stage">
+
+    <div class="arena" aria-hidden="true">
+      <div class="arena-floor"></div>
+      <div class="arena-vignette"></div>
+      <div class="arena-pillar arena-pillar--left"></div>
+      <div class="arena-pillar arena-pillar--right"></div>
+    </div>
+
+    <!-- Boss stays centered; hero spawns off-stage left, walks in, dies, despawns -->
+    <div class="actors" aria-hidden="true">
+      <div class="actor actor--boss" id="actor-boss" data-label="Minotaur"></div>
+      <div class="actor actor--hero" id="actor-hero" data-label="Theseus"></div>
+    </div>
+
+    <!-- Cinematic letterbox bars -->
+    <div class="letterbox letterbox--top" id="lbtop"></div>
+    <div class="letterbox letterbox--bottom" id="lbbot"></div>
+
+    <!-- Portrait inset -->
+    <div class="portrait" id="portrait" hidden>
+      <div class="portrait__frame">
+        <div class="portrait__cam portrait__cam--theseus" data-speaker="theseus">
+          <div class="portrait__head portrait__head--theseus"></div>
+          <div class="portrait__cam-tag">CAM · Theseus</div>
+        </div>
+        <div class="portrait__cam portrait__cam--minotaur" data-speaker="minotaur">
+          <div class="portrait__head portrait__head--minotaur"></div>
+          <div class="portrait__cam-tag">CAM · Minotaur</div>
+        </div>
+        <span class="portrait__corner portrait__corner--tl"></span>
+        <span class="portrait__corner portrait__corner--tr"></span>
+        <span class="portrait__corner portrait__corner--bl"></span>
+        <span class="portrait__corner portrait__corner--br"></span>
+      </div>
+    </div>
+
+    <!-- Dialogue box (auto-advances) -->
+    <div class="dialogue" id="dialogue" hidden>
+      <div class="dialogue__nameplate" id="nameplate">
+        <span id="nameplate-text">Minotaur</span>
+      </div>
+      <div class="dialogue__box" id="dialogue-box">
+        <p class="dialogue__text" id="dialogue-text" aria-live="polite"></p>
+      </div>
+      <p class="dialogue__hint">Hold <kbd>SPACE</kbd> to fast-forward</p>
+    </div>
+
+    <!-- Fade-to-black overlay -->
+    <div class="fade" id="fade"></div>
+
+    <!-- Tier card -->
+    <div class="tier-card" id="tier-card" hidden>
+      <div class="tier-card__label" id="tier-label">TIER 2</div>
+      <div class="tier-card__debuff" id="tier-debuff">Hero gains +30% attack speed</div>
+    </div>
+
+    <!-- Game-over flourish (player lost — boss died) -->
+    <div class="ending" id="ending" hidden>
+      <div class="ending__title">DEFEAT</div>
+      <div class="ending__sub">The labyrinth has fallen.</div>
+      <button class="ending__btn" id="ending-replay">Retry from current tier</button>
+    </div>
+
+    <!-- HUD (mock health bars during combat) -->
+    <div class="hud" id="hud" hidden>
+      <div class="hud__bar hud__bar--boss"><span id="bossHp" style="width: 100%"></span><label>Boss</label></div>
+      <div class="hud__bar hud__bar--hero"><span id="heroHp" style="width: 100%"></span><label>Hero</label></div>
+    </div>
+
+    <!-- Phase tag -->
+    <div class="phase-tag" id="phase-tag">Phase: idle</div>
+
+    <!-- Demo controls -->
+    <div class="controls" id="controls">
+      <div class="controls__row">
+        <button id="replay-btn" class="ctrl-btn">▶ Restart loop</button>
+        <button id="kill-hero-btn" class="ctrl-btn">⚔ Kill hero now</button>
+        <button id="kill-boss-btn" class="ctrl-btn">💀 Kill boss now</button>
+      </div>
+      <div class="controls__row">
+        <label class="toggle"><input type="checkbox" id="sfx-toggle" checked /> Letter SFX</label>
+        <label>Walk speed
+          <input type="range" id="walk-speed" min="200" max="2000" step="100" value="1100" />
+        </label>
+        <label>Type speed
+          <input type="range" id="speed-range" min="10" max="80" step="2" value="28" />
+        </label>
+      </div>
+      <p class="controls__legend">Hold SPACE during dialogue = fast forward · auto-advances between lines · this is a mock</p>
+    </div>
+  </div>
+
+  <script src="dialogue.js"></script>
+</body>
+</html>

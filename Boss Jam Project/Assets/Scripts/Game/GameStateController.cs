@@ -11,6 +11,7 @@ namespace BossJam.Game
     public enum GameState
     {
         Startup,
+        Intermediate,    // difficulty card between title screen and cutscene; timescale 0
         CutsceneIntro,   // letterbox + hero walks in
         Dialogue,        // pre-fight typewriter; timescale 0
         Playing,
@@ -97,9 +98,9 @@ namespace BossJam.Game
                 Debug.LogWarning($"{nameof(GameStateController)}: dialogueRig/Controller missing — dialogue→Playing transition will not run.");
             }
 
-            // Mid-run scene reload (e.g. after a hero-death outro): skip the
-            // start screen and roll straight into the next wave's cutscene.
-            if (GameSession.IsMidRun) Begin();
+            // Every wave goes through the start screen — even mid-run. The
+            // start screen handles the tier transition + Press SPACE prompt
+            // and then calls Begin() itself.
         }
 
         private void OnDisable()
@@ -147,7 +148,25 @@ namespace BossJam.Game
         public void Begin()
         {
             if (State != GameState.Startup) return;
+            EnterIntermediate();
+        }
+
+        // Called by IntermediateScreenUI after the player presses SPACE on the
+        // difficulty card. Drives the next transition into the cutscene.
+        public void AdvanceFromIntermediate()
+        {
+            if (State != GameState.Intermediate) return;
             EnterCutsceneIntro();
+        }
+
+        private void EnterIntermediate()
+        {
+            // Time stays paused — Startup → Intermediate is purely a UI hop
+            // and the boss must remain disabled.
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
+            State = GameState.Intermediate;
+            StateChanged?.Invoke(State);
         }
 
         private void EnterCutsceneIntro()

@@ -50,6 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   footprint: {x: 1, y: 1}
   initialAnchor: {x: 23, y: 23}
+  useTransformAsInitialAnchor: 1
   grid: {fileID: 0}
 --- !u!114 &8988924489543744632
 MonoBehaviour:

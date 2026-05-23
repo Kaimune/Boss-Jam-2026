@@ -1,0 +1,36 @@
+{
+  "intro_wave_1": [
+    { "speaker": "minotaur", "text": "So... the labyrinth spits up another lamb." },
+    { "speaker": "theseus",  "text": "I came to finish what Athens started." },
+    { "speaker": "minotaur", "text": "Brave words. Let's see if the sword behind them is just as loud." }
+  ],
+  "intro_wave_2": [
+    { "speaker": "minotaur", "text": "Back again? Or did they send another one?" },
+    { "speaker": "theseus",  "text": "There are always more of us." },
+    { "speaker": "minotaur", "text": "Good. I was getting hungry." }
+  ],
+  "intro_wave_3": [
+    { "speaker": "minotaur", "text": "You don't even look like the others anymore." },
+    { "speaker": "theseus",  "text": "We bleed the same." },
+    { "speaker": "minotaur", "text": "...so we do." }
+  ],
+  "hero_death_wave_1": [
+    { "speaker": "minotaur", "text": "Another bone for the pile." }
+  ],
+  "hero_death_wave_2": [
+    { "speaker": "minotaur", "text": "Athens runs out of sons before I run out of patience." }
+  ],
+  "hero_death_wave_3": [
+    { "speaker": "minotaur", "text": "Pathetic." }
+  ],
+  "game_over": [
+    { "speaker": "minotaur", "text": "...I can't... feel my legs..." },
+    { "speaker": "theseus",  "text": "It's over. The labyrinth is empty now." },
+    { "speaker": "minotaur", "text": "Empty? No. The labyrinth IS me." }
+  ],
+  "tiers": [
+    { "label": "TIER 2", "debuff": "Hero gains +30% attack speed" },
+    { "label": "TIER 3", "debuff": "Hero gains a third dash" },
+    { "label": "TIER 4 — FINAL", "debuff": "Hero deals double damage" }
+  ]
+}

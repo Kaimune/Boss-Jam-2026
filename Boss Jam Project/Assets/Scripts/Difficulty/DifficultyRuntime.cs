@@ -81,6 +81,25 @@ namespace BossJam.Difficulty
         public DebuffEntry CurrentTierEntry =>
             runState != null ? runState.currentTierEntry : null;
 
+        public string PreviousTierName =>
+            runState != null ? runState.previousTierName : ImmortalTierName;
+        public DebuffEntry PreviousTierEntry =>
+            runState != null ? runState.previousTierEntry : null;
+
+        /// <summary>
+        /// Most recently applied debuff, or null on wave 1 (nothing applied yet).
+        /// The start screen uses this for the "what changed" line.
+        /// </summary>
+        public DebuffEntry LastAppliedEntry
+        {
+            get
+            {
+                if (runState == null) return null;
+                int n = runState.appliedEntries.Count;
+                return n > 0 ? runState.appliedEntries[n - 1] : null;
+            }
+        }
+
         // ── Cutscene-facing surface ──────────────────────────────────
         /// <summary>1-based wave counter. Starts at 1, increments inside ApplyNextDebuff.</summary>
         public int CurrentWaveIndex =>
@@ -156,6 +175,14 @@ namespace BossJam.Difficulty
             if (AppliedCount >= profile.debuffs.Count) return;
 
             var entry = profile.debuffs[AppliedCount];
+
+            // Snapshot the pre-application tier so the next-wave start screen
+            // can animate from the old label to the new one. Unconditional so
+            // debuffs that inherit the previous tierName still get a stable
+            // "previous" reference.
+            runState.previousTierName = runState.currentTierName;
+            runState.previousTierEntry = runState.currentTierEntry;
+
             runState.appliedEntries.Add(entry);
             entry.effect?.Apply(this);
 
@@ -211,6 +238,8 @@ namespace BossJam.Difficulty
         {
             float adds = 0f;
             float muls = 1f;
+            bool hasOverride = false;
+            float overrideValue = 0f;
             for (int i = 0; i < applied.Count; i++)
             {
                 var m = applied[i];
@@ -218,9 +247,14 @@ namespace BossJam.Difficulty
                 if (m.attackId.Length > 0 && m.attackId != attackId) continue;
                 if (m.extensionKey.Length > 0 && m.extensionKey != extensionKey) continue;
 
-                if (m.op == Op.Mul) muls *= m.value;
-                else adds += m.value;
+                switch (m.op)
+                {
+                    case Op.Mul: muls *= m.value; break;
+                    case Op.Add: adds += m.value; break;
+                    case Op.Override: hasOverride = true; overrideValue = m.value; break;
+                }
             }
+            if (hasOverride) return overrideValue;
             return (baseValue + adds) * muls;
         }
 
