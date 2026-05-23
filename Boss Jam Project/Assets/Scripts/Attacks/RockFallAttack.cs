@@ -163,7 +163,7 @@ namespace BossJam.Attacks
             var anchor = new Vector2(UnityEngine.Random.Range(0f, maxX), UnityEngine.Random.Range(0f, maxY));
             var worldImpact = Grid.FootprintCenterWorld(anchor, fp);
 
-            var telegraph = SpawnTelegraph(worldImpact, fp);
+            var telegraph = SpawnTelegraph(worldImpact, fp, anchor);
             var fallingRock = SpawnFallingRock(worldImpact);
 
             var now = Time.time;
@@ -182,7 +182,7 @@ namespace BossJam.Attacks
             });
         }
 
-        private GameObject SpawnTelegraph(Vector3 worldImpact, Vector2 fp)
+        private GameObject SpawnTelegraph(Vector3 worldImpact, Vector2 fp, Vector2 anchor)
         {
             if (config.telegraphPrefab == null) return null;
             var t = Instantiate(config.telegraphPrefab, worldImpact, Quaternion.identity);
@@ -192,6 +192,9 @@ namespace BossJam.Attacks
                 var s = Grid.CellSize * fp;
                 vis.localScale = new Vector3(s.x, s.y, 1f);
             }
+            // Publish the impact rect as a Hazard so the hero AI avoids it.
+            var hazard = t.GetComponent<Hazard>() ?? t.AddComponent<Hazard>();
+            hazard.Configure(anchor, fp);
             return t;
         }
 
@@ -250,6 +253,11 @@ namespace BossJam.Attacks
 
             var hbFootprint = go.GetComponent<GridFootprint>();
             if (hbFootprint != null) hbFootprint.Configure(anchor, fp, Grid);
+
+            // Publish the hitbox rect as a Hazard alongside its GridFootprint
+            // so the hero AI keeps avoiding the impact zone post-impact.
+            var hazard = go.GetComponent<Hazard>() ?? go.AddComponent<Hazard>();
+            hazard.Configure(anchor, fp);
 
             var hb = go.GetComponent<AttackHitbox>();
             if (hb != null) hb.SetDamage(EffI(Target.BossAttackDamage, config.damage));

@@ -124,6 +124,10 @@ namespace BossJam.Attacks
             var fpSize = EffHitboxFootprint();
             var anchor = ClampAnchor(HitboxAnchor(fpSize), fpSize);
             liveTelegraph.transform.position = grid.FootprintCenterWorld(anchor, fpSize);
+            // Keep the hazard rect glued to the telegraph each frame so hero
+            // perception sees it move with the boss.
+            var hazard = liveTelegraph.GetComponent<Hazard>();
+            if (hazard != null) hazard.Configure(anchor, fpSize);
         }
 
         private void OnDisable() => DestroyLive();
@@ -176,6 +180,8 @@ namespace BossJam.Attacks
                 var s = grid.CellSize * fpSize;
                 vis.localScale = new Vector3(s.x, s.y, 1f);
             }
+            var hazard = liveTelegraph.GetComponent<Hazard>() ?? liveTelegraph.AddComponent<Hazard>();
+            hazard.Configure(anchor, fpSize);
         }
 
         private void OnActiveEnter()
@@ -217,6 +223,9 @@ namespace BossJam.Attacks
 
             var fp = go.GetComponent<GridFootprint>();
             if (fp != null) fp.Configure(anchor, fpSize, grid);
+
+            var hazard = go.GetComponent<Hazard>() ?? go.AddComponent<Hazard>();
+            hazard.Configure(anchor, fpSize);
 
             var hb = go.GetComponent<AttackHitbox>();
             if (hb != null) hb.SetDamage(EffI(Target.BossAttackDamage, config.damage));
