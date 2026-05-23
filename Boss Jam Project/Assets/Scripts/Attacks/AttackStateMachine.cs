@@ -12,16 +12,34 @@ namespace BossJam.Attacks
     /// All per-state data — next-on-timer-end, base duration, movement-lock — lives in the
     /// `phases` dictionary. Every state appears exactly once; there are no switch statements.
     /// </summary>
+    /// <summary>
+    /// Snapshot of the per-phase durations and movement locks for one swing.
+    /// Built by the consuming IAttack at TryStart time from its AttackConfig
+    /// + the difficulty runtime, then handed to the state machine. Frozen for
+    /// the duration of the swing — a debuff applied mid-swing only affects the
+    /// next swing.
+    /// </summary>
+    public struct PhaseTimings
+    {
+        public float windupSeconds;
+        public float activeSeconds;
+        public float recoverySeconds;
+        public float cooldownSeconds;
+        public bool  lockMovementDuringWindup;
+        public bool  lockMovementDuringActive;
+        public bool  lockMovementDuringRecovery;
+    }
+
     public sealed class AttackStateMachine
     {
         // ---------- Per-phase descriptor ----------
         private readonly struct PhaseInfo
         {
             public readonly AttackState NextOnTimerEnd;
-            public readonly Func<AttackConfig, float> DurationSec;
-            public readonly Func<AttackConfig, bool>  LocksMovement;
+            public readonly Func<PhaseTimings, float> DurationSec;
+            public readonly Func<PhaseTimings, bool>  LocksMovement;
 
-            public PhaseInfo(AttackState next, Func<AttackConfig, float> dur, Func<AttackConfig, bool> locks)
+            public PhaseInfo(AttackState next, Func<PhaseTimings, float> dur, Func<PhaseTimings, bool> locks)
             { NextOnTimerEnd = next; DurationSec = dur; LocksMovement = locks; }
         }
 
@@ -36,24 +54,25 @@ namespace BossJam.Attacks
                     locks: _ => false) },
                 { AttackState.Windup, new PhaseInfo(
                     next:  AttackState.Active,
-                    dur:   c => c.windupSeconds,
-                    locks: c => c.lockMovementDuringWindup) },
+                    dur:   t => t.windupSeconds,
+                    locks: t => t.lockMovementDuringWindup) },
                 { AttackState.Active, new PhaseInfo(
                     next:  AttackState.Recovery,
-                    dur:   c => c.activeSeconds,
-                    locks: c => c.lockMovementDuringActive) },
+                    dur:   t => t.activeSeconds,
+                    locks: t => t.lockMovementDuringActive) },
                 { AttackState.Recovery, new PhaseInfo(
                     next:  AttackState.Cooldown,
-                    dur:   c => c.recoverySeconds,
-                    locks: c => c.lockMovementDuringRecovery) },
+                    dur:   t => t.recoverySeconds,
+                    locks: t => t.lockMovementDuringRecovery) },
                 { AttackState.Cooldown, new PhaseInfo(
                     next:  AttackState.Idle,
-                    dur:   c => c.cooldownSeconds,
+                    dur:   t => t.cooldownSeconds,
                     locks: _ => false) },
             };
 
         // ---------- Runtime state ----------
-        private AttackConfig config;
+        private PhaseTimings timings;
+        private bool hasTimings;
         private float tickScale = 1f;
 
         private AttackState state = AttackState.Idle;
@@ -68,13 +87,13 @@ namespace BossJam.Attacks
         {
             get
             {
-                if (config == null) return 0f;
-                var total = phases[state].DurationSec(config) * tickScale;
+                if (!hasTimings) return 0f;
+                var total = phases[state].DurationSec(timings) * tickScale;
                 return total > 0f ? Mathf.Clamp01(1f - (timer / total)) : 0f;
             }
         }
 
-        public bool LocksMovement => config != null && phases[state].LocksMovement(config);
+        public bool LocksMovement => hasTimings && phases[state].LocksMovement(timings);
 
         public event Action<AttackState, AttackState> StateChanged;
 
@@ -94,12 +113,17 @@ namespace BossJam.Attacks
                 onEnter[s] = existing - handler;
         }
 
-        public void Init(AttackConfig c) => config = c;
+        /// <summary>
+        /// Provide the per-phase durations + movement locks for the next swing.
+        /// Call this every TryStart so the snapshot reflects the current debuff state.
+        /// </summary>
+        public void Init(PhaseTimings t) { timings = t; hasTimings = true; }
+
         public void SetTickScale(float m) => tickScale = Mathf.Max(0.0001f, m);
 
         public bool TryStart()
         {
-            if (config == null) return false;
+            if (!hasTimings) return false;
             if (state != AttackState.Idle) return false;
             EnterPhase(AttackState.Windup);
             return true;
@@ -135,7 +159,7 @@ namespace BossJam.Attacks
         {
             var prev = state;
             state = next;
-            timer = (config != null ? phases[next].DurationSec(config) : 0f) * tickScale;
+            timer = (hasTimings ? phases[next].DurationSec(timings) : 0f) * tickScale;
             StateChanged?.Invoke(prev, next);
             if (onEnter.TryGetValue(next, out var cb)) cb?.Invoke();
         }

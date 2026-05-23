@@ -1,8 +1,8 @@
 # Context for Claude Code
 
 ## Project layout
-- **This project (`Boss GameJam/`) is the NEW / active Unity project.** Unity Editor is opened on this one.
-- A sibling project at `../Boss-Jam-2026/Boss Jam Project/` is the **OLD** project that's being phased out. Ignore it unless explicitly asked.
+- **This project (`Boss-Jam-2026/Boss Jam Project/`) is the active Unity project.** Unity Editor is opened on this one.
+- The "Boss GameJam" sibling referenced in earlier notes no longer exists on disk; this directory absorbed all the active work.
 
 ## Unity MCP setup
 - Unity MCP for Unity (CoplayDev) v9.6.8 is running, serving HTTP on `http://127.0.0.1:8080/mcp`.
@@ -13,10 +13,8 @@
   ```
   After creating it, restart Claude Code and approve the project-scoped server when prompted.
 
-## Asset transfer status (as of 2026-05-15)
-- A previous session was mistakenly run from the OLD project's directory.
-- Asset diff (Boss-Jam-2026 → Boss GameJam) showed **nothing missing**. The new project already contains everything from the old, plus extras.
-- No further asset copying is needed.
+## Asset status
+- Single source of truth lives in this directory. No "old" / "new" split anymore.
 
 ## Known console state
 - 5 "missing script" warnings present. Likely stale references — investigate before assuming they're harmless if they affect gameplay.

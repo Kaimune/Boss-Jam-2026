@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fb8e917ca7684ca999ed6184863be61, type: 3}
+  m_Name: DifficultyProfile
+  m_EditorClassIdentifier: 
+  gameConfig: {fileID: 11400000, guid: c8e18a3215fd94a9888840cc1b961b8e, type: 2}
+  heroConfig: {fileID: 11400000, guid: 4978d48ee606748c89f956fe01dc2978, type: 2}
+  attackConfigs:
+  - {fileID: 11400000, guid: 1520cfe2c1ec343daa5c83de20106b3c, type: 2}
+  - {fileID: 11400000, guid: 72d1682011f5647f49ae278891074a36, type: 2}
+  - {fileID: 11400000, guid: a7c9e3b18f24d44f0a5c8de7b40b6c2e, type: 2}
+  debuffs:
+  - name: Quickening
+    description: Boss acts 15% faster.
+    icon: {fileID: 0}
+    tint: {r: 1, g: 0.85, b: 0.5, a: 1}
+    tierName: Tier 1 Awakened
+    tierDescription: The boss begins to move with purpose.
+    effect:
+      rid: 5190052726517006752
+  - name: Hardened
+    description: Boss gains +2 max HP.
+    icon: {fileID: 0}
+    tint: {r: 0.7, g: 0.9, b: 1, a: 1}
+    tierName: Tier 2 Hardened
+    tierDescription: Its hide thickens.
+    effect:
+      rid: 5190052726517006753
+  - name: Frenzy
+    description: Boss acts 25% faster and gains +3 HP.
+    icon: {fileID: 0}
+    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
+    tierName: Tier 3 Frenzied
+    tierDescription: Pain becomes fuel.
+    effect:
+      rid: 5190052726517006754
+  references:
+    version: 2
+    RefIds:
+    - rid: 5190052726517006752
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 11
+        op: 0
+        value: 1.15
+        attackId: 
+        extensionKey: 
+    - rid: 5190052726517006753
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 10
+        op: 1
+        value: 2
+        attackId: 
+        extensionKey: 
+    - rid: 5190052726517006754
+      type: {class: CompositeEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        effects:
+        - rid: 5190052726517006755
+        - rid: 5190052726517006756
+    - rid: 5190052726517006755
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 11
+        op: 0
+        value: 1.25
+        attackId: 
+        extensionKey: 
+    - rid: 5190052726517006756
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 10
+        op: 1
+        value: 3
+        attackId: 
+        extensionKey: 

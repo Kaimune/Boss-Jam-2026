@@ -1,4 +1,5 @@
 using System;
+using BossJam.Difficulty;
 using BossJam.GridSystem;
 using BossJam.Player;
 using UnityEngine;
@@ -25,6 +26,30 @@ namespace BossJam.Attacks
         private GridMover cachedMover;
         private float tickScale = 1f;
 
+        private DifficultyRuntime rt;
+        private float Eff(Target t, float b, string ext = null)
+            => rt != null ? rt.Get(t, b, config != null ? config.id : null, ext) : b;
+        private int EffI(Target t, int b, string ext = null)
+            => rt != null ? rt.GetInt(t, b, config != null ? config.id : null, ext) : b;
+        // Snapshot effective timings + locks for one swing. Called per TryStart.
+        private PhaseTimings BuildTimings() => new PhaseTimings
+        {
+            windupSeconds              = Eff(Target.BossAttackWindupSeconds,    config.windupSeconds),
+            activeSeconds              = Eff(Target.BossAttackActiveSeconds,    config.activeSeconds),
+            recoverySeconds            = Eff(Target.BossAttackRecoverySeconds,  config.recoverySeconds),
+            cooldownSeconds            = Eff(Target.BossAttackCooldownSeconds,  config.cooldownSeconds),
+            lockMovementDuringWindup   = config.lockMovementDuringWindup,
+            lockMovementDuringActive   = config.lockMovementDuringActive,
+            lockMovementDuringRecovery = config.lockMovementDuringRecovery,
+        };
+        private Vector2 EffHitboxFootprint()
+        {
+            if (rt == null || config == null) return config != null ? config.hitboxFootprint : Vector2.one;
+            return new Vector2(
+                Eff(Target.BossAttackHitboxFootprintX, config.hitboxFootprint.x),
+                Eff(Target.BossAttackHitboxFootprintY, config.hitboxFootprint.y));
+        }
+
         // ---- IAttack forwarders ----
         public AttackConfig Config => config;
         public AttackState State => fsm.State;
@@ -40,8 +65,11 @@ namespace BossJam.Attacks
 
         public bool TryStart(Vector3 aimWorldPoint)
         {
+            if (config == null) return false;
             lastAim = aimWorldPoint;
             chargeDirection = AimDirectionFromBoss();
+            fsm.Init(BuildTimings());
+            rt?.RaiseAttackStarted(config);
             return fsm.TryStart();
         }
 
@@ -60,7 +88,8 @@ namespace BossJam.Attacks
         // ---- Lifecycle ----
         private void Awake()
         {
-            fsm.Init(config);
+            rt = FindFirstObjectByType<DifficultyRuntime>();
+            if (config != null) fsm.Init(BuildTimings());
             fsm.OnEnter(AttackState.Windup,   SpawnTelegraph);
             fsm.OnEnter(AttackState.Recovery, SpawnHitboxAndClearTelegraph);
             fsm.OnEnter(AttackState.Cooldown, DestroyHitbox);
@@ -100,7 +129,8 @@ namespace BossJam.Attacks
             if (mover == null || config == null) return;
             var before = mover.AnchorPosition;
 
-            var delta = chargeDirection * (config.chargeCellsPerSecond * tickScale * Time.deltaTime);
+            float cps = Eff(Target.AttackExtension, config.chargeCellsPerSecond, ext: "chargeCellsPerSecond");
+            var delta = chargeDirection * (cps * tickScale * Time.deltaTime);
             var target = before + delta;
 
             // Try the combined move; if blocked, axis-split to slide along walls.
@@ -116,21 +146,23 @@ namespace BossJam.Attacks
         }
 
         // Hitbox spawns at boss's CURRENT center (after charge has moved them).
-        private Vector2 HitboxAnchorAtBoss()
+        private Vector2 HitboxAnchorAtBoss(Vector2 fpSize)
         {
             var fp = BossFootprint;
             var bossCenter = fp.Anchor + fp.Footprint * 0.5f;
-            return bossCenter - config.hitboxFootprint * 0.5f;
+            return bossCenter - fpSize * 0.5f;
         }
 
         // Telegraph shows the PROJECTED end position based on charge speed × active duration.
-        private Vector2 TelegraphAnchor()
+        private Vector2 TelegraphAnchor(Vector2 fpSize)
         {
             var fp = BossFootprint;
-            var estDistance = config.chargeCellsPerSecond * config.activeSeconds * tickScale;
+            float cps = Eff(Target.AttackExtension, config.chargeCellsPerSecond, ext: "chargeCellsPerSecond");
+            float activeSec = Eff(Target.BossAttackActiveSeconds, config.activeSeconds);
+            var estDistance = cps * activeSec * tickScale;
             var bossCenter = fp.Anchor + fp.Footprint * 0.5f;
             var endCenter = bossCenter + chargeDirection * estDistance;
-            return endCenter - config.hitboxFootprint * 0.5f;
+            return endCenter - fpSize * 0.5f;
         }
 
         private void SpawnTelegraph()
@@ -139,13 +171,14 @@ namespace BossJam.Attacks
             var grid = BossFootprint != null ? BossFootprint.Grid : null;
             if (grid == null) return;
 
-            var anchor = TelegraphAnchor();
-            var world = grid.FootprintCenterWorld(anchor, config.hitboxFootprint);
+            var fpSize = EffHitboxFootprint();
+            var anchor = TelegraphAnchor(fpSize);
+            var world = grid.FootprintCenterWorld(anchor, fpSize);
             liveTelegraph = Instantiate(config.telegraphPrefab, world, Quaternion.identity);
             var vis = liveTelegraph.transform.Find("Visual");
             if (vis != null)
             {
-                var s = grid.CellSize * config.hitboxFootprint;
+                var s = grid.CellSize * fpSize;
                 vis.localScale = new Vector3(s.x, s.y, 1f);
             }
         }
@@ -157,22 +190,23 @@ namespace BossJam.Attacks
             var grid = BossFootprint != null ? BossFootprint.Grid : null;
             if (grid == null) return;
 
-            var anchor = HitboxAnchorAtBoss();
+            var fpSize = EffHitboxFootprint();
+            var anchor = HitboxAnchorAtBoss(fpSize);
             var go = Instantiate(config.hitboxPrefab);
             go.SetActive(false);
 
             var fp = go.GetComponent<GridFootprint>();
-            if (fp != null) fp.Configure(anchor, config.hitboxFootprint, grid);
+            if (fp != null) fp.Configure(anchor, fpSize, grid);
 
             var hb = go.GetComponent<AttackHitbox>();
-            if (hb != null) hb.SetDamage(config.damage);
+            if (hb != null) hb.SetDamage(EffI(Target.BossAttackDamage, config.damage));
 
-            go.transform.position = grid.FootprintCenterWorld(anchor, config.hitboxFootprint);
+            go.transform.position = grid.FootprintCenterWorld(anchor, fpSize);
 
             var vis = go.transform.Find("Visual");
             if (vis != null)
             {
-                var s = grid.CellSize * config.hitboxFootprint;
+                var s = grid.CellSize * fpSize;
                 vis.localScale = new Vector3(s.x, vis.localScale.y, s.y);
             }
 

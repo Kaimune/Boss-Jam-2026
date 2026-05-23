@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using BossJam.Attacks;
+using BossJam.Difficulty;
+using BossJam.Game;
 using BossJam.GridSystem;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,10 +19,19 @@ namespace BossJam.Player
         [Header("HP")]
         [SerializeField, Min(1), FormerlySerializedAs("hp")] private int maxHp = 10;
         private int currentHp;
+        private int spawnedMaxHp;
 
-        public int MaxHp => maxHp;
+        public int MaxHp => spawnedMaxHp;
         public int CurrentHp => currentHp;
+        public bool IsDead => isDead;
         public event System.Action<int, int> HpChanged;
+        public event System.Action BossDied;
+
+        private bool isDead;
+
+        private DifficultyRuntime rt;
+        private float Eff(Target t, float b) => rt != null ? rt.Get(t, b) : b;
+        private int   EffI(Target t, int b)  => rt != null ? rt.GetInt(t, b) : b;
 
         [Header("Input")]
         [Tooltip("Below this magnitude the stick is treated as released.")]
@@ -38,7 +49,7 @@ namespace BossJam.Player
         private GridFootprint cachedFootprint;
         public GridFootprint Footprint =>
             cachedFootprint != null ? cachedFootprint : (cachedFootprint = GetComponent<GridFootprint>());
-        public float TickMultiplier => tickMultiplier;
+        public float TickMultiplier => Eff(Target.BossTickMultiplier, tickMultiplier);
         public Team Team => Team.Boss;
 
         public Verdict OnEnteredBy(IGridEntity mover)
@@ -75,16 +86,44 @@ namespace BossJam.Player
 
         public void TakeDamage(int amount, IGridEntity source)
         {
+            if (isDead) return;
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
-            HpChanged?.Invoke(currentHp, maxHp);
-            if (currentHp <= 0) Debug.Log("Boss would die here — no death handling yet.");
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            rt?.RaiseBossDamaged(amount, source);
+            if (currentHp <= 0) Die();
+        }
+
+        private void Die()
+        {
+            isDead = true;
+            Debug.Log("Boss died — entering GameOver.");
+            BossDied?.Invoke();
+            // GameStateController handles the pause + GameOver screen; the
+            // boss is brought back via Respawn() when the player presses Space.
+            if (gameState != null) gameState.TriggerGameOver();
+            else Respawn(); // fallback if no controller in scene
+        }
+
+        /// <summary>
+        /// Restore the boss to a fresh state for another life. Re-snapshots
+        /// MaxHp through the difficulty runtime so any debuffs that landed
+        /// during the previous life are baked into the new spawn.
+        /// </summary>
+        public void Respawn()
+        {
+            isDead = false;
+            spawnedMaxHp = EffI(Target.BossMaxHp, maxHp);
+            currentHp = spawnedMaxHp;
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            enabled = true;
         }
 
         private void ApplyTick()
         {
+            float tickMul = Eff(Target.BossTickMultiplier, tickMultiplier);
             foreach (var t in GetComponentsInChildren<ITickScalable>(includeInactive: true))
-                t.ApplyTick(tickMultiplier);
+                t.ApplyTick(tickMul);
         }
 
         private void OnValidate() => ApplyTick();
@@ -99,9 +138,23 @@ namespace BossJam.Player
         private Vector3 aimForward = Vector3.forward;
         public Vector3 AimForward => aimForward;
 
+        private GameStateController gameState;
+
         private void Awake()
         {
-            currentHp = maxHp;
+            rt = FindFirstObjectByType<DifficultyRuntime>();
+            if (rt != null) rt.Boss = this;
+
+            // Find the controller now, but defer registration until after
+            // InputActions are built — the setter on Boss can flip our
+            // enabled flag, which would fire OnDisable before init.
+            gameState = FindFirstObjectByType<GameStateController>();
+
+            // Snapshot effective MaxHp at spawn — debuffs that later raise/lower
+            // BossMaxHp don't retroactively change the live boss's max.
+            spawnedMaxHp = EffI(Target.BossMaxHp, maxHp);
+            currentHp = spawnedMaxHp;
+
             mover = GetComponent<GridMover>();
             moveAction = BuildMoveAction();
             primaryAction   = new InputAction(name: "AttackPrimary",   type: InputActionType.Button, binding: "<Mouse>/leftButton");
@@ -111,6 +164,10 @@ namespace BossJam.Player
             facingTarget = Quaternion.Euler(0f, modelYawOffset, 0f);
             visual.rotation = facingTarget;
             GetComponentsInChildren<IAttack>(includeInactive: true, attacks);
+
+            // Safe to register now — if the setter flips enabled=false, the
+            // resulting OnDisable will find the InputActions ready to disable.
+            if (gameState != null) gameState.Boss = this;
         }
 
         private void OnEnable()
@@ -132,11 +189,13 @@ namespace BossJam.Player
 
         private void Start()
         {
-            HpChanged?.Invoke(currentHp, maxHp);
+            HpChanged?.Invoke(currentHp, spawnedMaxHp);
         }
 
         private void OnDestroy()
         {
+            if (rt != null && rt.Boss == this) rt.Boss = null;
+            if (gameState != null && gameState.Boss == this) gameState.Boss = null;
             moveAction?.Dispose();
             primaryAction?.Dispose();
             secondaryAction?.Dispose();
