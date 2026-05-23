@@ -23,14 +23,19 @@ namespace BossJam.Difficulty
     {
         [SerializeField] private DifficultyProfile profile;
 
+        [Tooltip("Persists wave/applied debuffs across scene reloads. The runtime " +
+                 "rebuilds its modifier ledger from this on Awake.")]
+        [SerializeField] private RunState runState;
+
         public DifficultyProfile Profile => profile;
+        public RunState State => runState;
 
-        // ── Applied ledger ───────────────────────────────────────────
+        // ── Modifier ledger (rebuilt on Awake from runState.appliedEntries) ──
         private readonly List<Modifier> applied = new();
-        private readonly List<DebuffEntry> appliedEntries = new();
 
-        public int AppliedCount => appliedEntries.Count;
-        public IReadOnlyList<DebuffEntry> Applied => appliedEntries;
+        public int AppliedCount => runState != null ? runState.appliedEntries.Count : 0;
+        public IReadOnlyList<DebuffEntry> Applied =>
+            runState != null ? runState.appliedEntries : System.Array.Empty<DebuffEntry>();
         public DebuffEntry NextPreview =>
             (profile != null && AppliedCount < profile.debuffs.Count)
                 ? profile.debuffs[AppliedCount]
@@ -71,12 +76,15 @@ namespace BossJam.Difficulty
         // kill sees this string.
         public const string ImmortalTierName = "Immortal";
 
-        public string CurrentTierName { get; private set; } = ImmortalTierName;
-        public DebuffEntry CurrentTierEntry { get; private set; }
+        public string CurrentTierName =>
+            runState != null ? runState.currentTierName : ImmortalTierName;
+        public DebuffEntry CurrentTierEntry =>
+            runState != null ? runState.currentTierEntry : null;
 
         // ── Cutscene-facing surface ──────────────────────────────────
         /// <summary>1-based wave counter. Starts at 1, increments inside ApplyNextDebuff.</summary>
-        public int CurrentWaveIndex { get; private set; } = 1;
+        public int CurrentWaveIndex =>
+            runState != null ? runState.currentWaveIndex : 1;
 
         /// <summary>Tier label shown on the tier card during the hero-death cutscene.</summary>
         public string NextTierLabel => $"TIER {CurrentWaveIndex + 1}";
@@ -102,6 +110,25 @@ namespace BossJam.Difficulty
         }
 
         // ── Wire-up ──────────────────────────────────────────────────
+        private void Awake()
+        {
+            if (runState == null)
+            {
+                Debug.LogWarning(
+                    $"{nameof(DifficultyRuntime)}: no RunState assigned — wave/debuff state will not persist.",
+                    this);
+                return;
+            }
+
+            // Rebuild the modifier ledger from persisted debuffs. The scene
+            // was just reloaded, so `applied` is empty; replay each entry's
+            // effect so consumers see the correct effective values.
+            for (int i = 0; i < runState.appliedEntries.Count; i++)
+            {
+                runState.appliedEntries[i]?.effect?.Apply(this);
+            }
+        }
+
         private void OnEnable()
         {
             HeroEnemy.HeroKilledStatic += OnHeroKilled;
@@ -125,29 +152,29 @@ namespace BossJam.Difficulty
         /// </summary>
         public void ApplyNextDebuff()
         {
-            if (profile == null) return;
+            if (profile == null || runState == null) return;
             if (AppliedCount >= profile.debuffs.Count) return;
 
             var entry = profile.debuffs[AppliedCount];
-            appliedEntries.Add(entry);
+            runState.appliedEntries.Add(entry);
             entry.effect?.Apply(this);
 
             // Promote tier if this entry names a new one. Blank tierName
             // inherits the previous label (lets multiple debuffs share a tier).
             bool tierPromoted = false;
-            if (!string.IsNullOrEmpty(entry.tierName) && entry.tierName != CurrentTierName)
+            if (!string.IsNullOrEmpty(entry.tierName) && entry.tierName != runState.currentTierName)
             {
-                CurrentTierName = entry.tierName;
-                CurrentTierEntry = entry;
+                runState.currentTierName = entry.tierName;
+                runState.currentTierEntry = entry;
                 tierPromoted = true;
             }
 
             DebuffApplied?.Invoke(entry);
             Debug.Log($"[Difficulty] Applied #{AppliedCount} '{entry.name}' — {entry.description}");
 
-            if (tierPromoted) TierChanged?.Invoke(CurrentTierEntry);
+            if (tierPromoted) TierChanged?.Invoke(runState.currentTierEntry);
 
-            CurrentWaveIndex++;
+            runState.currentWaveIndex++;
         }
 
         public bool HasNextDebuff =>

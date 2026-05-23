@@ -4,6 +4,7 @@ using BossJam.Difficulty;
 using BossJam.Dialogue;
 using BossJam.Player;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BossJam.Game
 {
@@ -73,18 +74,42 @@ namespace BossJam.Game
             runtime = FindFirstObjectByType<DifficultyRuntime>();
         }
 
+        private DialogueController subscribedController;
+
         private void OnEnable()
         {
             if (runtime != null) runtime.HeroKilled += OnHeroKilled;
+        }
+
+        private void Start()
+        {
+            // Wire dialogue Finished here, not in OnEnable: by Start time every
+            // other script's Awake has run, so DialogueRig.Controller is set.
+            // OnEnable runs before sibling Awakes complete in some edit-time
+            // configurations, which silently dropped the subscription.
             if (dialogueRig != null && dialogueRig.Controller != null)
-                dialogueRig.Controller.Finished += OnDialogueFinished;
+            {
+                subscribedController = dialogueRig.Controller;
+                subscribedController.Finished += OnDialogueFinished;
+            }
+            else
+            {
+                Debug.LogWarning($"{nameof(GameStateController)}: dialogueRig/Controller missing — dialogue→Playing transition will not run.");
+            }
+
+            // Mid-run scene reload (e.g. after a hero-death outro): skip the
+            // start screen and roll straight into the next wave's cutscene.
+            if (GameSession.IsMidRun) Begin();
         }
 
         private void OnDisable()
         {
             if (runtime != null) runtime.HeroKilled -= OnHeroKilled;
-            if (dialogueRig != null && dialogueRig.Controller != null)
-                dialogueRig.Controller.Finished -= OnDialogueFinished;
+            if (subscribedController != null)
+            {
+                subscribedController.Finished -= OnDialogueFinished;
+                subscribedController = null;
+            }
         }
 
         private void OnDestroy()
@@ -94,6 +119,20 @@ namespace BossJam.Game
                 // Restore timeScale so leaving a paused scene doesn't trap the next one.
                 Time.timeScale = 1f;
                 Instance = null;
+            }
+        }
+
+        private void Update()
+        {
+            // Belt-and-suspenders: if the Finished event ever fails to fire
+            // (or subscription got dropped), poll the controller so dialogue
+            // never strands the state machine in Dialogue.
+            if (State == GameState.Dialogue
+                && dialogueRig != null
+                && dialogueRig.Controller != null
+                && !dialogueRig.Controller.IsPlaying)
+            {
+                OnDialogueFinished();
             }
         }
 
@@ -210,12 +249,13 @@ namespace BossJam.Game
 
         private void ResumeAfterDeathOutro()
         {
-            // Commit the queued debuff + respawn boss (existing Resume() logic),
-            // then loop back through CutsceneIntro for the next wave.
+            // Commit the queued debuff to the persistent RunState, then reload
+            // the scene. Every actor and subscriber rebuilds from scratch on
+            // the next frame; DifficultyRuntime rehydrates the modifier ledger
+            // from RunState in its Awake. GameStateController.Start sees
+            // IsMidRun and auto-calls Begin() to roll into the next cutscene.
             if (runtime != null) runtime.ApplyNextDebuff();
-            if (Boss != null) Boss.Respawn();
-            State = GameState.Startup; // satisfy the Begin() guard
-            Begin();
+            ReloadScene();
         }
 
         public void TriggerGameOver()
@@ -244,15 +284,24 @@ namespace BossJam.Game
         }
 
         /// <summary>
-        /// Resume from the GameOver screen. Refills the boss (debuff state is
-        /// preserved) and loops back through the intro cutscene.
+        /// Resume from the GameOver screen. Reloads the scene; RunState
+        /// (debuffs + wave index) persists so the player retries the same
+        /// wave with the same difficulty.
         /// </summary>
         public void Resume()
         {
             if (State != GameState.GameOver) return;
-            if (Boss != null) Boss.Respawn();
-            State = GameState.Startup; // satisfy the Begin() guard
-            Begin();
+            ReloadScene();
+        }
+
+        private void ReloadScene()
+        {
+            // Restore timescale before reloading — OnDestroy will run during
+            // the scene unload, but doing it explicitly first means any code
+            // that observes timescale during the unload sees a sane value.
+            Time.timeScale = 1f;
+            var scene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(scene.buildIndex);
         }
     }
 }

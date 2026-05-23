@@ -37,7 +37,13 @@ namespace BossJam.UI
 
             if (titleLabel != null) titleLabel.text = titleText;
             if (promptLabel != null) promptLabel.text = promptText;
-            panelRoot.SetActive(controller.State == GameState.Startup);
+
+            // Mid-run scene reloads land here with RunState carrying applied
+            // debuffs from prior waves. Skip the start screen entirely — the
+            // controller will auto-Begin on its own Start.
+            bool showStartScreen = controller.State == GameState.Startup && !GameSession.IsMidRun;
+            panelRoot.SetActive(showStartScreen);
+            if (!showStartScreen) enabled = false;
         }
 
         private void OnEnable()
@@ -59,7 +65,11 @@ namespace BossJam.UI
         {
             if (controller == null || controller.State != GameState.Startup) return;
             var kb = Keyboard.current;
-            if (kb != null && kb.spaceKey.wasPressedThisFrame) controller.Begin();
+            if (kb != null && kb.spaceKey.wasPressedThisFrame)
+            {
+                GameSession.StartNewRun();
+                controller.Begin();
+            }
         }
     }
 }

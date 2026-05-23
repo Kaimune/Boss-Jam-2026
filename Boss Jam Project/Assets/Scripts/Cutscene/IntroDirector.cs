@@ -19,6 +19,15 @@ namespace BossJam.Cutscene
         [SerializeField] private Transform heroFightStart;
         [SerializeField] private BossGrid grid;
 
+        [Header("Cutscene pacing")]
+        [SerializeField, Tooltip("Per-cell step duration during the walk = grid.TickDuration * this. " +
+                                 ">1 makes the cutscene walk slower than in-fight movement.")]
+        private float cutsceneStepMultiplier = 2.5f;
+
+        [SerializeField, Tooltip("Animator playback speed multiplier applied to the hero during the " +
+                                 "cutscene walk. Restored to 1 when the intro completes.")]
+        private float cutsceneAnimatorSpeed = 0.5f;
+
         public event Action IntroComplete;
         public Transform HeroIntroSpawn => heroIntroSpawn;
         public Transform HeroFightStart => heroFightStart;
@@ -26,6 +35,7 @@ namespace BossJam.Cutscene
         private Coroutine walkRoutine;
         private HeroEnemy hero;
         private GridFootprint footprint;
+        private Animator heroAnimator;
 
         private void Awake()
         {
@@ -42,11 +52,15 @@ namespace BossJam.Cutscene
             }
             hero = heroInstance;
             footprint = hero.GetComponent<GridFootprint>();
+            heroAnimator = hero.GetComponentInChildren<Animator>();
 
             // Park the hero off-grid + disable grid registration during walk.
             if (footprint != null) footprint.enabled = false;
             ToggleCombatComponents(false);
             if (heroIntroSpawn != null) hero.transform.position = heroIntroSpawn.position;
+
+            // Slow the walk animation for cinematic pacing. Restored in Complete().
+            if (heroAnimator != null) heroAnimator.speed = cutsceneAnimatorSpeed;
 
             walkRoutine = StartCoroutine(WalkIn());
         }
@@ -64,6 +78,7 @@ namespace BossJam.Cutscene
             float cellSize = grid.CellSize;
             float tick = grid.TickDuration;
             if (tick <= 0.001f) tick = 0.2f;
+            tick *= Mathf.Max(0.01f, cutsceneStepMultiplier);
 
             while (true)
             {
@@ -98,6 +113,7 @@ namespace BossJam.Cutscene
                 }
                 ToggleCombatComponents(true);
             }
+            if (heroAnimator != null) heroAnimator.speed = 1f;
             IntroComplete?.Invoke();
         }
 
