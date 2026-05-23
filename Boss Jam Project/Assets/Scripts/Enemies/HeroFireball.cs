@@ -17,6 +17,13 @@ namespace BossJam.Enemies
     [RequireComponent(typeof(HeroEnemy))]
     public sealed class HeroFireball : MonoBehaviour, IHeroAbility
     {
+        [Tooltip("Whether the hero has this ability by default. A DifficultyRuntime modifier on " +
+                 "Target.HeroFireballEnabled can override this — Override op with value 0 disables, 1 enables.")]
+        [SerializeField] private bool enabledByDefault = false;
+
+        public bool IsEnabled =>
+            (rt != null ? rt.Get(Target.HeroFireballEnabled, enabledByDefault ? 1f : 0f) : (enabledByDefault ? 1f : 0f)) > 0.5f;
+
         [SerializeField] private Fireball fireballPrefab;
 
         public string Id => "fireball";

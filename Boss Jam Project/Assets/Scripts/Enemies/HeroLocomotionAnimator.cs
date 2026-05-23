@@ -27,23 +27,31 @@ namespace BossJam.Enemies
         private GridMover mover;
         private HeroEnemy hero;
         private HeroDodge dodge;
+        private HeroMelee melee;
         private bool? currentRunning;
+        private bool idleStateExists;
+        private bool runStateExists;
 
         private void Awake()
         {
             mover = GetComponent<GridMover>();
             hero = GetComponent<HeroEnemy>();
             dodge = GetComponent<HeroDodge>();
+            melee = GetComponent<HeroMelee>();
             if (animator == null) animator = GetComponentInChildren<Animator>(includeInactive: true);
+            idleStateExists = WarnIfStateMissing(idleStateName);
+            runStateExists  = WarnIfStateMissing(runStateName);
         }
 
         private void Update()
         {
             if (animator == null) return;
 
-            // While a dash is active or we're stunned, yield the Animator to
-            // the trigger-driven clips so they aren't interrupted.
-            if ((dodge != null && dodge.IsActive) || (hero != null && hero.IsStunned))
+            // While an ability is mid-clip or we're stunned, yield the Animator
+            // to whoever owns that clip so it isn't crossfaded back to idle/run.
+            if ((dodge != null && dodge.IsActive)
+                || (melee != null && melee.IsBusy)
+                || (hero != null && hero.IsStunned))
             {
                 currentRunning = null;
                 return;
@@ -53,9 +61,28 @@ namespace BossJam.Enemies
             if (currentRunning != wantRun)
             {
                 animator.speed = 1f;
-                animator.CrossFadeInFixedTime(wantRun ? runStateName : idleStateName, crossfadeSeconds);
+                bool stateOk = wantRun ? runStateExists : idleStateExists;
+                if (stateOk)
+                    animator.CrossFadeInFixedTime(wantRun ? runStateName : idleStateName, crossfadeSeconds);
+                // Update the cached value either way so we don't retry every
+                // frame when the state is missing — the Awake warning is the
+                // one and only signal the author needs to fix it.
                 currentRunning = wantRun;
             }
+        }
+
+        // Animator silently no-ops when CrossFadeInFixedTime is given a state
+        // name that doesn't exist on the controller — surface it explicitly so
+        // a typo or missing state is immediately obvious in the console.
+        // Returns true when the state exists (CrossFade is safe to call).
+        private bool WarnIfStateMissing(string stateName)
+        {
+            if (animator == null || string.IsNullOrEmpty(stateName)) return false;
+            int hash = Animator.StringToHash(stateName);
+            if (animator.HasState(0, hash)) return true;
+            Debug.LogWarning($"{nameof(HeroLocomotionAnimator)}: state '{stateName}' not found on " +
+                             $"the animator '{animator.name}' (layer 0). Locomotion won't crossfade.", this);
+            return false;
         }
     }
 }

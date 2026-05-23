@@ -25,9 +25,6 @@ namespace BossJam.Enemies
         [SerializeField] private HeroMelee melee;
         [SerializeField] private HeroFireball fireball;
         [SerializeField] private HeroDodge dodge;
-        [Tooltip("Wave (1-based) at which the hero gains the matching ability. Melee is always on.")]
-        [SerializeField, Min(1)] private int fireballUnlockWave = 2;
-        [SerializeField, Min(1)] private int dodgeUnlockWave = 3;
 
         // Public read-only views the ability components query each frame.
         public HeroConfig Config => config;
@@ -50,6 +47,14 @@ namespace BossJam.Enemies
         [Header("Kiting (runtime-only)")]
         [Tooltip("+1 rotates the off-grid search CCW around the boss, -1 CW. Flipped when stuck.")]
         [SerializeField] private int orbitSign = 1;
+
+        [Header("Facing")]
+        [Tooltip("Transform that rotates to face movement. Leave null to rotate the root.")]
+        [SerializeField] private Transform visual;
+        [SerializeField, Min(0f)] private float turnDegreesPerSecond = 720f;
+        [Tooltip("Yaw offset (degrees) applied to the visual. Spin this until the model's nose points along movement.")]
+        [SerializeField, Range(-180f, 180f)] private float modelYawOffset = 0f;
+        private Quaternion facingTarget = Quaternion.identity;
 
         [Header("Debug")]
         [SerializeField] private bool drawKiteVisual = true;
@@ -174,6 +179,9 @@ namespace BossJam.Enemies
 
             mover = GetComponent<GridMover>();
             if (grid == null && Footprint != null) grid = Footprint.Grid;
+            if (visual == null) visual = transform;
+            // Honour the scene-authored idle rotation as the starting facing.
+            facingTarget = visual.rotation;
 
             // When spawned from a prefab the scene-bound target ref is null —
             // resolve to the boss in the scene.
@@ -186,19 +194,22 @@ namespace BossJam.Enemies
             if (fireball == null) fireball = GetComponent<HeroFireball>();
             if (dodge == null)    dodge    = GetComponent<HeroDodge>();
 
-            // Wave-based loadout. Wave 1 = melee only; later waves unlock more.
-            int wave = rt != null ? rt.CurrentWaveIndex : 1;
+            // Each ability self-determines whether it's available this wave
+            // via its IsEnabled property: an `enabledByDefault` toggle on the
+            // ability script, optionally overridden by a DifficultyRuntime
+            // modifier on the matching Target.*Enabled enum entry. The brain
+            // only sees abilities that resolved to enabled.
             if (brain != null)
             {
-                if (melee != null) brain.RegisterAbility(melee);
-                if (fireball != null && wave >= fireballUnlockWave) brain.RegisterAbility(fireball);
-                if (dodge != null && wave >= dodgeUnlockWave) brain.RegisterAbility(dodge);
+                if (melee != null && melee.IsEnabled)      brain.RegisterAbility(melee);
+                if (fireball != null && fireball.IsEnabled) brain.RegisterAbility(fireball);
+                if (dodge != null && dodge.IsEnabled)      brain.RegisterAbility(dodge);
 
-                // Disable locked-ability components so their internal state
-                // (cooldown timers, OnEnable side effects) doesn't tick during
-                // waves where the brain ignores them.
-                if (fireball != null) fireball.enabled = wave >= fireballUnlockWave;
-                if (dodge != null) dodge.enabled = wave >= dodgeUnlockWave;
+                // Quiet the component so its internal state (cooldown timers,
+                // OnEnable side effects) doesn't tick during waves where it's
+                // disabled. Melee runs lean already so we leave it alone.
+                if (fireball != null) fireball.enabled = fireball.IsEnabled;
+                if (dodge != null)    dodge.enabled    = dodge.IsEnabled;
             }
 
             // Predictor tuning is read-once at spawn. Reaction/velocity-window
@@ -288,6 +299,7 @@ namespace BossJam.Enemies
             if (IsStunned)
             {
                 mover.InputDirection = (Time.time < pushUntil) ? pushDir : Vector2.zero;
+                ApplyFacing(mover.InputDirection);
                 return;
             }
 
@@ -307,9 +319,38 @@ namespace BossJam.Enemies
             }
 
             Vector2 inputDir = (dodge != null && dodge.IsActive) ? dodge.LockedDirection : kiteDir;
+            // While an ability with LocksMovement is mid-animation (e.g. melee
+            // swing window), hold the kite still so the hero plants for the clip.
+            if (IsAbilityLockingMovement()) inputDir = Vector2.zero;
             mover.InputDirection = inputDir;
+            ApplyFacing(inputDir);
             ApplyDodgeSpeedIfChanged();
             TickStuckDetector();
+        }
+
+        private bool IsAbilityLockingMovement()
+        {
+            if (melee != null && melee.IsBusy && melee.LocksMovement) return true;
+            if (fireball != null && fireball.IsBusy && fireball.LocksMovement) return true;
+            // Dodge intentionally never locks — it ACCELERATES movement.
+            return false;
+        }
+
+        // Snap the facing target when there's a non-zero movement direction;
+        // ease the visual rotation toward the target every frame. Easing runs
+        // even when input is zero so the hero finishes turning after stopping.
+        private void ApplyFacing(Vector2 dir)
+        {
+            if (visual == null) return;
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                var forward = new Vector3(dir.x, 0f, dir.y);
+                facingTarget = Quaternion.LookRotation(forward, Vector3.up)
+                               * Quaternion.Euler(0f, modelYawOffset, 0f);
+            }
+            visual.rotation = Quaternion.RotateTowards(
+                visual.rotation, facingTarget,
+                turnDegreesPerSecond * Time.deltaTime);
         }
 
         // Hero approaches melee range when the boss has an opening AND the

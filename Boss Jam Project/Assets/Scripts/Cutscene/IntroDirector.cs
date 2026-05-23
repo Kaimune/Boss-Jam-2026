@@ -20,6 +20,8 @@ namespace BossJam.Cutscene
     /// </summary>
     public sealed class IntroDirector : MonoBehaviour
     {
+        [Tooltip("Optional teleport point applied at intro start. Leave null when the hero is hand-placed " +
+                 "in the scene and you want the walk to start from that placed position.")]
         [SerializeField] private Transform heroIntroSpawn;
         [SerializeField] private Transform heroFightStart;
         [SerializeField] private BossGrid grid;
@@ -161,6 +163,12 @@ namespace BossJam.Cutscene
                     footprint.Configure(new Vector2(cell.x, cell.y), footprint.Footprint, grid);
                     footprint.enabled = true;
                 }
+                // ToggleCombatComponents re-enables GridMover. Its cached anchor
+                // is still the pre-walk corner cell, so the first Update would
+                // snap the hero back. Sync from the just-registered footprint
+                // before re-enabling.
+                var gm = hero.GetComponent<BossJam.Player.GridMover>();
+                if (gm != null) gm.SyncFromFootprint();
                 ToggleCombatComponents(true);
             }
             if (heroAnimator != null) heroAnimator.speed = 1f;
@@ -219,6 +227,12 @@ namespace BossJam.Cutscene
             // HeroEnemy.Update already early-returns when state != Playing, so the static
             // helper isn't called during the cutscene anyway.
             ToggleByTypeName(hero.gameObject, "BossJam.Enemies.FireballSpawner", enabledFlag);
+
+            // GridMover snaps transform.position to its cached anchor every frame.
+            // If we leave it enabled during the walk, it overrides the lerped position
+            // in WalkIn and the hero appears to "snap back" to its scene-authored cell.
+            var gm = hero.GetComponent<BossJam.Player.GridMover>();
+            if (gm != null) gm.enabled = enabledFlag;
         }
 
         private static void ToggleByTypeName(GameObject go, string fullName, bool enabledFlag)

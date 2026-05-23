@@ -125,6 +125,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ac1aa4dd6035443e9333f9cf33e7a89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
+  animatorTrigger: Attack
 --- !u!114 &8768223249846523597
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,6 +152,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a29cf9baaf1d41e4bf5ccbd586bfdb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
+  animatorTrigger: hero_run_stepped
 --- !u!114 &2825991036323869408
 MonoBehaviour:
   m_ObjectHideFlags: 0

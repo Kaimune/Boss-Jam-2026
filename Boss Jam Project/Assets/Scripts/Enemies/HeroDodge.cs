@@ -15,11 +15,19 @@ namespace BossJam.Enemies
     [RequireComponent(typeof(HeroEnemy))]
     public sealed class HeroDodge : MonoBehaviour, IHeroAbility
     {
+        [Tooltip("Whether the hero has this ability by default. A DifficultyRuntime modifier on " +
+                 "Target.HeroDodgeEnabled can override this — Override op with value 0 disables, 1 enables.")]
+        [SerializeField] private bool enabledByDefault = false;
+
+        public bool IsEnabled =>
+            (rt != null ? rt.Get(Target.HeroDodgeEnabled, enabledByDefault ? 1f : 0f) : (enabledByDefault ? 1f : 0f)) > 0.5f;
+
         [Header("Animation")]
         [Tooltip("Animator that owns the hero's clips. Auto-resolves via GetComponentInChildren if left null.")]
         [SerializeField] private Animator animator;
-        [Tooltip("Trigger fired on the Animator when the dash begins. Match the parameter name on your controller.")]
-        [SerializeField] private string animatorTrigger = "Dash";
+        [Tooltip("State name to crossfade into when the dash begins. Match the state node name on your controller.")]
+        [SerializeField] private string animatorStateName = "dash";
+        [SerializeField, Min(0f)] private float crossfadeSeconds = 0.05f;
 
         public string Id => "dodge";
         // Busy while the boost is active so the brain doesn't immediately
@@ -33,6 +41,7 @@ namespace BossJam.Enemies
         private Vector2 lockedDirection;
         private HeroEnemy hero;
         private DifficultyRuntime rt;
+        private bool stateExists;
 
         // HeroEnemy queries this each frame to know whether to apply the
         // boost and which direction to lock the kite vector to.
@@ -45,6 +54,13 @@ namespace BossJam.Enemies
             hero = GetComponent<HeroEnemy>();
             rt = FindFirstObjectByType<DifficultyRuntime>();
             if (animator == null) animator = GetComponentInChildren<Animator>(includeInactive: true);
+            if (animator != null && !string.IsNullOrEmpty(animatorStateName))
+            {
+                stateExists = animator.HasState(0, Animator.StringToHash(animatorStateName));
+                if (!stateExists)
+                    Debug.LogWarning($"{nameof(HeroDodge)}: state '{animatorStateName}' not found on " +
+                                     $"animator '{animator.name}' (layer 0). Dash animation will not play.", this);
+            }
         }
 
         public bool IsReady => !IsActive && Time.time >= cooldownReadyAt;
@@ -53,8 +69,8 @@ namespace BossJam.Enemies
 
         public void Begin(in HeroDecisionContext ctx)
         {
-            if (animator != null && !string.IsNullOrEmpty(animatorTrigger))
-                animator.SetTrigger(animatorTrigger);
+            if (animator != null && stateExists)
+                animator.CrossFadeInFixedTime(animatorStateName, crossfadeSeconds);
 
             // Lock the boost direction at commit time so a mid-dodge kite
             // re-evaluation doesn't tug the hero around. The boost has a

@@ -1,20 +1,17 @@
 using System.Collections.Generic;
 using BossJam.Enemies;
-using BossJam.Game;
 using UnityEngine;
 
 namespace BossJam.UI
 {
     /// <summary>
-    /// HUD bar for the hero. Heroes are spawned dynamically by the
-    /// <see cref="HeroSpawner"/>, so the bar can't hold a stable serialized
-    /// reference — it subscribes to <c>HeroSpawner.HeroSpawned</c> and rebinds
-    /// on every spawn, rebuilding the segment row to match the new hero's
-    /// MaxHp (which can change across tiers if a debuff scales HeroMaxHp).
+    /// HUD bar for the hero. The hero is authored directly in the scene now
+    /// (no spawner), so this binds in Start by finding the HeroEnemy in the
+    /// scene. Each wave reload rebuilds the scene, so the bind is fresh each
+    /// time without any spawn-event plumbing.
     /// </summary>
     public class HeroHealthBarUI : MonoBehaviour
     {
-        [SerializeField] private HeroSpawner spawner;
         [SerializeField] private HpSegment segmentPrefab;
         [SerializeField] private Transform segmentRow;
 
@@ -24,30 +21,21 @@ namespace BossJam.UI
 
         private void Awake()
         {
-            if (spawner == null) spawner = FindFirstObjectByType<HeroSpawner>();
-            if (spawner == null || segmentPrefab == null || segmentRow == null)
+            if (segmentPrefab == null || segmentRow == null)
             {
                 Debug.LogWarning($"{nameof(HeroHealthBarUI)}: missing reference; disabling.", this);
                 enabled = false;
             }
         }
 
-        private void OnEnable()
+        // Start, not OnEnable: HeroEnemy.Awake must have run so MaxHp is
+        // snapshotted before we build segments off it.
+        private void Start()
         {
-            if (spawner == null) return;
-            spawner.HeroSpawned += OnHeroSpawned;
-            // Bind to whoever is already alive when the bar wakes up — covers
-            // the case where the spawner spawned a hero before this OnEnable.
-            if (spawner.CurrentHero != null) Bind(spawner.CurrentHero);
+            Bind(FindFirstObjectByType<HeroEnemy>(FindObjectsInactive.Include));
         }
 
-        private void OnDisable()
-        {
-            if (spawner != null) spawner.HeroSpawned -= OnHeroSpawned;
-            Unbind();
-        }
-
-        private void OnHeroSpawned(HeroEnemy next) => Bind(next);
+        private void OnDisable() => Unbind();
 
         private void Bind(HeroEnemy next)
         {

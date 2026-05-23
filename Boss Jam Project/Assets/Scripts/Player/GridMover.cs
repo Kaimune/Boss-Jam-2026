@@ -124,6 +124,17 @@ namespace BossJam.Player
             return true;
         }
 
+        // Re-cache AnchorPosition + transform from the current GridFootprint
+        // registration without re-registering. Used by the intro director after
+        // a manual transform.position walk so GridMover.Update doesn't snap
+        // the hero back to its pre-walk cached anchor on the next frame.
+        public void SyncFromFootprint()
+        {
+            if (!UseBossGrid || footprint == null) return;
+            AnchorPosition = footprint.Anchor;
+            transform.position = bossGrid.FootprintCenterWorld(footprint.Anchor, footprint.Footprint);
+        }
+
         public void SnapToAnchor(Vector2 anchor)
         {
             AnchorPosition = anchor;

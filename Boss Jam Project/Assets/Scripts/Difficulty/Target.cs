@@ -28,15 +28,20 @@ namespace BossJam.Difficulty
         HeroFireballDamage,
 
         // ── Hero — Melee ─────────────────────────────────────
+        HeroMeleeEnabled,
         HeroMeleeDamage,
         HeroMeleeRangeCells,
         HeroMeleeApproachDistanceCells,
         HeroMeleeCooldownSeconds,
 
         // ── Hero — Dodge ─────────────────────────────────────
+        HeroDodgeEnabled,
         HeroDodgeSpeedMultiplier,
         HeroDodgeDurationSeconds,
         HeroDodgeCooldownSeconds,
+
+        // ── Hero — Fireball enable toggle ────────────────────
+        HeroFireballEnabled,
 
         // ── Boss ─────────────────────────────────────────────
         BossMaxHp,

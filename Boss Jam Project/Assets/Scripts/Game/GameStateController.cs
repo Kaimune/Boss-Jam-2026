@@ -182,16 +182,15 @@ namespace BossJam.Game
                 return;
             }
             introDirector.IntroComplete += OnIntroComplete;
-            // HeroSpawner spawns on the StateChanged event we just fired (CS9 wires this).
-            // Grab the hero one frame later, then ask the director to begin the walk.
+            // Hero is hand-placed in the scene; grab it one frame after the
+            // state change so any wave-1 init (HeroEnemy.Awake) is finished.
             StartCoroutine(BeginIntroNextFrame());
         }
 
         private System.Collections.IEnumerator BeginIntroNextFrame()
         {
             yield return null;
-            var spawner = FindFirstObjectByType<HeroSpawner>();
-            var hero = spawner != null ? spawner.CurrentHero : null;
+            var hero = FindFirstObjectByType<BossJam.Enemies.HeroEnemy>(FindObjectsInactive.Include);
             introDirector.Begin(hero);
         }
 
