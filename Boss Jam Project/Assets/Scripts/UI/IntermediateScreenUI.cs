@@ -37,6 +37,8 @@ namespace BossJam.UI
 
         [Header("Copy")]
         [SerializeField] private string promptText = "Press SPACE to continue";
+        [Tooltip("Color applied to the tier name label when no tier has been promoted yet (wave 1).")]
+        [SerializeField] private Color defaultTierColor = Color.white;
 
         [Header("Transition timing")]
         [SerializeField] private float preTransitionPauseSeconds = 0.2f;
@@ -175,7 +177,12 @@ namespace BossJam.UI
             DebuffEntry debuffEntry = ResolveDebuffEntry(showPrevious);
 
             if (tierNameLabel != null)
+            {
                 tierNameLabel.text = tierName ?? string.Empty;
+                // Wave 1 (no entry) falls back to defaultTierColor; otherwise the
+                // tier's defining debuff entry contributes its tint.
+                tierNameLabel.color = tierEntry != null ? tierEntry.tint : defaultTierColor;
+            }
 
             // Subtitle = the debuff that defines this tier, in parens. Hidden on
             // wave 1 (nothing applied) so the title doesn't float with stray "()".
