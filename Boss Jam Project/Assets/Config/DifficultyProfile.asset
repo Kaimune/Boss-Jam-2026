@@ -19,12 +19,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 72d1682011f5647f49ae278891074a36, type: 2}
   - {fileID: 11400000, guid: a7c9e3b18f24d44f0a5c8de7b40b6c2e, type: 2}
   debuffs:
-  - name: Quickening
-    description: Boss acts 15% faster.
+  - name: Very Hard
+    description: '"Damn... Immortal is literally impossible"'
     icon: {fileID: 0}
     tint: {r: 1, g: 0.85, b: 0.5, a: 1}
-    tierName: Tier 1 Awakened
-    tierDescription: The boss begins to move with purpose.
+    tierName: Very Hard
+    tierDescription: 'Boss made well... not immortal...
+
+
+      boss no longer regenerates
+      health
+
+      boss no longer '
     effect:
       rid: 5190052726517006752
   - name: Hardened
@@ -49,8 +55,8 @@ MonoBehaviour:
     - rid: 5190052726517006752
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
-        target: 11
-        op: 0
+        target: 10
+        op: 1
         value: 1.15
         attackId: 
         extensionKey: 

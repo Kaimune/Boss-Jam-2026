@@ -14,6 +14,11 @@ namespace BossJam.CameraSys
         [Tooltip("Higher = snappier follow. Smooth time for SmoothDamp position lerp.")]
         [SerializeField, Min(0f)] private float smoothTime = 0.15f;
 
+        // Exposed so cutscene directors can swap to a wider framing during intros
+        // and ease back to the gameplay offset on completion.
+        public Vector3 Offset { get => offset; set => offset = value; }
+        public float SmoothTime { get => smoothTime; set => smoothTime = Mathf.Max(0f, value); }
+
         private Vector3 velocity;
 
         private void Awake()

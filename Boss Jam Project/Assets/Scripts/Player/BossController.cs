@@ -87,11 +87,28 @@ namespace BossJam.Player
         public void TakeDamage(int amount, IGridEntity source)
         {
             if (isDead) return;
+            if (IsInvulnerable) return;
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             rt?.RaiseBossDamaged(amount, source);
             if (currentHp <= 0) Die();
+        }
+
+        // Time.time at which i-frames lapse. Set via SetInvulnFor by attacks that
+        // grant temporary invulnerability (e.g. the charge slam).
+        private float invulnUntil = -1f;
+        public bool IsInvulnerable => Time.time < invulnUntil;
+
+        /// <summary>
+        /// Grant invulnerability for at least `seconds` from now. If a longer window
+        /// is already active, keeps the existing one — invuln only ever extends.
+        /// </summary>
+        public void SetInvulnFor(float seconds)
+        {
+            if (seconds <= 0f) return;
+            var until = Time.time + seconds;
+            if (until > invulnUntil) invulnUntil = until;
         }
 
         private void Die()
@@ -161,8 +178,11 @@ namespace BossJam.Player
             secondaryAction = new InputAction(name: "AttackSecondary", type: InputActionType.Button, binding: "<Mouse>/rightButton");
             ultAction       = new InputAction(name: "AttackUlt",       type: InputActionType.Button, binding: "<Keyboard>/space");
             if (visual == null) visual = transform;
-            facingTarget = Quaternion.Euler(0f, modelYawOffset, 0f);
-            visual.rotation = facingTarget;
+            // Honour the scene-authored idle rotation as the starting facing.
+            // `modelYawOffset` is reserved for compensating models that are built
+            // with a non-standard forward axis — it is applied only when
+            // movement input drives the boss to LookRotation a new direction.
+            facingTarget = visual.rotation;
             GetComponentsInChildren<IAttack>(includeInactive: true, attacks);
 
             // Safe to register now — if the setter flips enabled=false, the

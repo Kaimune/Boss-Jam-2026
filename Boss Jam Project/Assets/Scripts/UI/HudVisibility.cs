@@ -4,19 +4,27 @@ using UnityEngine;
 namespace BossJam.UI
 {
     /// <summary>
-    /// Hides the HUD whenever the game is not in Playing — covers Startup,
-    /// Dialogue, Death, and GameOver. Attached to the HUDCanvas root.
+    /// Hides the gameplay HUD widgets (health bars, tier label) whenever the
+    /// game is not in Playing — covers Startup, Dialogue, Death, GameOver.
+    /// Lives on HUDCanvas so it shares lifetime with the HUD it manages, but
+    /// only toggles the listed gameplay-only children. Screen panels
+    /// (StartScreen / DeathScreen / GameOver) are owned by their own
+    /// controllers — leaving the Canvas itself enabled lets those panels
+    /// render during non-Playing states.
     /// </summary>
-    [RequireComponent(typeof(Canvas))]
     public sealed class HudVisibility : MonoBehaviour
     {
-        private Canvas canvas;
+        [Tooltip("Children to hide whenever state != Playing. Leave empty to auto-resolve common names " +
+                 "(BossHealthBar / HeroHealthBar / TierLabel).")]
+        [SerializeField] private GameObject[] gameplayHudChildren;
+
         private GameStateController controller;
 
         private void Awake()
         {
-            canvas = GetComponent<Canvas>();
             controller = FindFirstObjectByType<GameStateController>();
+            if (gameplayHudChildren == null || gameplayHudChildren.Length == 0)
+                AutoResolveChildren();
         }
 
         private void OnEnable()
@@ -35,7 +43,25 @@ namespace BossJam.UI
 
         private void Apply(GameState state)
         {
-            if (canvas != null) canvas.enabled = state == GameState.Playing;
+            bool show = state == GameState.Playing;
+            if (gameplayHudChildren == null) return;
+            for (int i = 0; i < gameplayHudChildren.Length; i++)
+            {
+                if (gameplayHudChildren[i] != null)
+                    gameplayHudChildren[i].SetActive(show);
+            }
+        }
+
+        private void AutoResolveChildren()
+        {
+            string[] names = { "BossHealthBar", "HeroHealthBar", "TierLabel" };
+            var found = new System.Collections.Generic.List<GameObject>(names.Length);
+            for (int i = 0; i < names.Length; i++)
+            {
+                var t = transform.Find(names[i]);
+                if (t != null) found.Add(t.gameObject);
+            }
+            gameplayHudChildren = found.ToArray();
         }
     }
 }
