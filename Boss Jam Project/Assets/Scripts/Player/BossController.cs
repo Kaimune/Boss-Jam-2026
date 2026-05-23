@@ -192,9 +192,9 @@ namespace BossJam.Player
 
             mover = GetComponent<GridMover>();
             moveAction = BuildMoveAction();
-            primaryAction   = new InputAction(name: "AttackPrimary",   type: InputActionType.Button, binding: "<Mouse>/leftButton");
-            secondaryAction = new InputAction(name: "AttackSecondary", type: InputActionType.Button, binding: "<Mouse>/rightButton");
-            ultAction       = new InputAction(name: "AttackUlt",       type: InputActionType.Button, binding: "<Keyboard>/space");
+            primaryAction   = new InputAction(name: "AttackPrimary",   type: InputActionType.Button, binding: "<Keyboard>/j");
+            secondaryAction = new InputAction(name: "AttackSecondary", type: InputActionType.Button, binding: "<Keyboard>/k");
+            ultAction       = new InputAction(name: "AttackUlt",       type: InputActionType.Button, binding: "<Keyboard>/l");
             if (visual == null) visual = transform;
             // Honour the scene-authored idle rotation as the starting facing.
             // `modelYawOffset` is reserved for compensating models that are built
