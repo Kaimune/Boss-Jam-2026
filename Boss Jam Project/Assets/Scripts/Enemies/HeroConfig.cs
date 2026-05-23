@@ -13,8 +13,8 @@ namespace BossJam.Enemies
         [Min(0.01f)] public float tickMultiplier = 1f;
 
         [Header("Movement")]
-        [Tooltip("Baseline movement speed in cells per second. Default 8.33 matches the previous tick-derived speed (1 cell per 0.12s tick).")]
-        [Min(0.01f)] public float moveSpeed = 8.33f;
+        [Tooltip("Baseline movement speed in cells per second.")]
+        [Min(0.01f)] public float moveSpeed = 5f;
 
         [Tooltip("Scalar applied on top of moveSpeed. 1 = baseline, 2 = twice as fast, 0.5 = half speed.")]
         [Min(0.01f)] public float moveSpeedMultiplier = 1f;

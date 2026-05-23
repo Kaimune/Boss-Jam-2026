@@ -65,7 +65,33 @@ namespace BossJam.Enemies
 
         public bool IsReady => !IsActive && Time.time >= cooldownReadyAt;
 
-        public float Score(in HeroDecisionContext ctx) => 0f;
+        public float Score(in HeroDecisionContext ctx)
+        {
+            // Primary signal: hero is currently inside a perceived hazard rect.
+            // That's the unavoidable "I'm getting hit unless I move" moment —
+            // dash out at high priority.
+            var hazards = hero != null ? hero.PerceivedHazards : null;
+            if (hazards != null)
+            {
+                Vector2 hero01 = ctx.heroCenter;
+                for (int i = 0; i < hazards.Count; i++)
+                {
+                    var h = hazards[i];
+                    if (PointInRect(hero01, h.Anchor, h.Footprint)) return 0.95f;
+                }
+            }
+
+            // Fallback signal: boss is winding up or actively swinging. Even
+            // if no specific hazard rect is published yet (e.g. boss in early
+            // windup before the telegraph spawns), dodge defensively.
+            return ctx.bossIsExecutingAttack ? 0.6f : 0f;
+        }
+
+        private static bool PointInRect(Vector2 p, Vector2 anchor, Vector2 footprint)
+        {
+            return p.x >= anchor.x && p.x <= anchor.x + footprint.x
+                && p.y >= anchor.y && p.y <= anchor.y + footprint.y;
+        }
 
         public void Begin(in HeroDecisionContext ctx)
         {
@@ -82,7 +108,11 @@ namespace BossJam.Enemies
 
             float dur = Eff(Target.HeroDodgeDurationSeconds, hero.Config.dodgeDurationSeconds);
             activeUntil = Time.time + dur;
-            cooldownReadyAt = activeUntil + Eff(Target.HeroDodgeCooldownSeconds, hero.Config.dodgeCooldownSeconds);
+            // Cooldown starts on cast (intuitive: the cast itself is what
+            // triggers the timer). The dodge still can't re-fire while
+            // IsActive — IsReady already gates on that. Effective gate is
+            // max(dur, cooldown) from cast time.
+            cooldownReadyAt = Time.time + Eff(Target.HeroDodgeCooldownSeconds, hero.Config.dodgeCooldownSeconds);
         }
 
         public void Tick(float dt) { }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BossJam.Difficulty;
 using BossJam.GridSystem;
 using BossJam.Player;
@@ -131,14 +132,10 @@ namespace BossJam.Enemies
 
         private void BeginHitReaction()
         {
-            int pick = UnityEngine.Random.Range(0, 4);
-            pushDir = pick switch
-            {
-                0 => Vector2.up,
-                1 => Vector2.down,
-                2 => Vector2.left,
-                _ => Vector2.right,
-            };
+            // Push direction is "away from the boss" — reads as knockback and
+            // can't accidentally shove the hero deeper into trouble. Snapped
+            // to the nearest cardinal so the shove stays grid-aligned.
+            pushDir = ComputeKnockbackDirection();
             pushUntil = Time.time + pushDurationSeconds;
             stunUntil = Time.time + stunDurationSeconds;
             SetInvulnFor(iframesOnHitSeconds);
@@ -147,6 +144,27 @@ namespace BossJam.Enemies
             // mid-fireball-spawn when control resumes. Brain.CancelAll calls
             // Cancel() on each registered ability.
             if (brain != null) brain.CancelAll();
+        }
+
+        private Vector2 ComputeKnockbackDirection()
+        {
+            Vector2 away = Vector2.zero;
+            if (bossRef != null && bossRef.Footprint != null && Footprint != null)
+            {
+                Vector2 myCenter   = Footprint.Anchor + Footprint.Footprint * 0.5f;
+                Vector2 bossCenter = bossRef.Footprint.Anchor + bossRef.Footprint.Footprint * 0.5f;
+                away = myCenter - bossCenter;
+            }
+            if (away.sqrMagnitude < 0.0001f)
+            {
+                // Hero is dead on top of boss (rare). Fall back to the kite
+                // direction, or up if even that's zero.
+                return Vector2.up;
+            }
+            // Snap to cardinal so the push lands on a grid-aligned cell.
+            return Mathf.Abs(away.x) > Mathf.Abs(away.y)
+                ? new Vector2(Mathf.Sign(away.x), 0f)
+                : new Vector2(0f, Mathf.Sign(away.y));
         }
 
         private GridMover mover;
@@ -268,7 +286,10 @@ namespace BossJam.Enemies
             var g = grid != null ? grid : (Footprint != null ? Footprint.Grid : null);
             if (m != null && g != null)
             {
-                float speed = config.moveSpeed * Mathf.Max(0.01f, config.moveSpeedMultiplier);
+                // Folded through DifficultyRuntime so debuffs on HeroMoveSpeed
+                // can scale / override the hero's cells/sec per wave.
+                float baseline = config.moveSpeed * Mathf.Max(0.01f, config.moveSpeedMultiplier);
+                float speed = Eff(Target.HeroMoveSpeed, baseline);
                 if (boosted)
                 {
                     float boost = Eff(Target.HeroDodgeSpeedMultiplier, config.dodgeSpeedMultiplier);
@@ -363,10 +384,12 @@ namespace BossJam.Enemies
         {
             Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
             float dist = Vector2.Distance(myCenter, predictedBossCenter);
+            bool bossExecuting = bossRef != null && bossRef.IsExecutingAttack;
             return new HeroDecisionContext
             {
                 heroCenter         = myCenter,
                 bossCenter         = predictedBossCenter,
+                bossIsExecutingAttack = bossExecuting,
                 kiteDir            = kiteDir,
                 distanceToBossCells = dist,
                 bossInPunishWindow = bossRef != null && bossRef.InPunishWindow,
@@ -392,6 +415,34 @@ namespace BossJam.Enemies
                 : WorldToCellCenter(target.position);
             predictor.Observe(Time.time, realBossCenter);
             predictedBossCenter = predictor.Predict(Time.time, realBossCenter);
+            RefreshHazardBuffer();
+        }
+
+        // Per-frame buffer of hazard rects the hero can perceive (reaction-lag
+        // filtered). Reused list to avoid per-frame allocations.
+        private readonly List<HeroKiteSteering.HazardRect> hazardBuffer = new();
+        public IReadOnlyList<HeroKiteSteering.HazardRect> PerceivedHazards => hazardBuffer;
+
+        private void RefreshHazardBuffer()
+        {
+            hazardBuffer.Clear();
+            var all = Hazard.All;
+            if (all == null || all.Count == 0) return;
+
+            float now = Time.time;
+            float reactLag = Eff(Target.HeroReactionTimeSeconds, config.reactionTimeSeconds);
+            for (int i = 0; i < all.Count; i++)
+            {
+                var h = all[i];
+                if (h == null) continue;
+                // Hazards under the reaction-lag window are not yet perceived.
+                if (now - h.BornAt < reactLag) continue;
+                hazardBuffer.Add(new HeroKiteSteering.HazardRect
+                {
+                    Anchor    = h.Anchor,
+                    Footprint = h.Footprint,
+                });
+            }
         }
 
         private Vector2 ComputeSteering(bool bossInPunishWindowAndUnspent)
@@ -406,7 +457,8 @@ namespace BossJam.Enemies
 
             var r = HeroKiteSteering.Solve(
                 myCenter, predictedBossCenter, kiteDist, grid,
-                Footprint.Footprint, orbitSign);
+                Footprint.Footprint, orbitSign,
+                hazardBuffer);
 
             kiteTarget = r.TargetPoint;
             hasKiteTarget = r.ValidTargetFound;

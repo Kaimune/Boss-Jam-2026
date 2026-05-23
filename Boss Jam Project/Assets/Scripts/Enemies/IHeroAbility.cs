@@ -48,5 +48,6 @@ namespace BossJam.Enemies
         public Vector2 kiteDir;             // unit vector the kite solver produced this frame
         public float   distanceToBossCells; // straight-line cell distance hero→boss
         public bool    bossInPunishWindow;  // boss has an attack in Recovery or Cooldown
+        public bool    bossIsExecutingAttack; // boss has an attack in Windup or Active — dodge cue
     }
 }

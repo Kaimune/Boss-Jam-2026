@@ -102,6 +102,23 @@ namespace BossJam.Player
             }
         }
 
+        // True when the boss is winding up or actively swinging an attack — the
+        // hero treats this as the "duck" window to dodge through it.
+        public bool IsExecutingAttack
+        {
+            get
+            {
+                for (int i = 0; i < attacks.Count; i++)
+                {
+                    var a = attacks[i];
+                    if (a == null) continue;
+                    var s = a.State;
+                    if (s == AttackState.Windup || s == AttackState.Active) return true;
+                }
+                return false;
+            }
+        }
+
         public void TakeDamage(int amount, IGridEntity source)
         {
             if (isDead) return;
