@@ -18,6 +18,11 @@ namespace BossJam.Difficulty
     /// and folds the ledger over it. With an empty profile the runtime is
     /// inert and the game plays exactly as it would without it.
     /// </summary>
+    // Run before any consumer Awake (HeroEnemy, BossController, ability scripts)
+    // so the modifier ledger is rebuilt from RunState before they snapshot
+    // spawn-time stats (HP, IsEnabled, register-with-brain). Without this,
+    // consumers race the rebuild and read empty modifiers → debuffs appear inert.
+    [DefaultExecutionOrder(-1000)]
     [DisallowMultipleComponent]
     public sealed class DifficultyRuntime : MonoBehaviour
     {
@@ -141,11 +146,21 @@ namespace BossJam.Difficulty
 
             // Rebuild the modifier ledger from persisted debuffs. The scene
             // was just reloaded, so `applied` is empty; replay each entry's
-            // effect so consumers see the correct effective values.
+            // effect(s) so consumers see the correct effective values.
             for (int i = 0; i < runState.appliedEntries.Count; i++)
             {
-                runState.appliedEntries[i]?.effect?.Apply(this);
+                ApplyAllEffects(runState.appliedEntries[i]);
             }
+        }
+
+        // Each DebuffEntry can carry multiple DebuffEffect SO assets via its
+        // `effects` list. Iterates each one — null entries are tolerated so
+        // designers can leave a slot empty without breaking application.
+        private void ApplyAllEffects(DebuffEntry entry)
+        {
+            if (entry == null || entry.effects == null) return;
+            for (int i = 0; i < entry.effects.Count; i++)
+                entry.effects[i]?.Apply(this);
         }
 
         private void OnEnable()
@@ -184,7 +199,7 @@ namespace BossJam.Difficulty
             runState.previousTierEntry = runState.currentTierEntry;
 
             runState.appliedEntries.Add(entry);
-            entry.effect?.Apply(this);
+            ApplyAllEffects(entry);
 
             // Promote tier if this entry names a new one. Blank tierName
             // inherits the previous label (lets multiple debuffs share a tier).

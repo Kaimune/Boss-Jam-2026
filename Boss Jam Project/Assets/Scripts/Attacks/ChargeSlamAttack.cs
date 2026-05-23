@@ -56,6 +56,7 @@ namespace BossJam.Attacks
         public AttackState State => fsm.State;
         public float PhaseProgress01 => fsm.PhaseProgress01;
         public float CooldownRemaining => fsm.CooldownRemaining;
+        public float TimeToIdle => fsm.TimeToIdle;
         public bool IsBusy => fsm.IsBusy;
         public bool LocksMovement => fsm.LocksMovement;
         public event Action<AttackState, AttackState> StateChanged
@@ -212,6 +213,8 @@ namespace BossJam.Attacks
                 var s = grid.CellSize * fpSize;
                 vis.localScale = new Vector3(s.x, s.y, 1f);
             }
+            var hazard = liveTelegraph.GetComponent<Hazard>() ?? liveTelegraph.AddComponent<Hazard>();
+            hazard.Configure(anchor, fpSize);
         }
 
         private void SpawnHitboxAndClearTelegraph()
@@ -228,6 +231,9 @@ namespace BossJam.Attacks
 
             var fp = go.GetComponent<GridFootprint>();
             if (fp != null) fp.Configure(anchor, fpSize, grid);
+
+            var hazard = go.GetComponent<Hazard>() ?? go.AddComponent<Hazard>();
+            hazard.Configure(anchor, fpSize);
 
             var hb = go.GetComponent<AttackHitbox>();
             if (hb != null) hb.SetDamage(EffI(Target.BossAttackDamage, config.damage));

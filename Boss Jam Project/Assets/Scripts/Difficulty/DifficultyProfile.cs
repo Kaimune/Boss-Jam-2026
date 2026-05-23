@@ -38,10 +38,10 @@ namespace BossJam.Difficulty
     }
 
     /// <summary>
-    /// One authored debuff. The <see cref="effect"/> field is polymorphic via
-    /// [SerializeReference] — pick a concrete IDebuffEffect from the Inspector
-    /// dropdown. Effect may be null for pure-flavor tier entries that only
-    /// update the HUD label without changing gameplay.
+    /// One authored debuff. The <see cref="effects"/> list is polymorphic via
+    /// [SerializeReference] — pick concrete IDebuffEffect entries from the
+    /// Inspector dropdown. Each tier can carry any number of effects (or
+    /// none, for pure-flavor tier entries that only update the HUD label).
     ///
     /// Tier fields: when <see cref="tierName"/> is non-empty and differs from
     /// the runtime's current tier, applying this entry promotes the tier and
@@ -59,7 +59,8 @@ namespace BossJam.Difficulty
         public string tierName;
         [TextArea] public string tierDescription;
 
-        [SerializeReference]
-        public IDebuffEffect effect;
+        [Tooltip("Effects fired when this entry lands. Each entry is a DebuffEffect ScriptableObject asset — " +
+                 "create them via Assets → Create → BossJam/Difficulty/Stat Modifier Effect (or other subtype).")]
+        public List<DebuffEffect> effects = new List<DebuffEffect>();
     }
 }

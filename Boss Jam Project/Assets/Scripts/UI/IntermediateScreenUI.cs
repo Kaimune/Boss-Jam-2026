@@ -172,33 +172,37 @@ namespace BossJam.UI
         {
             if (difficulty == null) return;
 
-            string tierName = showPrevious ? difficulty.PreviousTierName : difficulty.CurrentTierName;
+            // Big top label = tier name (e.g. "Extreme"). Small lines below
+            // are the debuff description (what changed this wave) and tier
+            // flavour text. Tier tint colours the big name.
             DebuffEntry tierEntry = showPrevious ? difficulty.PreviousTierEntry : difficulty.CurrentTierEntry;
             DebuffEntry debuffEntry = ResolveDebuffEntry(showPrevious);
+
+            string tierName = tierEntry != null
+                ? tierEntry.tierName
+                : (showPrevious ? difficulty.PreviousTierName : difficulty.CurrentTierName);
 
             if (tierNameLabel != null)
             {
                 tierNameLabel.text = tierName ?? string.Empty;
-                // Wave 1 (no entry) falls back to defaultTierColor; otherwise the
-                // tier's defining debuff entry contributes its tint.
                 tierNameLabel.color = tierEntry != null ? tierEntry.tint : defaultTierColor;
+                tierNameLabel.gameObject.SetActive(!string.IsNullOrWhiteSpace(tierName));
             }
 
-            // Subtitle = the debuff that defines this tier, in parens. Hidden on
-            // wave 1 (nothing applied) so the title doesn't float with stray "()".
+            // Small line 1: debuff description ("what changed").
             if (subtitleLabel != null)
             {
-                string debuffName = debuffEntry != null ? debuffEntry.name : null;
-                bool hasSubtitle = !string.IsNullOrWhiteSpace(debuffName);
-                subtitleLabel.text = hasSubtitle ? $"({debuffName})" : string.Empty;
-                subtitleLabel.gameObject.SetActive(hasSubtitle);
+                string desc = debuffEntry != null ? debuffEntry.description : null;
+                subtitleLabel.text = desc ?? string.Empty;
+                subtitleLabel.gameObject.SetActive(!string.IsNullOrWhiteSpace(desc));
             }
 
+            // Small line 2: tier flavour text.
             if (tierDescriptionLabel != null)
             {
-                string desc = tierEntry != null ? tierEntry.tierDescription : null;
-                tierDescriptionLabel.text = desc ?? string.Empty;
-                tierDescriptionLabel.gameObject.SetActive(!string.IsNullOrWhiteSpace(desc));
+                string tierDesc = tierEntry != null ? tierEntry.tierDescription : null;
+                tierDescriptionLabel.text = tierDesc ?? string.Empty;
+                tierDescriptionLabel.gameObject.SetActive(!string.IsNullOrWhiteSpace(tierDesc));
             }
         }
 

@@ -16,6 +16,7 @@ namespace BossJam.Difficulty
         // ── Hero ─────────────────────────────────────────────
         HeroMaxHp,
         HeroTickMultiplier,
+        HeroMoveSpeed,
         HeroPreferredDistanceCells,
         HeroStuckFlipSeconds,
         HeroReactionTimeSeconds,
@@ -24,6 +25,24 @@ namespace BossJam.Difficulty
         HeroFireballSizeX,
         HeroFireballSizeY,
         HeroFirstShotDelay,
+        HeroFireballCooldownSeconds,
+        HeroFireballDamage,
+
+        // ── Hero — Melee ─────────────────────────────────────
+        HeroMeleeEnabled,
+        HeroMeleeDamage,
+        HeroMeleeRangeCells,
+        HeroMeleeApproachDistanceCells,
+        HeroMeleeCooldownSeconds,
+
+        // ── Hero — Dodge ─────────────────────────────────────
+        HeroDodgeEnabled,
+        HeroDodgeSpeedMultiplier,
+        HeroDodgeDurationSeconds,
+        HeroDodgeCooldownSeconds,
+
+        // ── Hero — Fireball enable toggle ────────────────────
+        HeroFireballEnabled,
 
         // ── Boss ─────────────────────────────────────────────
         BossMaxHp,

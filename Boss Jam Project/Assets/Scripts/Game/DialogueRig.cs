@@ -26,8 +26,6 @@ namespace BossJam.Game
         private DialogueController controller;
         public DialogueController Controller => controller;
 
-        private HeroSpawner heroSpawner;
-
         private void Awake()
         {
             controller = GetComponent<DialogueController>();
@@ -37,21 +35,15 @@ namespace BossJam.Game
             // Boss is hand-placed in the scene — anchor its cam once.
             var boss = FindFirstObjectByType<BossController>();
             if (boss != null) ParentCamToHeadAnchor(bossPortraitCam, boss.transform);
-
-            // Hero is spawned per wave — re-parent each time a new one appears.
-            heroSpawner = FindFirstObjectByType<HeroSpawner>();
-            if (heroSpawner != null) heroSpawner.HeroSpawned += OnHeroSpawned;
         }
+
+        // Hero portrait cam is hand-placed in the scene (parented + offset
+        // however you like, relative to the hero). No HeadAnchor reparenting —
+        // EnableCameras still toggles it on during dialogue.
 
         private void OnDestroy()
         {
             if (controller != null) controller.Finished -= OnDialogueFinished;
-            if (heroSpawner != null) heroSpawner.HeroSpawned -= OnHeroSpawned;
-        }
-
-        private void OnHeroSpawned(HeroEnemy hero)
-        {
-            if (hero != null) ParentCamToHeadAnchor(heroPortraitCam, hero.transform);
         }
 
         private void ParentCamToHeadAnchor(Camera cam, Transform actor)

@@ -12,6 +12,11 @@ GameObject:
   - component: {fileID: 6141999145694484533}
   - component: {fileID: 8988924489543744632}
   - component: {fileID: 1982423208079333074}
+  - component: {fileID: 4241545259068807302}
+  - component: {fileID: 3874092561385176467}
+  - component: {fileID: 8768223249846523597}
+  - component: {fileID: 6904885068016557614}
+  - component: {fileID: 2825991036323869408}
   m_Layer: 0
   m_Name: HeroEnemy
   m_TagString: Untagged
@@ -79,15 +84,90 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  fireballPrefab: {fileID: 5340630882246654578, guid: c6b5382f5ee7f4b64a1bef0f1dbf3403, type: 3}
   grid: {fileID: 0}
   config: {fileID: 11400000, guid: 4978d48ee606748c89f956fe01dc2978, type: 2}
+  brain: {fileID: 4241545259068807302}
+  melee: {fileID: 3874092561385176467}
+  fireball: {fileID: 8768223249846523597}
+  dodge: {fileID: 6904885068016557614}
+  fireballUnlockWave: 2
+  dodgeUnlockWave: 3
   orbitSign: 1
   drawKiteVisual: 1
   kiteVisualColor: {r: 0.2, g: 1, b: 0.6, a: 0.9}
   kiteLineWidth: 0.08
   kiteDotScale: 0.35
   kiteVisualYLift: 0.1
+  pushDurationSeconds: 0.15
+  stunDurationSeconds: 0.5
+  iframesOnHitSeconds: 0.5
+--- !u!114 &4241545259068807302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1432158357741170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a693b39b3f19b46d49c93b17e3053020, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &3874092561385176467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1432158357741170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ac1aa4dd6035443e9333f9cf33e7a89, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 0}
+  animatorTrigger: Attack
+--- !u!114 &8768223249846523597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1432158357741170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dd9c2cf393c44159830c76369324ccb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fireballPrefab: {fileID: 5340630882246654578, guid: c6b5382f5ee7f4b64a1bef0f1dbf3403, type: 3}
+--- !u!114 &6904885068016557614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1432158357741170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a29cf9baaf1d41e4bf5ccbd586bfdb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 0}
+  animatorTrigger: hero_run_stepped
+--- !u!114 &2825991036323869408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1432158357741170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f901afc36c84b4f84b9093665c5a93b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rendererRoot: {fileID: 0}
+  blinkHz: 10
 --- !u!1 &906896313872348745
 GameObject:
   m_ObjectHideFlags: 0

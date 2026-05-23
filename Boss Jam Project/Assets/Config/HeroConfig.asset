@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07ab57981bc944f51834869f9bbe6844, type: 3}
   m_Name: HeroConfig
   m_EditorClassIdentifier: 
-  maxHp: 20
+  maxHp: 1
   tickMultiplier: 1
-  moveSpeed: 10
+  moveSpeed: 0.01
   moveSpeedMultiplier: 1
-  preferredDistanceCells: 20
+  preferredDistanceCells: 10
   stuckFlipSeconds: 0.25
   reactionTimeSeconds: 0.25
   velocityWindowSeconds: 0.1
@@ -24,4 +24,12 @@ MonoBehaviour:
   perceptionBufferSeconds: 1
   fireballIntervalSeconds: 2.5
   fireballSize: {x: 1, y: 1}
+  fireballDamage: 1
   firstShotDelay: 1
+  meleeDamage: 1
+  meleeRangeCells: 1.75
+  meleeApproachDistanceCells: 1.5
+  meleeCooldownSeconds: 0.9
+  dodgeSpeedMultiplier: 4.5
+  dodgeDurationSeconds: 0.35
+  dodgeCooldownSeconds: 1.5

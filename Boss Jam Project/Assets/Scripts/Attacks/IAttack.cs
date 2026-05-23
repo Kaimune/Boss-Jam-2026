@@ -10,6 +10,7 @@ namespace BossJam.Attacks
 
         float PhaseProgress01 { get; }
         float CooldownRemaining { get; }
+        float TimeToIdle { get; }
 
         bool IsBusy { get; }
         bool LocksMovement { get; }

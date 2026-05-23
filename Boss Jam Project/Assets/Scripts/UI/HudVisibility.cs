@@ -54,7 +54,7 @@ namespace BossJam.UI
 
         private void AutoResolveChildren()
         {
-            string[] names = { "BossHealthBar", "HeroHealthBar", "TierLabel" };
+            string[] names = { "BossHealthBar", "HeroHealthBar", "TierLabel", "AbilityBar" };
             var found = new System.Collections.Generic.List<GameObject>(names.Length);
             for (int i = 0; i < names.Length; i++)
             {

@@ -19,74 +19,67 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 72d1682011f5647f49ae278891074a36, type: 2}
   - {fileID: 11400000, guid: a7c9e3b18f24d44f0a5c8de7b40b6c2e, type: 2}
   debuffs:
-  - name: Very Hard
+  - name: Extreme
     description: '"Damn... Immortal is literally impossible"'
     icon: {fileID: 0}
     tint: {r: 1, g: 0.85, b: 0.5, a: 1}
-    tierName: Very Hard
+    tierName: Extreme
     tierDescription: 'Boss made well... not immortal...
 
 
-      boss no longer regenerates
-      health
-
-      boss no longer '
-    effect:
-      rid: 5190052726517006752
-  - name: Hardened
+      player: moves now,
+      melee atacks enabled, +3 hp'
+    effects:
+    - {fileID: 0}
+  - name: Very Hard
     description: Boss gains +2 max HP.
     icon: {fileID: 0}
     tint: {r: 0.7, g: 0.9, b: 1, a: 1}
-    tierName: Tier 2 Hardened
+    tierName: Very Hard
     tierDescription: Its hide thickens.
-    effect:
-      rid: 5190052726517006753
-  - name: Frenzy
+    effects:
+    - {fileID: 11400000, guid: 1d2535789ebe94a00a3a874f3e3a765f, type: 2}
+    - {fileID: 11400000, guid: 7c62c895696fb4e96ae1ded1eb0b6081, type: 2}
+    - {fileID: 11400000, guid: 8613bae6aab0b414ea06502794c9000c, type: 2}
+  - name: Hard
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
     tint: {r: 1, g: 0.5, b: 0.5, a: 1}
     tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
-    effect:
-      rid: 5190052726517006754
-  references:
-    version: 2
-    RefIds:
-    - rid: 5190052726517006752
-      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        target: 10
-        op: 1
-        value: 1.15
-        attackId: 
-        extensionKey: 
-    - rid: 5190052726517006753
-      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        target: 10
-        op: 1
-        value: 2
-        attackId: 
-        extensionKey: 
-    - rid: 5190052726517006754
-      type: {class: CompositeEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        effects:
-        - rid: 5190052726517006755
-        - rid: 5190052726517006756
-    - rid: 5190052726517006755
-      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        target: 11
-        op: 0
-        value: 1.25
-        attackId: 
-        extensionKey: 
-    - rid: 5190052726517006756
-      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        target: 10
-        op: 1
-        value: 3
-        attackId: 
-        extensionKey: 
+    effects: []
+  - name: Medium
+    description: Boss acts 25% faster and gains +3 HP.
+    icon: {fileID: 0}
+    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
+    tierName: Tier 3 Frenzied
+    tierDescription: Pain becomes fuel.
+    effects: []
+  - name: Easy
+    description: Boss acts 25% faster and gains +3 HP.
+    icon: {fileID: 0}
+    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
+    tierName: Tier 3 Frenzied
+    tierDescription: Pain becomes fuel.
+    effects: []
+  - name: Beginner
+    description: Boss acts 25% faster and gains +3 HP.
+    icon: {fileID: 0}
+    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
+    tierName: Tier 3 Frenzied
+    tierDescription: Pain becomes fuel.
+    effects: []
+  - name: Tutorial
+    description: Boss acts 25% faster and gains +3 HP.
+    icon: {fileID: 0}
+    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
+    tierName: Tier 3 Frenzied
+    tierDescription: Pain becomes fuel.
+    effects: []
+  - name: Error....
+    description: Boss acts 25% faster and gains +3 HP.
+    icon: {fileID: 0}
+    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
+    tierName: Tier 3 Frenzied
+    tierDescription: Pain becomes fuel.
+    effects: []
