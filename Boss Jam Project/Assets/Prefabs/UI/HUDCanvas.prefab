@@ -692,7 +692,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press SPACE to play
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 559f8db07d8ef465991b082fac0fcbb7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4fb15619488354e44bd634236c75dd78, type: 2}
   m_sharedMaterial: {fileID: 0}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1944,10 +1944,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.82}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2069,7 +2069,7 @@ MonoBehaviour:
   panelRoot: {fileID: 4899741668845553458}
   titleLabel: {fileID: 5665125225237703724}
   promptLabel: {fileID: 6055898341228700201}
-  titleText: Boss Jam
+  titleText: Labyrinth
   promptText: Press SPACE to play
 --- !u!1 &7549639191539467748
 GameObject:
@@ -2389,9 +2389,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Boss Jam
+  m_text: Labyrinth
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 559f8db07d8ef465991b082fac0fcbb7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4fb15619488354e44bd634236c75dd78, type: 2}
   m_sharedMaterial: {fileID: 0}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}

@@ -1,4 +1,5 @@
 using System.Collections;
+using BossJam.Game;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,7 +16,16 @@ namespace BossJam.Cutscene
         [SerializeField] private Image image;
 
         private void Reset() { image = GetComponent<Image>(); }
-        private void Awake() { if (image == null) image = GetComponent<Image>(); SetAlpha(0f); }
+
+        private void Awake()
+        {
+            if (image == null) image = GetComponent<Image>();
+            // Mid-run scene reloads (between waves) come in under a black
+            // outro fade. Start fully opaque so the seam is invisible — the
+            // start screen will fade us out once it has populated the tier
+            // labels. Fresh runs start transparent as before.
+            SetAlpha(GameSession.IsMidRun ? 1f : 0f);
+        }
 
         public void SetAlpha(float a)
         {

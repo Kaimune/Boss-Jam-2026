@@ -21,6 +21,12 @@ namespace BossJam.Difficulty
         public string currentTierName = "Immortal";
         public DebuffEntry currentTierEntry;
 
+        // Snapshot of the tier before the most recent ApplyNextDebuff. Used by
+        // the start screen to animate from the previous tier to the new one
+        // when entering a fresh wave's scene.
+        public string previousTierName = "Immortal";
+        public DebuffEntry previousTierEntry;
+
         public bool IsMidRun => appliedEntries != null && appliedEntries.Count > 0;
 
         public void ResetForNewRun()
@@ -29,6 +35,8 @@ namespace BossJam.Difficulty
             appliedEntries.Clear();
             currentTierName = "Immortal";
             currentTierEntry = null;
+            previousTierName = "Immortal";
+            previousTierEntry = null;
         }
 
         // Guard against Unity's "Enter Play Mode → Reload Domain" being

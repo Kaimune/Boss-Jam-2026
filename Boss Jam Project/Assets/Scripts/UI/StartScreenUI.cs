@@ -1,3 +1,5 @@
+using System.Collections;
+using BossJam.Cutscene;
 using BossJam.Game;
 using TMPro;
 using UnityEngine;
@@ -6,10 +8,13 @@ using UnityEngine.InputSystem;
 namespace BossJam.UI
 {
     /// <summary>
-    /// Full-screen overlay shown while GameStateController is in Startup.
-    /// Time is paused and the boss is disabled until Space is pressed, which
-    /// calls Begin() and transitions to Playing. Disappears once the run has
-    /// started and never returns this session.
+    /// Plain title screen shown while GameStateController is in Startup. Press
+    /// SPACE → Begin() → transitions into Intermediate (the difficulty card).
+    /// On mid-run scene reloads the title arrives under the outro's black
+    /// FadeOverlay; this script fades the overlay out before arming input so
+    /// the player isn't pressing into a black screen.
+    ///
+    /// Time is paused during Startup, so all waits use unscaled time.
     /// </summary>
     public class StartScreenUI : MonoBehaviour
     {
@@ -18,15 +23,26 @@ namespace BossJam.UI
         [SerializeField] private TMP_Text titleLabel;
         [SerializeField] private TMP_Text promptLabel;
 
+        [Header("Scene refs")]
+        [SerializeField] private FadeOverlay fadeOverlay;
+
         [Header("Copy")]
-        [SerializeField] private string titleText = "Boss Jam";
+        [SerializeField] private string titleText = "Labyrinth";
         [SerializeField] private string promptText = "Press SPACE to play";
 
+        [Header("Mid-run fade-in")]
+        [Tooltip("Seconds to fade the outro's black overlay out when arriving mid-run.")]
+        [SerializeField] private float fadeOutSeconds = 0.5f;
+
         private GameStateController controller;
+        private bool inputArmed;
 
         private void Awake()
         {
             controller = GameStateController.Instance ?? FindFirstObjectByType<GameStateController>();
+            // FadeOverlay lives in the scene, not in this prefab. Auto-resolve so
+            // mid-run reloads don't strand us behind the outro's black overlay.
+            if (fadeOverlay == null) fadeOverlay = FindFirstObjectByType<FadeOverlay>();
 
             if (controller == null || panelRoot == null)
             {
@@ -38,12 +54,11 @@ namespace BossJam.UI
             if (titleLabel != null) titleLabel.text = titleText;
             if (promptLabel != null) promptLabel.text = promptText;
 
-            // Mid-run scene reloads land here with RunState carrying applied
-            // debuffs from prior waves. Skip the start screen entirely — the
-            // controller will auto-Begin on its own Start.
-            bool showStartScreen = controller.State == GameState.Startup && !GameSession.IsMidRun;
-            panelRoot.SetActive(showStartScreen);
-            if (!showStartScreen) enabled = false;
+            bool show = controller.State == GameState.Startup;
+            panelRoot.SetActive(show);
+            if (!show) { enabled = false; return; }
+
+            StartCoroutine(RunIntro(GameSession.IsMidRun));
         }
 
         private void OnEnable()
@@ -58,18 +73,29 @@ namespace BossJam.UI
 
         private void OnStateChanged(GameState state)
         {
-            panelRoot.SetActive(state == GameState.Startup);
+            if (panelRoot != null) panelRoot.SetActive(state == GameState.Startup);
         }
 
         private void Update()
         {
-            if (controller == null || controller.State != GameState.Startup) return;
+            if (!inputArmed || controller == null || controller.State != GameState.Startup) return;
             var kb = Keyboard.current;
             if (kb != null && kb.spaceKey.wasPressedThisFrame)
             {
-                GameSession.StartNewRun();
+                // Mid-run keeps applied debuffs; only a true fresh launch wipes RunState.
+                if (!GameSession.IsMidRun) GameSession.StartNewRun();
                 controller.Begin();
             }
+        }
+
+        private IEnumerator RunIntro(bool midRun)
+        {
+            inputArmed = false;
+            if (midRun && fadeOverlay != null)
+            {
+                yield return fadeOverlay.FadeOut(fadeOutSeconds);
+            }
+            inputArmed = true;
         }
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using BossJam.Difficulty;
 using BossJam.Game;
 using UnityEngine;
 
@@ -8,7 +7,9 @@ namespace BossJam.Cutscene
 {
     /// <summary>
     /// Drives the death cutscenes.
-    ///   PlayHeroDeath: pause -> boss line -> fade -> tier card -> fade back -> OutroComplete.
+    ///   PlayHeroDeath: pause -> boss line -> fade to black -> OutroComplete.
+    ///     Fade stays on; the controller reloads the scene under black and
+    ///     the next wave's StartScreenUI owns the fade-out + tier transition.
     ///   PlayBossDeath: pause -> defeat line -> fade in -> OutroComplete (fade stays on,
     ///     GameOverScreenUI shows over the faded canvas).
     /// </summary>
@@ -16,21 +17,13 @@ namespace BossJam.Cutscene
     {
         [SerializeField] private DialogueRig dialogueRig;
         [SerializeField] private FadeOverlay fadeOverlay;
-        [SerializeField] private TierCardUI tierCardUI;
-        [SerializeField] private DifficultyRuntime difficulty;
 
         [SerializeField] private string heroDeathScriptFormat = "hero_death_wave_{0}";
         [SerializeField] private string gameOverScript = "game_over";
         [SerializeField] private float heroDeathHoldSeconds = 0.4f;
         [SerializeField] private float fadeDurationSeconds = 0.6f;
-        [SerializeField] private float tierCardHoldSeconds = 1.8f;
 
         public event Action OutroComplete;
-
-        private void Awake()
-        {
-            if (difficulty == null) difficulty = FindFirstObjectByType<DifficultyRuntime>();
-        }
 
         public void PlayHeroDeath(int waveIndex)
         {
@@ -48,12 +41,11 @@ namespace BossJam.Cutscene
 
             yield return PlayLine(string.Format(heroDeathScriptFormat, waveIndex));
 
+            // Fade to black and leave it on — the scene reload happens under
+            // the black overlay so the player never sees the dying-wave scene.
+            // The next wave's FadeOverlay starts at alpha=1 and the start
+            // screen fades it out once the tier transition is wired.
             if (fadeOverlay != null) yield return fadeOverlay.FadeIn(fadeDurationSeconds);
-
-            if (tierCardUI != null && difficulty != null)
-                yield return tierCardUI.Show(difficulty.NextTierLabel, difficulty.NextDebuffDescription, tierCardHoldSeconds);
-
-            if (fadeOverlay != null) yield return fadeOverlay.FadeOut(fadeDurationSeconds);
 
             OutroComplete?.Invoke();
         }
