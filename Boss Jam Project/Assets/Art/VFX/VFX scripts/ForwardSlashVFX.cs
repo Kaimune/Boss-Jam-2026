@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 
 public class ForwardSlashVFX : MonoBehaviour
 {
@@ -6,7 +7,6 @@ public class ForwardSlashVFX : MonoBehaviour
 
     [Header("Timing")]
     public float lifetime = 0.18f;
-    public float steppedFPS = 8f;
 
     [Header("Scale")]
     public Vector3 startScale = new Vector3(0.6f, 0.6f, 1f);
@@ -21,8 +21,7 @@ public class ForwardSlashVFX : MonoBehaviour
     private Vector3 originalScale;
     private Quaternion originalRotation;
 
-    private float timer;
-    private bool playing;
+    private Sequence sequence;
 
     private void Awake()
     {
@@ -40,49 +39,18 @@ public class ForwardSlashVFX : MonoBehaviour
 
     private void OnDestroy()
     {
+        sequence?.Kill();
+
         if (mat != null)
             Destroy(mat);
     }
 
-    private void Update()
-    {
-        if (!playing)
-            return;
-
-        timer += Time.deltaTime;
-
-        float rawT = Mathf.Clamp01(timer / lifetime);
-
-        // Makes animation update in chunks
-        float steppedT = Mathf.Floor(rawT * steppedFPS) / steppedFPS;
-        steppedT = Mathf.Clamp01(steppedT);
-
-        transform.localScale = Vector3.Lerp(startScale, endScale, steppedT);
-
-        float rot = Mathf.Lerp(rotationKick, -rotationKick, steppedT);
-        transform.localRotation = originalRotation * Quaternion.Euler(0f, 0f, rot);
-
-        Color c = startColor;
-        c.a = 1f - steppedT;
-        mat.color = c;
-
-        if (timer >= lifetime)
-        {
-            playing = false;
-            slashRenderer.enabled = false;
-
-            transform.localScale = originalScale;
-            transform.localRotation = originalRotation;
-        }
-    }
-
     public void PlaySlash()
     {
-        timer = 0f;
-        playing = true;
+        sequence?.Kill();
 
         transform.localScale = startScale;
-        transform.localRotation = originalRotation;
+        transform.localRotation = originalRotation * Quaternion.Euler(0f, 0f, rotationKick);
 
         if (randomFlipY && Random.value > 0.5f)
         {
@@ -96,5 +64,35 @@ public class ForwardSlashVFX : MonoBehaviour
         mat.color = c;
 
         slashRenderer.enabled = true;
+
+        sequence = DOTween.Sequence();
+
+        sequence.Append(
+            transform.DOScale(endScale, lifetime)
+                .SetEase(Ease.OutQuad)
+        );
+
+        sequence.Join(
+            transform.DOLocalRotateQuaternion(
+                originalRotation * Quaternion.Euler(0f, 0f, -rotationKick),
+                lifetime
+            ).SetEase(Ease.OutQuad)
+        );
+
+        sequence.Join(
+            mat.DOFade(0f, lifetime)
+                .SetEase(Ease.Linear)
+        );
+
+        sequence.OnComplete(() =>
+        {
+            slashRenderer.enabled = false;
+            transform.localScale = originalScale;
+            transform.localRotation = originalRotation;
+
+            Color reset = startColor;
+            reset.a = startColor.a;
+            mat.color = reset;
+        });
     }
 }
