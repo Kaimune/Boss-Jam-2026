@@ -12,14 +12,26 @@ namespace BossJam.Enemies
     [DisallowMultipleComponent]
     [RequireComponent(typeof(GridFootprint))]
     [RequireComponent(typeof(GridMover))]
-    public class HeroEnemy : MonoBehaviour, IGridEntity, IDamageable
+    public class HeroEnemy : MonoBehaviour, IGridEntity, IDamageable, IInvulnerable
     {
         [Header("Refs")]
         [SerializeField] private Transform target;
-        [SerializeField] private Fireball fireballPrefab;
         [SerializeField] private BossGrid grid;
         [Tooltip("Tunable hero stats. If unassigned, falls back to a runtime-created default with the values defined in HeroConfig.cs.")]
         [SerializeField] private HeroConfig config;
+
+        [Header("Abilities")]
+        [SerializeField] private HeroBrain brain;
+        [SerializeField] private HeroMelee melee;
+        [SerializeField] private HeroFireball fireball;
+        [SerializeField] private HeroDodge dodge;
+        [Tooltip("Wave (1-based) at which the hero gains the matching ability. Melee is always on.")]
+        [SerializeField, Min(1)] private int fireballUnlockWave = 2;
+        [SerializeField, Min(1)] private int dodgeUnlockWave = 3;
+
+        // Public read-only views the ability components query each frame.
+        public HeroConfig Config => config;
+        public BossGrid Grid => grid;
 
         private int currentHp;
         private int spawnedMaxHp;
@@ -75,6 +87,7 @@ namespace BossJam.Enemies
 
         public void TakeDamage(int amount, IGridEntity source)
         {
+            if (IsInvulnerable) return;
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"HeroEnemy '{name}' took {amount} damage (hp={currentHp})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
@@ -82,17 +95,65 @@ namespace BossJam.Enemies
             {
                 HeroKilledStatic?.Invoke();
                 Destroy(gameObject);
+                return;
             }
+            BeginHitReaction();
+        }
+
+        // ── Hit reaction ─────────────────────────────────────────────
+        [Header("Hit reaction")]
+        [Tooltip("Seconds the hero is shoved in the random push direction after a non-killing hit.")]
+        [SerializeField, Min(0f)] private float pushDurationSeconds = 0.15f;
+        [Tooltip("Seconds the hero is stunned (no kiting, no abilities) after a non-killing hit. Push runs inside this window.")]
+        [SerializeField, Min(0.05f)] private float stunDurationSeconds = 0.5f;
+        [Tooltip("Iframe window granted after a hit. Usually matches stun so chained boss hits can't connect mid-stun.")]
+        [SerializeField, Min(0f)] private float iframesOnHitSeconds = 0.5f;
+
+        private float invulnUntil = -1f;
+        private float stunUntil = -1f;
+        private float pushUntil = -1f;
+        private Vector2 pushDir;
+
+        public bool IsInvulnerable => Time.time < invulnUntil;
+        public bool IsStunned => Time.time < stunUntil;
+
+        public void SetInvulnFor(float seconds)
+        {
+            if (seconds <= 0f) return;
+            var until = Time.time + seconds;
+            if (until > invulnUntil) invulnUntil = until;
+        }
+
+        private void BeginHitReaction()
+        {
+            int pick = UnityEngine.Random.Range(0, 4);
+            pushDir = pick switch
+            {
+                0 => Vector2.up,
+                1 => Vector2.down,
+                2 => Vector2.left,
+                _ => Vector2.right,
+            };
+            pushUntil = Time.time + pushDurationSeconds;
+            stunUntil = Time.time + stunDurationSeconds;
+            SetInvulnFor(iframesOnHitSeconds);
+
+            // Abort any in-progress ability so the brain isn't mid-dodge or
+            // mid-fireball-spawn when control resumes. Brain.CancelAll calls
+            // Cancel() on each registered ability.
+            if (brain != null) brain.CancelAll();
         }
 
         private GridMover mover;
         private GridFootprint targetFootprint;
-        private float nextShotTime;
         private float stuckTimer;
         private Vector2 kiteTarget;
         private bool hasKiteTarget;
         private BossPredictor predictor;
         private Vector2 predictedBossCenter;
+        private BossJam.Player.BossController bossRef;
+        private bool lastDodgeActive;
+        private bool tickAppliedAsBoosted;
 
         // Runtime debug visual (visible in Game view without needing Gizmos toggle).
         private LineRenderer kiteLine;
@@ -116,10 +177,28 @@ namespace BossJam.Enemies
 
             // When spawned from a prefab the scene-bound target ref is null —
             // resolve to the boss in the scene.
-            if (target == null)
+            bossRef = FindFirstObjectByType<BossJam.Player.BossController>();
+            if (target == null && bossRef != null) target = bossRef.transform;
+
+            // Auto-resolve ability components if the inspector didn't wire them.
+            if (brain == null)    brain    = GetComponent<HeroBrain>();
+            if (melee == null)    melee    = GetComponent<HeroMelee>();
+            if (fireball == null) fireball = GetComponent<HeroFireball>();
+            if (dodge == null)    dodge    = GetComponent<HeroDodge>();
+
+            // Wave-based loadout. Wave 1 = melee only; later waves unlock more.
+            int wave = rt != null ? rt.CurrentWaveIndex : 1;
+            if (brain != null)
             {
-                var boss = FindFirstObjectByType<BossJam.Player.BossController>();
-                if (boss != null) target = boss.transform;
+                if (melee != null) brain.RegisterAbility(melee);
+                if (fireball != null && wave >= fireballUnlockWave) brain.RegisterAbility(fireball);
+                if (dodge != null && wave >= dodgeUnlockWave) brain.RegisterAbility(dodge);
+
+                // Disable locked-ability components so their internal state
+                // (cooldown timers, OnEnable side effects) doesn't tick during
+                // waves where the brain ignores them.
+                if (fireball != null) fireball.enabled = wave >= fireballUnlockWave;
+                if (dodge != null) dodge.enabled = wave >= dodgeUnlockWave;
             }
 
             // Predictor tuning is read-once at spawn. Reaction/velocity-window
@@ -159,7 +238,11 @@ namespace BossJam.Enemies
             Debug.LogWarning($"HeroEnemy '{name}' has no HeroConfig assigned; using runtime defaults.", this);
         }
 
-        private void ApplyTick()
+        private void ApplyTick() => ApplyTickInternal(boosted: false);
+
+        // boosted == true folds the dodge speed multiplier into the GridMover
+        // tick so the hero physically moves faster during a dodge window.
+        private void ApplyTickInternal(bool boosted)
         {
             EnsureConfig();
             if (config == null) return; // edit mode + unassigned: nothing to scale yet
@@ -175,6 +258,11 @@ namespace BossJam.Enemies
             if (m != null && g != null)
             {
                 float speed = config.moveSpeed * Mathf.Max(0.01f, config.moveSpeedMultiplier);
+                if (boosted)
+                {
+                    float boost = Eff(Target.HeroDodgeSpeedMultiplier, config.dodgeSpeedMultiplier);
+                    speed *= Mathf.Max(1f, boost);
+                }
                 if (speed > 0.0001f && g.TickDuration > 0.0001f)
                     m.ApplyTick(1f / (g.TickDuration * speed));
             }
@@ -184,7 +272,6 @@ namespace BossJam.Enemies
         {
             // Awake-order between root GameObjects is undefined; resolve in Start.
             if (target != null) targetFootprint = target.GetComponent<GridFootprint>();
-            nextShotTime = Time.time + Eff(Target.HeroFirstShotDelay, config.firstShotDelay);
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
         }
 
@@ -195,10 +282,66 @@ namespace BossJam.Enemies
                 return;
             if (target == null) { mover.InputDirection = Vector2.zero; return; }
 
+            // Stun gate: brain ignored, kiting paused. Push direction drives
+            // the mover for the first slice of the stun, then the hero sits
+            // until iframes/stun lapse together.
+            if (IsStunned)
+            {
+                mover.InputDirection = (Time.time < pushUntil) ? pushDir : Vector2.zero;
+                return;
+            }
+
             UpdatePerception();
-            mover.InputDirection = ComputeSteering();
+
+            // Compute kite first so the decision context can carry it. The
+            // ability brain may then override the direction (dodge locks its
+            // own vector at Begin time and replays it for the boost window).
+            Vector2 kiteDir = ComputeSteering(bossInPunishWindowAndUnspent: PunishWindowOpenForApproach());
+            var ctx = BuildContext(kiteDir);
+
+            if (brain != null)
+            {
+                brain.TickAll(Time.deltaTime);
+                var pick = brain.Choose(ctx);
+                if (pick != null) brain.Commit(pick, ctx);
+            }
+
+            Vector2 inputDir = (dodge != null && dodge.IsActive) ? dodge.LockedDirection : kiteDir;
+            mover.InputDirection = inputDir;
+            ApplyDodgeSpeedIfChanged();
             TickStuckDetector();
-            TickFireball();
+        }
+
+        // Hero approaches melee range when the boss has an opening AND the
+        // brain hasn't already spent its hit this window.
+        private bool PunishWindowOpenForApproach()
+            => bossRef != null && bossRef.InPunishWindow
+               && brain != null && !brain.PunishWindowConsumed;
+
+        private HeroDecisionContext BuildContext(Vector2 kiteDir)
+        {
+            Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
+            float dist = Vector2.Distance(myCenter, predictedBossCenter);
+            return new HeroDecisionContext
+            {
+                heroCenter         = myCenter,
+                bossCenter         = predictedBossCenter,
+                kiteDir            = kiteDir,
+                distanceToBossCells = dist,
+                bossInPunishWindow = bossRef != null && bossRef.InPunishWindow,
+            };
+        }
+
+        // Reapply mover tick when dodge state flips so the speed boost is
+        // gated to exactly the dodge's active window. Avoids the per-frame
+        // cost of recomputing the tick scale when nothing has changed.
+        private void ApplyDodgeSpeedIfChanged()
+        {
+            bool dodging = dodge != null && dodge.IsActive;
+            if (dodging == lastDodgeActive && dodging == tickAppliedAsBoosted) return;
+            lastDodgeActive = dodging;
+            tickAppliedAsBoosted = dodging;
+            ApplyTickInternal(dodging);
         }
 
         private void UpdatePerception()
@@ -210,11 +353,16 @@ namespace BossJam.Enemies
             predictedBossCenter = predictor.Predict(Time.time, realBossCenter);
         }
 
-        private Vector2 ComputeSteering()
+        private Vector2 ComputeSteering(bool bossInPunishWindowAndUnspent)
         {
             Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
 
-            float kiteDist = Eff(Target.HeroPreferredDistanceCells, config.preferredDistanceCells);
+            // Dynamic preferred distance: collapse inward to melee range when
+            // there's an opening to punish; otherwise kite at the full radius.
+            float kiteDist = bossInPunishWindowAndUnspent
+                ? Eff(Target.HeroMeleeApproachDistanceCells, config.meleeApproachDistanceCells)
+                : Eff(Target.HeroPreferredDistanceCells, config.preferredDistanceCells);
+
             var r = HeroKiteSteering.Solve(
                 myCenter, predictedBossCenter, kiteDist, grid,
                 Footprint.Footprint, orbitSign);
@@ -238,41 +386,6 @@ namespace BossJam.Enemies
                 orbitSign = -orbitSign;
                 stuckTimer = 0f;
             }
-        }
-
-        private void TickFireball()
-        {
-            if (fireballPrefab == null || grid == null) return;
-            if (Time.time < nextShotTime) return;
-            nextShotTime = Time.time + Eff(Target.HeroFireballIntervalSeconds, config.fireballIntervalSeconds);
-            SpawnFireball();
-        }
-
-        private void SpawnFireball()
-        {
-            Vector2 fireSize = new Vector2(
-                Eff(Target.HeroFireballSizeX, config.fireballSize.x),
-                Eff(Target.HeroFireballSizeY, config.fireballSize.y));
-
-            Vector2 anchor = Footprint.Anchor;
-            Vector3 worldPos = grid.FootprintCenterWorld(anchor, fireSize);
-
-            // Aim at the predicted boss position (lag + extrapolation), so juking
-            // dodges shots the same way it dodges movement.
-            Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
-            Vector2 dir = predictedBossCenter - myCenter;
-            if (dir.sqrMagnitude < 0.0001f) dir = Vector2.left;
-            dir.Normalize();
-
-            Fireball instance = Instantiate(fireballPrefab);
-            instance.gameObject.SetActive(false);
-            instance.transform.position = worldPos;
-
-            GridFootprint fp = instance.GetComponent<GridFootprint>();
-            if (fp != null) fp.Configure(anchor, fireSize, grid);
-
-            instance.Direction = dir;
-            instance.gameObject.SetActive(true);
         }
 
         private Vector2 WorldToCellCenter(Vector3 world)

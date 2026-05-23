@@ -29,6 +29,10 @@ namespace BossJam.Enemies
 
         public int Damage => damage;
 
+        // Set by HeroFireball at spawn so per-wave difficulty modifiers on
+        // Target.HeroFireballDamage flow through to the projectile.
+        public void SetDamage(int amount) { damage = Mathf.Max(0, amount); }
+
         // IGridEntity
         private GridFootprint cachedFootprint;
         public GridFootprint Footprint =>

@@ -10,7 +10,7 @@ using UnityEngine.Serialization;
 namespace BossJam.Player
 {
     [RequireComponent(typeof(GridMover))]
-    public class BossController : MonoBehaviour, IGridEntity, IDamageable
+    public class BossController : MonoBehaviour, IGridEntity, IDamageable, IInvulnerable
     {
         [Header("Tick")]
         [Tooltip("Per-actor scalar on the grid's tick. 1 = baseline, >1 slower, <1 faster.")]
@@ -80,6 +80,24 @@ namespace BossJam.Player
             {
                 for (int i = 0; i < attacks.Count; i++)
                     if (attacks[i] != null && attacks[i].LocksMovement) return true;
+                return false;
+            }
+        }
+
+        // True when any of the boss's attacks is in Recovery or Cooldown — the
+        // hero treats this as the "punish window" to dive in for melee while
+        // the boss is locked out of an immediate response.
+        public bool InPunishWindow
+        {
+            get
+            {
+                for (int i = 0; i < attacks.Count; i++)
+                {
+                    var a = attacks[i];
+                    if (a == null) continue;
+                    var s = a.State;
+                    if (s == AttackState.Recovery || s == AttackState.Cooldown) return true;
+                }
                 return false;
             }
         }

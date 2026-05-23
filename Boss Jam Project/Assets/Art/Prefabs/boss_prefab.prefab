@@ -1527,8 +1527,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4061830125026889192}
   - component: {fileID: 2213737661558194679}
-  - component: {fileID: 5990279789624029754}
-  - component: {fileID: 5577949513349918948}
+  - component: {fileID: 2977289710572397576}
+  - component: {fileID: 6883417561824152340}
   m_Layer: 0
   m_Name: boss_prefab
   m_TagString: Untagged
@@ -1588,7 +1588,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &5990279789624029754
+--- !u!114 &2977289710572397576
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1597,13 +1597,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 4861109385937965429}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2539149fb1b91f0489c5c13c9649ccc4, type: 3}
+  m_Script: {fileID: 11500000, guid: 5556ba3e670d542ff8e6b40fb723c08b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slashPrefab: {fileID: 0}
-  slashSpawnPoint: {fileID: 0}
-  mainCamera: {fileID: 0}
---- !u!114 &5577949513349918948
+--- !u!114 &6883417561824152340
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1612,10 +1609,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4861109385937965429}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5467ddfd0d304f04ebc0fa01bbcd8c29, type: 3}
+  m_Script: {fileID: 11500000, guid: baf08be2400a04d719b93f7dac4b598d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slash: {fileID: 0}
 --- !u!1 &5118348898369756526
 GameObject:
   m_ObjectHideFlags: 0
