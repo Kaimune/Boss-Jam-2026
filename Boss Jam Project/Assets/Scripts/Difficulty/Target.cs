@@ -16,6 +16,7 @@ namespace BossJam.Difficulty
         // ── Hero ─────────────────────────────────────────────
         HeroMaxHp,
         HeroTickMultiplier,
+        HeroMoveSpeed,
         HeroPreferredDistanceCells,
         HeroStuckFlipSeconds,
         HeroReactionTimeSeconds,
