@@ -62,5 +62,10 @@ namespace BossJam.Difficulty
         [Tooltip("Effects fired when this entry lands. Each entry is a DebuffEffect ScriptableObject asset — " +
                  "create them via Assets → Create → BossJam/Difficulty/Stat Modifier Effect (or other subtype).")]
         public List<DebuffEffect> effects = new List<DebuffEffect>();
+
+        [Header("Narration (black-screen text shown before the difficulty card)")]
+        [Tooltip("Name of a JSON script under Resources/Narration/ (no extension). " +
+                 "Empty = no narration; flow goes straight to the difficulty card.")]
+        public string narrationScriptName;
     }
 }

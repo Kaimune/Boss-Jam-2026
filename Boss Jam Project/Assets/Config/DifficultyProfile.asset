@@ -30,7 +30,10 @@ MonoBehaviour:
       player: moves now,
       melee atacks enabled, +3 hp'
     effects:
-    - {fileID: 0}
+    - {fileID: 11400000, guid: 1d2535789ebe94a00a3a874f3e3a765f, type: 2}
+    - {fileID: 11400000, guid: 7c62c895696fb4e96ae1ded1eb0b6081, type: 2}
+    - {fileID: 11400000, guid: 8613bae6aab0b414ea06502794c9000c, type: 2}
+    narrationScriptName: extreme
   - name: Very Hard
     description: Boss gains +2 max HP.
     icon: {fileID: 0}
@@ -41,6 +44,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 1d2535789ebe94a00a3a874f3e3a765f, type: 2}
     - {fileID: 11400000, guid: 7c62c895696fb4e96ae1ded1eb0b6081, type: 2}
     - {fileID: 11400000, guid: 8613bae6aab0b414ea06502794c9000c, type: 2}
+    narrationScriptName: 
   - name: Hard
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
@@ -48,6 +52,7 @@ MonoBehaviour:
     tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
     effects: []
+    narrationScriptName: 
   - name: Medium
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
@@ -55,6 +60,7 @@ MonoBehaviour:
     tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
     effects: []
+    narrationScriptName: 
   - name: Easy
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
@@ -62,6 +68,7 @@ MonoBehaviour:
     tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
     effects: []
+    narrationScriptName: 
   - name: Beginner
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
@@ -69,6 +76,7 @@ MonoBehaviour:
     tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
     effects: []
+    narrationScriptName: 
   - name: Tutorial
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
@@ -76,6 +84,7 @@ MonoBehaviour:
     tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
     effects: []
+    narrationScriptName: 
   - name: Error....
     description: Boss acts 25% faster and gains +3 HP.
     icon: {fileID: 0}
@@ -83,3 +92,4 @@ MonoBehaviour:
     tierName: Tier 3 Frenzied
     tierDescription: Pain becomes fuel.
     effects: []
+    narrationScriptName: 

@@ -4,6 +4,7 @@ using BossJam.Difficulty;
 using BossJam.Dialogue;
 using BossJam.Player;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace BossJam.Game
@@ -11,6 +12,7 @@ namespace BossJam.Game
     public enum GameState
     {
         Startup,
+        Narration,       // black-screen flavour text shown before the difficulty card on the next wave
         Intermediate,    // difficulty card between title screen and cutscene; timescale 0
         CutsceneIntro,   // letterbox + hero walks in
         Dialogue,        // pre-fight typewriter; timescale 0
@@ -38,6 +40,9 @@ namespace BossJam.Game
 
         [Header("Dialogue")]
         [SerializeField] private DialogueRig dialogueRig;
+
+        [Header("Narration")]
+        [SerializeField] private NarrationController narrationController;
 
         [Header("Cutscene")]
         [SerializeField] private IntroDirector introDirector;
@@ -135,6 +140,16 @@ namespace BossJam.Game
             {
                 OnDialogueFinished();
             }
+
+            // Narration is owned here — forward Space to the controller (the
+            // Dialogue asmdef doesn't reference InputSystem so the controller
+            // can't poll input itself).
+            if (State == GameState.Narration && narrationController != null)
+            {
+                var kb = Keyboard.current;
+                if (kb != null && kb.spaceKey.wasPressedThisFrame)
+                    narrationController.RequestAdvance();
+            }
         }
 
         private void OnHeroKilled()
@@ -148,7 +163,14 @@ namespace BossJam.Game
         public void Begin()
         {
             if (State != GameState.Startup) return;
-            EnterIntermediate();
+            // Mid-run: if the just-applied debuff names a narration script,
+            // play it before the difficulty card. Fresh runs (no LastAppliedEntry)
+            // and entries with no script name skip straight to Intermediate.
+            var entry = runtime != null ? runtime.LastAppliedEntry : null;
+            if (entry != null && !string.IsNullOrWhiteSpace(entry.narrationScriptName))
+                EnterNarration(entry.narrationScriptName);
+            else
+                EnterIntermediate();
         }
 
         // Called by IntermediateScreenUI after the player presses SPACE on the
@@ -157,6 +179,30 @@ namespace BossJam.Game
         {
             if (State != GameState.Intermediate) return;
             EnterCutsceneIntro();
+        }
+
+        private void EnterNarration(string scriptName)
+        {
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
+            State = GameState.Narration;
+            StateChanged?.Invoke(State);
+
+            if (narrationController == null)
+            {
+                Debug.LogWarning($"{nameof(GameStateController)}: NarrationController not assigned; skipping narration '{scriptName}'.");
+                EnterIntermediate();
+                return;
+            }
+            narrationController.Finished += OnNarrationFinished;
+            narrationController.Play(scriptName);
+        }
+
+        private void OnNarrationFinished()
+        {
+            if (narrationController != null) narrationController.Finished -= OnNarrationFinished;
+            if (State != GameState.Narration) return;
+            EnterIntermediate();
         }
 
         private void EnterIntermediate()
