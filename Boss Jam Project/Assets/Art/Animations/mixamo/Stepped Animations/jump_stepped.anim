@@ -88902,6 +88902,13 @@ AnimationClip:
   m_HasMotionFloatCurves: 0
   m_Events:
   - time: 1.1666666
+    functionName: PlayProfile
+    data: 
+    objectReferenceParameter: {fileID: 11400000, guid: 36bc471eb13cd41b48c3d1cf42d70916, type: 2}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 1.1666666
     functionName: PlaySlamVFX
     data: 
     objectReferenceParameter: {fileID: 0}

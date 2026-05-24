@@ -17,8 +17,10 @@ namespace BossJam.UI
     public sealed class AbilitySlotUI : MonoBehaviour
     {
         [SerializeField] private AttackHotkey hotkey = AttackHotkey.Primary;
-        [Tooltip("Image with fillMethod=Radial360, origin=Top, clockwise=false. Drains 1→0 over the cooldown.")]
+        [Tooltip("The ability icon image. Stays fully visible at all times — script never touches its fillAmount or color.")]
         [SerializeField] private Image iconFill;
+        [Tooltip("Gray radial overlay rendered on top of the icon. Image with fillMethod=Radial360, origin=Top, clockwise=false. fillAmount sweeps 1→0 over the cast, then flashes white on ready.")]
+        [SerializeField] private Image cooldownMask;
         [Tooltip("Centered countdown text — toggled on/off as the cooldown begins and ends.")]
         [SerializeField] private TMP_Text cooldownText;
         [Tooltip("Static key label (e.g. \"J\"). Set once in the inspector; this script doesn't touch it.")]
@@ -26,12 +28,25 @@ namespace BossJam.UI
         [Tooltip("Optional. If null, the slot resolves the boss via FindFirstObjectByType in Awake.")]
         [SerializeField] private BossController boss;
 
+        [Header("Ready flash")]
+        [Tooltip("Color of the white blink shown the moment the ability becomes ready again.")]
+        [SerializeField] private Color readyFlashColor = new Color(1f, 1f, 1f, 0.85f);
+        [Tooltip("Duration of the ready-blink, in seconds. Set to 0 to disable.")]
+        [Min(0f)] [SerializeField] private float readyFlashSeconds = 0.25f;
+
         private IAttack attack;
         private float castTotal;
         private Coroutine tickCo;
+        private Coroutine flashCo;
+        private Color cooldownMaskRestColor = new Color(0.1f, 0.1f, 0.1f, 0.5f);
 
         private void Awake()
         {
+            if (cooldownMask != null) cooldownMaskRestColor = cooldownMask.color;
+            // Ensure the icon is fully drawn regardless of any stale fillAmount left
+            // on the prefab. The script never modifies iconFill after this point.
+            if (iconFill != null) iconFill.fillAmount = 1f;
+
             if (boss == null) boss = FindFirstObjectByType<BossController>();
             if (boss == null)
             {
@@ -76,7 +91,7 @@ namespace BossJam.UI
         {
             if (attack == null) return;
             attack.StateChanged -= OnAttackStateChanged;
-            if (tickCo != null) { StopCoroutine(tickCo); tickCo = null; }
+            StopSlotCoroutines();
             ResetVisual();
         }
 
@@ -89,14 +104,18 @@ namespace BossJam.UI
             {
                 castTotal = Mathf.Max(0.0001f, attack.TimeToIdle);
                 if (cooldownText != null) cooldownText.gameObject.SetActive(true);
-                if (iconFill != null) iconFill.fillAmount = 1f;
-                if (tickCo != null) StopCoroutine(tickCo);
+                if (cooldownMask != null)
+                {
+                    cooldownMask.color = cooldownMaskRestColor;
+                    cooldownMask.fillAmount = 1f;
+                }
+                StopSlotCoroutines();
                 tickCo = StartCoroutine(TickCooldown());
             }
             else if (next == AttackState.Idle)
             {
-                if (tickCo != null) { StopCoroutine(tickCo); tickCo = null; }
-                ResetVisual();
+                StopSlotCoroutines();
+                flashCo = StartCoroutine(FlashReady());
             }
         }
 
@@ -105,7 +124,7 @@ namespace BossJam.UI
             while (attack.TimeToIdle > 0f)
             {
                 float r = attack.TimeToIdle;
-                if (iconFill != null) iconFill.fillAmount = Mathf.Clamp01(r / castTotal);
+                if (cooldownMask != null) cooldownMask.fillAmount = Mathf.Clamp01(r / castTotal);
                 if (cooldownText != null) cooldownText.text = FormatCooldown(r);
                 yield return null;
             }
@@ -114,9 +133,46 @@ namespace BossJam.UI
             // fires the same frame this coroutine exits.
         }
 
+        private IEnumerator FlashReady()
+        {
+            if (cooldownText != null) cooldownText.gameObject.SetActive(false);
+
+            if (cooldownMask == null || readyFlashSeconds <= 0f)
+            {
+                flashCo = null;
+                ResetVisual();
+                yield break;
+            }
+
+            cooldownMask.fillAmount = 1f;
+            float t = 0f;
+            while (t < readyFlashSeconds)
+            {
+                t += Time.deltaTime;
+                float k = Mathf.Clamp01(t / readyFlashSeconds);
+                var c = readyFlashColor;
+                c.a = Mathf.Lerp(readyFlashColor.a, 0f, k);
+                cooldownMask.color = c;
+                yield return null;
+            }
+
+            flashCo = null;
+            ResetVisual();
+        }
+
+        private void StopSlotCoroutines()
+        {
+            if (tickCo != null) { StopCoroutine(tickCo); tickCo = null; }
+            if (flashCo != null) { StopCoroutine(flashCo); flashCo = null; }
+        }
+
         private void ResetVisual()
         {
-            if (iconFill != null) iconFill.fillAmount = 0f;
+            if (cooldownMask != null)
+            {
+                cooldownMask.color = cooldownMaskRestColor;
+                cooldownMask.fillAmount = 0f;
+            }
             if (cooldownText != null) cooldownText.gameObject.SetActive(false);
         }
 

@@ -21,6 +21,9 @@ namespace BossJam.Player
         [SerializeField, Min(1), FormerlySerializedAs("hp")] private int maxHp = 10;
         [Tooltip("Optional hit-feedback bundle (SFX + hurt animator state). Fires when HP actually drops.")]
         [SerializeField] private HitReactionFx hitFx;
+        [Tooltip("Optional death-feedback bundle (SFX + death animator state). Fires once in Die(). Outro waits its clip length.")]
+        [SerializeField] private DeathFx deathFx;
+        public DeathFx DeathFx => deathFx;
         private int currentHp;
         private int spawnedMaxHp;
 

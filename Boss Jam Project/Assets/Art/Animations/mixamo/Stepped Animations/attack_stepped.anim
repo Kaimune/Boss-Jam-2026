@@ -53482,6 +53482,13 @@ AnimationClip:
   m_HasMotionFloatCurves: 0
   m_Events:
   - time: 0.75
+    functionName: PlaySfx
+    data: 
+    objectReferenceParameter: {fileID: 8300000, guid: f0cbc67e70386df45a290fc189edfc21, type: 3}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.75
     functionName: PlayForwardSlashVFX
     data: 
     objectReferenceParameter: {fileID: 0}
@@ -53489,9 +53496,16 @@ AnimationClip:
     intParameter: 0
     messageOptions: 0
   - time: 0.75
-    functionName: PlaySfx
+    functionName: 
     data: 
-    objectReferenceParameter: {fileID: 8300000, guid: f0cbc67e70386df45a290fc189edfc21, type: 3}
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.75
+    functionName: PlayProfile
+    data: 
+    objectReferenceParameter: {fileID: 11400000, guid: de8d12c1a2819415591090e6062d3e89, type: 2}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
