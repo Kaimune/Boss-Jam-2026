@@ -10,16 +10,16 @@ namespace BossJam.UI
 {
     /// <summary>
     /// One ability slot in the cooldown HUD. Subscribes to a single IAttack's
-    /// StateChanged event and drives a radial-sweep fill + countdown text only
+    /// StateChanged event and drives a radial-sweep mask + countdown text only
     /// while that attack is in Cooldown. No Update() loop — the per-frame
     /// coroutine runs only while a cooldown is live.
     /// </summary>
     public sealed class AbilitySlotUI : MonoBehaviour
     {
         [SerializeField] private AttackHotkey hotkey = AttackHotkey.Primary;
-        [Tooltip("The ability icon image. Stays fully visible at all times — script never touches its fillAmount or color.")]
+        [Tooltip("The ability icon image. Always visible; the script does not touch it.")]
         [SerializeField] private Image iconFill;
-        [Tooltip("Gray radial overlay rendered on top of the icon. Image with fillMethod=Radial360, origin=Top, clockwise=false. fillAmount sweeps 1→0 over the cast, then flashes white on ready.")]
+        [Tooltip("Radial overlay rendered on top of the icon. Becomes a white circle at fillAmount=1 when a cast begins, drains radially to 0 over the cooldown, then briefly blinks before vanishing.")]
         [SerializeField] private Image cooldownMask;
         [Tooltip("Centered countdown text — toggled on/off as the cooldown begins and ends.")]
         [SerializeField] private TMP_Text cooldownText;
@@ -28,24 +28,33 @@ namespace BossJam.UI
         [Tooltip("Optional. If null, the slot resolves the boss via FindFirstObjectByType in Awake.")]
         [SerializeField] private BossController boss;
 
-        [Header("Ready flash")]
-        [Tooltip("Color of the white blink shown the moment the ability becomes ready again.")]
-        [SerializeField] private Color readyFlashColor = new Color(1f, 1f, 1f, 0.85f);
-        [Tooltip("Duration of the ready-blink, in seconds. Set to 0 to disable.")]
-        [Min(0f)] [SerializeField] private float readyFlashSeconds = 0.25f;
+        [Header("Cooldown circle")]
+        [Tooltip("Resting color of the cooldown circle while it drains.")]
+        [SerializeField] private Color cooldownColor = new Color(1f, 1f, 1f, 0.3f);
+
+        [Header("Ready blink")]
+        [Tooltip("Color the circle flashes to when the ability becomes ready again.")]
+        [SerializeField] private Color blinkColor = new Color(1f, 1f, 1f, 1f);
+        [Tooltip("Blink duration, seconds. Set to 0 to disable.")]
+        [Min(0f)] [SerializeField] private float blinkSeconds = 0.2f;
 
         private IAttack attack;
         private float castTotal;
         private Coroutine tickCo;
-        private Coroutine flashCo;
-        private Color cooldownMaskRestColor = new Color(0.1f, 0.1f, 0.1f, 0.5f);
+        private Coroutine blinkCo;
+
+        // Shared procedurally-generated circle sprite. Filled at runtime so the
+        // mask can render as a clean radial pie wedge without depending on a
+        // project-side circle asset. Antialiased edge so the radial sweep is
+        // smooth at any size.
+        private static Sprite circleSprite;
 
         private void Awake()
         {
-            if (cooldownMask != null) cooldownMaskRestColor = cooldownMask.color;
-            // Ensure the icon is fully drawn regardless of any stale fillAmount left
-            // on the prefab. The script never modifies iconFill after this point.
-            if (iconFill != null) iconFill.fillAmount = 1f;
+            if (cooldownMask != null && cooldownMask.sprite == null)
+            {
+                cooldownMask.sprite = GetCircleSprite();
+            }
 
             if (boss == null) boss = FindFirstObjectByType<BossController>();
             if (boss == null)
@@ -80,10 +89,6 @@ namespace BossJam.UI
         {
             if (attack == null) return;
             attack.StateChanged += OnAttackStateChanged;
-            // Don't try to recover an in-flight cooldown's "total" — the slot
-            // visualises cooldowns that begin while it is active. Scene reload
-            // resets all state machines anyway, so this only matters around
-            // HudVisibility flips, where a half-cooldown wouldn't show right.
             ResetVisual();
         }
 
@@ -97,16 +102,13 @@ namespace BossJam.UI
 
         private void OnAttackStateChanged(AttackState prev, AttackState next)
         {
-            // Cast begins the moment we leave Idle (TryStart → Windup). League-style:
-            // the radial sweep starts draining now and runs until the state machine
-            // returns to Idle — Windup + Active + Recovery + Cooldown all included.
             if (prev == AttackState.Idle && next != AttackState.Idle)
             {
                 castTotal = Mathf.Max(0.0001f, attack.TimeToIdle);
                 if (cooldownText != null) cooldownText.gameObject.SetActive(true);
                 if (cooldownMask != null)
                 {
-                    cooldownMask.color = cooldownMaskRestColor;
+                    cooldownMask.color = cooldownColor;
                     cooldownMask.fillAmount = 1f;
                 }
                 StopSlotCoroutines();
@@ -115,7 +117,15 @@ namespace BossJam.UI
             else if (next == AttackState.Idle)
             {
                 StopSlotCoroutines();
-                flashCo = StartCoroutine(FlashReady());
+                if (cooldownText != null) cooldownText.gameObject.SetActive(false);
+                if (blinkSeconds > 0f && cooldownMask != null)
+                {
+                    blinkCo = StartCoroutine(Blink());
+                }
+                else
+                {
+                    ResetVisual();
+                }
             }
         }
 
@@ -129,51 +139,68 @@ namespace BossJam.UI
                 yield return null;
             }
             tickCo = null;
-            // Visual cleanup happens via the *→Idle StateChanged callback, which
-            // fires the same frame this coroutine exits.
         }
 
-        private IEnumerator FlashReady()
+        private IEnumerator Blink()
         {
-            if (cooldownText != null) cooldownText.gameObject.SetActive(false);
-
-            if (cooldownMask == null || readyFlashSeconds <= 0f)
-            {
-                flashCo = null;
-                ResetVisual();
-                yield break;
-            }
-
             cooldownMask.fillAmount = 1f;
             float t = 0f;
-            while (t < readyFlashSeconds)
+            while (t < blinkSeconds)
             {
                 t += Time.deltaTime;
-                float k = Mathf.Clamp01(t / readyFlashSeconds);
-                var c = readyFlashColor;
-                c.a = Mathf.Lerp(readyFlashColor.a, 0f, k);
+                float k = Mathf.Clamp01(t / blinkSeconds);
+                var c = blinkColor;
+                c.a = Mathf.Lerp(blinkColor.a, 0f, k);
                 cooldownMask.color = c;
                 yield return null;
             }
-
-            flashCo = null;
+            blinkCo = null;
             ResetVisual();
         }
 
         private void StopSlotCoroutines()
         {
             if (tickCo != null) { StopCoroutine(tickCo); tickCo = null; }
-            if (flashCo != null) { StopCoroutine(flashCo); flashCo = null; }
+            if (blinkCo != null) { StopCoroutine(blinkCo); blinkCo = null; }
         }
 
         private void ResetVisual()
         {
             if (cooldownMask != null)
             {
-                cooldownMask.color = cooldownMaskRestColor;
+                cooldownMask.color = cooldownColor;
                 cooldownMask.fillAmount = 0f;
             }
             if (cooldownText != null) cooldownText.gameObject.SetActive(false);
+        }
+
+        private static Sprite GetCircleSprite()
+        {
+            if (circleSprite != null) return circleSprite;
+            const int size = 128;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, mipChain: false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            var pixels = new Color32[size * size];
+            float radius = size * 0.5f;
+            float cx = radius - 0.5f;
+            float cy = radius - 0.5f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - cx;
+                    float dy = y - cy;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Clamp01(radius - d);
+                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+                }
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+            circleSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+            circleSprite.name = "AbilitySlotCircle";
+            return circleSprite;
         }
 
         /// <summary>
