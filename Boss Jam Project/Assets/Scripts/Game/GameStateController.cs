@@ -343,8 +343,10 @@ namespace BossJam.Game
         private void OnGameOverOutroComplete()
         {
             if (outroDirector != null) outroDirector.OutroComplete -= OnGameOverOutroComplete;
-            // State stays GameOver. GameOverScreenUI listens for StateChanged
-            // and shows its panel; player presses Space to call Resume().
+            // Boss death just replays the current tier — no GameOver screen, no
+            // tier advance. The RunState persists so the player retries the same
+            // wave with the same difficulty.
+            ReloadScene();
         }
 
         /// <summary>
