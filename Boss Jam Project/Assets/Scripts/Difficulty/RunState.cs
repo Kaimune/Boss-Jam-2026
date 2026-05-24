@@ -24,6 +24,11 @@ namespace BossJam.Difficulty
         public string previousTierName = "";
         public Difficulty previousTierEntry;
 
+        [Tooltip("Set true by AdvanceTier so the next scene load plays the new tier's " +
+                 "narration once, then cleared. False on boss-death replays so the " +
+                 "narration doesn't loop.")]
+        public bool pendingTierNarration;
+
         [Header("Debug (persists across ResetForNewRun)")]
         [Tooltip("If > 0, the runtime pre-applies this many tiers at game start. " +
                  "0 = normal flow (auto-advance to Tier 1 on Begin). Set via Tools > BossJam > Debug > Start At Tier.")]
@@ -39,6 +44,7 @@ namespace BossJam.Difficulty
             currentTierEntry = null;
             previousTierName = "";
             previousTierEntry = null;
+            pendingTierNarration = false;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

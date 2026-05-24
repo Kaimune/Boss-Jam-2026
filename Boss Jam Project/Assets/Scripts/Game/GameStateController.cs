@@ -184,9 +184,19 @@ namespace BossJam.Game
             // and go straight to the difficulty card — narration is reserved
             // for the death→tier-up transitions.
             var entry = runtime != null ? runtime.LastAppliedEntry : null;
-            if (!freshRunAutoAdvanced
+            bool wantsNarration =
+                !freshRunAutoAdvanced
                 && entry != null
-                && !string.IsNullOrWhiteSpace(entry.narrationScriptName))
+                && !string.IsNullOrWhiteSpace(entry.narrationScriptName)
+                && runtime.State != null
+                && runtime.State.pendingTierNarration;
+
+            // Consume the flag regardless of whether we end up playing — a subsequent
+            // reload at the same tier (e.g. boss death) should not replay the narration.
+            if (runtime != null && runtime.State != null)
+                runtime.State.pendingTierNarration = false;
+
+            if (wantsNarration)
                 EnterNarration(entry.narrationScriptName);
             else
                 EnterIntermediate();

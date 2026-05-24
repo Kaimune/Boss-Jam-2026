@@ -226,6 +226,7 @@ namespace BossJam.Difficulty
             ResetFlagsToDefaults();
 
             runState.appliedTiers.Add(entry);
+            runState.pendingTierNarration = !string.IsNullOrWhiteSpace(entry.narrationScriptName);
             ApplyAllEffects(entry);
 
             bool tierPromoted = false;
