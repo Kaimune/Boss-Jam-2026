@@ -20,7 +20,7 @@ namespace BossJam.Difficulty.Editor
     {
         private const string MenuRoot = "Tools/BossJam/Debug/Start At Tier/";
 
-        [MenuItem(MenuRoot + "Immortal (no tier)")]    public static void Set0() => SetStartingTier(0);
+        [MenuItem(MenuRoot + "None (fresh run)")]      public static void Set0() => SetStartingTier(0);
         [MenuItem(MenuRoot + "1 — Impossible")]        public static void Set1() => SetStartingTier(1);
         [MenuItem(MenuRoot + "2 — Very Hard")]         public static void Set2() => SetStartingTier(2);
         [MenuItem(MenuRoot + "3 — Hard")]              public static void Set3() => SetStartingTier(3);
@@ -30,8 +30,8 @@ namespace BossJam.Difficulty.Editor
         [MenuItem(MenuRoot + "7 — Tutorial")]          public static void Set7() => SetStartingTier(7);
         [MenuItem(MenuRoot + "8 — Error.")]            public static void Set8() => SetStartingTier(8);
 
-        [MenuItem(MenuRoot + "Immortal (no tier)", true)]
-        public static bool Validate0() { return ValidateTick(MenuRoot + "Immortal (no tier)", 0); }
+        [MenuItem(MenuRoot + "None (fresh run)", true)]
+        public static bool Validate0() { return ValidateTick(MenuRoot + "None (fresh run)", 0); }
         [MenuItem(MenuRoot + "1 — Impossible", true)]
         public static bool Validate1() { return ValidateTick(MenuRoot + "1 — Impossible", 1); }
         [MenuItem(MenuRoot + "2 — Very Hard", true)]
@@ -68,7 +68,7 @@ namespace BossJam.Difficulty.Editor
         }
 
         /// <summary>
-        /// Tier index is 1-based (Impossible = 1, Error. = 8). 0 = Immortal
+        /// Tier index is 1-based (Impossible = 1, Error. = 8). 0 = None
         /// (no tier applied, fresh run).
         /// </summary>
         private static void SetStartingTier(int tierIndex)
@@ -126,7 +126,7 @@ namespace BossJam.Difficulty.Editor
             AssetDatabase.SaveAssets();
 
             string label = tierIndex == 0
-                ? "Immortal (no tiers)"
+                ? "None (fresh run)"
                 : $"tier {tierIndex} — '{runState.currentTierName}'";
             Debug.Log($"[BossJam] RunState set to start at {label}. " +
                       $"appliedTiers.Count = {runState.appliedTiers.Count}, " +

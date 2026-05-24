@@ -87,15 +87,13 @@ namespace BossJam.Difficulty
         public event Action<Difficulty> TierApplied;
         public event Action<Difficulty> TierChanged;
 
-        public const string ImmortalTierName = "Immortal";
-
         public string CurrentTierName =>
-            runState != null ? runState.currentTierName : ImmortalTierName;
+            runState != null ? runState.currentTierName : "";
         public Difficulty CurrentTierEntry =>
             runState != null ? runState.currentTierEntry : null;
 
         public string PreviousTierName =>
-            runState != null ? runState.previousTierName : ImmortalTierName;
+            runState != null ? runState.previousTierName : "";
         public Difficulty PreviousTierEntry =>
             runState != null ? runState.previousTierEntry : null;
 

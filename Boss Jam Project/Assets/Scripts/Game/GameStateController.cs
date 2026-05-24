@@ -163,11 +163,30 @@ namespace BossJam.Game
         public void Begin()
         {
             if (State != GameState.Startup) return;
+
+            // Fresh-run auto-advance: the player should never see the empty
+            // pre-tier state. On the first wave (no tiers applied yet), commit
+            // tier 1 (Impossible) before the difficulty card renders so the
+            // card picks up the freshly-applied tier. Mid-run reloads skip
+            // this — DifficultyRuntime.Awake already rehydrates from RunState.
+            bool freshRunAutoAdvanced = false;
+            if (runtime != null
+                && runtime.State != null
+                && runtime.State.appliedTiers.Count == 0
+                && runtime.HasNextTier)
+            {
+                runtime.AdvanceTier();
+                freshRunAutoAdvanced = true;
+            }
+
             // Mid-run: if the just-applied debuff names a narration script,
-            // play it before the difficulty card. Fresh runs (no LastAppliedEntry)
-            // and entries with no script name skip straight to Intermediate.
+            // play it before the difficulty card. Fresh runs skip narration
+            // and go straight to the difficulty card — narration is reserved
+            // for the death→tier-up transitions.
             var entry = runtime != null ? runtime.LastAppliedEntry : null;
-            if (entry != null && !string.IsNullOrWhiteSpace(entry.narrationScriptName))
+            if (!freshRunAutoAdvanced
+                && entry != null
+                && !string.IsNullOrWhiteSpace(entry.narrationScriptName))
                 EnterNarration(entry.narrationScriptName);
             else
                 EnterIntermediate();

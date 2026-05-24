@@ -49,9 +49,10 @@ namespace BossJam.UI
 
         private void ApplyEntry(DifficultyTier entry, bool flashing)
         {
-            // Pull the canonical tier name from the runtime so the "Immortal"
-            // default (before any debuff lands) surfaces here too.
-            label.text = runtime != null ? runtime.CurrentTierName : DifficultyRuntime.ImmortalTierName;
+            // Pull the canonical tier name from the runtime. Fresh runs
+            // auto-advance to tier 1 before this UI binds, so an empty
+            // fallback should only surface in degenerate cases.
+            label.text = runtime != null ? runtime.CurrentTierName : "";
             label.color = entry != null ? entry.tint : Color.white;
             if (descriptionLabel != null)
                 descriptionLabel.text = entry != null ? entry.tierDescription : "";

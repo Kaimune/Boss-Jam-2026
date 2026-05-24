@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentWaveIndex: 1
   appliedTiers: []
-  currentTierName: Immortal
+  currentTierName: 
   currentTierEntry: {fileID: 0}
-  previousTierName: Immortal
+  previousTierName: 
   previousTierEntry: {fileID: 0}

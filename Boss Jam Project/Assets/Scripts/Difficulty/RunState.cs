@@ -18,10 +18,10 @@ namespace BossJam.Difficulty
         [Header("Persisted across scene reloads")]
         public int currentWaveIndex = 1;
         public List<Difficulty> appliedTiers = new();
-        public string currentTierName = "Immortal";
+        public string currentTierName = "";
         public Difficulty currentTierEntry;
 
-        public string previousTierName = "Immortal";
+        public string previousTierName = "";
         public Difficulty previousTierEntry;
 
         public bool IsMidRun => appliedTiers != null && appliedTiers.Count > 0;
@@ -30,9 +30,9 @@ namespace BossJam.Difficulty
         {
             currentWaveIndex = 1;
             appliedTiers.Clear();
-            currentTierName = "Immortal";
+            currentTierName = "";
             currentTierEntry = null;
-            previousTierName = "Immortal";
+            previousTierName = "";
             previousTierEntry = null;
         }
 
