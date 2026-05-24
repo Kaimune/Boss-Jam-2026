@@ -34,6 +34,7 @@ namespace BossJam.Audio
         public void Play()
         {
             AudioDirector.Sfx(hurtSfx);
+            Debug.log("TESTING");
             if (animator == null || string.IsNullOrEmpty(hurtStateName)) return;
             if (IsAnyAttackBusy()) return;
             animator.speed = 1f;

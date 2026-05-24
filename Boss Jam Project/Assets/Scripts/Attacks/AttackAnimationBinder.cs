@@ -38,6 +38,7 @@ namespace BossJam.Attacks
             }
             CacheClipLengths();
             attack.StateChanged += OnPhase;
+            Debug.Log($"[AttackAnimBinder:{name}] Awake — attack={attack?.GetType().Name} cfg={attack?.Config?.id} stateName='{attack?.Config?.attackStateName}' animator={(animator!=null?animator.name+" ctrl="+(animator.runtimeAnimatorController!=null?animator.runtimeAnimatorController.name:"NULL"):"NULL")} clipCount={clipLengthByName.Count} has_jump_stepped={clipLengthByName.ContainsKey("jump_stepped")}", this);
         }
 
         private void OnDestroy()
@@ -58,6 +59,7 @@ namespace BossJam.Attacks
 
         private void OnPhase(AttackState prev, AttackState next)
         {
+            Debug.Log($"[AttackAnimBinder:{name}] OnPhase {prev}->{next} (cfg={attack?.Config?.id} stateName='{attack?.Config?.attackStateName}' animator={(animator!=null?animator.name:"NULL")})", this);
             if (animator == null || attack.Config == null) return;
 
             // Initiate: any transition INTO Windup is a "boss successfully started an attack".
@@ -68,6 +70,7 @@ namespace BossJam.Attacks
 
                 animator.speed = autoFitAnimationSpeed ? ComputeFitSpeed(stateName) : 1f;
                 animator.CrossFadeInFixedTime(stateName, crossfadeSeconds);
+                Debug.Log($"[AttackAnimBinder:{name}] CrossFade '{stateName}' speed={animator.speed:F3} (clipLen={(clipLengthByName.TryGetValue(stateName,out var cl)?cl:-1):F2})", this);
                 return;
             }
 
