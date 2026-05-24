@@ -844,6 +844,10 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 7664300432318410115, guid: 4fb15619488354e44bd634236c75dd78, type: 2}
+    - target: {fileID: 7549639191539467748, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7776310980423876701, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 745
@@ -1049,6 +1053,11 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 9066771635181248367, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
   m_PrefabInstance: {fileID: 59298819}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &102110177 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7549639191539467748, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+  m_PrefabInstance: {fileID: 59298819}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &120620849 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4899741668845553458, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
@@ -1247,7 +1256,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startPanel: {fileID: 120620849}
   intermediatePanel: {fileID: 881417020}
+  deathPanel: {fileID: 102110177}
   gameOverPanel: {fileID: 431322497}
+  gameplayHudElements:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   narrationCanvasGroup: {fileID: 1194304839}
   dialogueCanvasGroup: {fileID: 2035568474}
   narrationCaption: {fileID: 1301125033}
