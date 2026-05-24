@@ -49,7 +49,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7693467267109811763}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -101,7 +101,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   slashRenderer: {fileID: 5269413155825372600}
   lifetime: 0.6
-  steppedFPS: 6
   startScale: {x: 3, y: 3, z: 1}
   endScale: {x: 9, y: 9, z: 1}
   rotationKick: 12
