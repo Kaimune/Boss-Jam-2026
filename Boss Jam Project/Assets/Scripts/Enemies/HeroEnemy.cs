@@ -151,6 +151,8 @@ namespace BossJam.Enemies
             ref var f = ref rt.Flags;
             switch (f.HeroRespawnMode)
             {
+                // Tier 6 only. Tier 7+ switches the flag to FullHpIfNotInstakilled,
+                // so this branch is unreachable from tier 7 onward.
                 case HeroRespawnMode.SaveScumOnFirstOneHp:
                     if (saveScumConsumed) return false;
                     saveScumConsumed = true;
