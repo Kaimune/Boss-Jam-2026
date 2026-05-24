@@ -20,16 +20,16 @@ MonoBehaviour:
     2.
   narrationScriptName: 
   effects:
-  - rid: 5190052753752982287
-  - rid: 5190052753752982288
-  - rid: 5190052753752982289
-  - rid: 5190052753752982290
-  - rid: 5190052753752982291
-  - rid: 5190052753752982292
+  - rid: 5190052753752982325
+  - rid: 5190052753752982326
+  - rid: 5190052753752982327
+  - rid: 5190052753752982328
+  - rid: 5190052753752982329
+  - rid: 5190052753752982330
   references:
     version: 2
     RefIds:
-    - rid: 5190052753752982287
+    - rid: 5190052753752982325
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982288
+    - rid: 5190052753752982326
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 2
@@ -45,7 +45,7 @@ MonoBehaviour:
         value: 0
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982289
+    - rid: 5190052753752982327
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 22
@@ -53,7 +53,7 @@ MonoBehaviour:
         value: 0
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982290
+    - rid: 5190052753752982328
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 13
@@ -61,7 +61,7 @@ MonoBehaviour:
         value: 0
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982291
+    - rid: 5190052753752982329
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 29
@@ -69,7 +69,7 @@ MonoBehaviour:
         value: 2
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982292
+    - rid: 5190052753752982330
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 23

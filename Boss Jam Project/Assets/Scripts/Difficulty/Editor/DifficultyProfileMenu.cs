@@ -52,6 +52,29 @@ namespace BossJam.Difficulty.Editor
             }
 
             PopulateImpossible(byName["Impossible"]);
+            PopulateVeryHard(byName["Very Hard"]);
+            PopulateHard(byName["Hard"]);
+
+            var profileGuids = AssetDatabase.FindAssets("t:DifficultyProfile");
+            if (profileGuids.Length == 0)
+            {
+                Debug.LogWarning("[BossJam] No DifficultyProfile asset found — skipping profile wiring.");
+            }
+            else
+            {
+                var profilePath = AssetDatabase.GUIDToAssetPath(profileGuids[0]);
+                var profile = AssetDatabase.LoadAssetAtPath<DifficultyProfile>(profilePath);
+                if (profile != null)
+                {
+                    profile.tiers = new List<Difficulty>
+                    {
+                        byName["Impossible"],
+                        byName["Very Hard"],
+                        byName["Hard"],
+                    };
+                    EditorUtility.SetDirty(profile);
+                }
+            }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -73,6 +96,38 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.HeroMeleeEnabled,      Op.Override, 0),
                 Stat(Target.BossAttackDamage,      Op.Override, 2),
                 Stat(Target.BossMaxHp,             Op.Override, 10),
+            };
+            EditorUtility.SetDirty(d);
+        }
+
+        private static void PopulateVeryHard(Difficulty d)
+        {
+            d.effects = new List<IDifficultyEffect>
+            {
+                Stat(Target.HeroMaxHp,             Op.Override, 3),
+                Stat(Target.HeroMoveSpeed,         Op.Override, 5),
+                Stat(Target.HeroMeleeEnabled,      Op.Override, 1),
+                Stat(Target.HeroMeleeDamage,       Op.Override, 1),
+                Stat(Target.HeroFireballEnabled,   Op.Override, 0),
+                Stat(Target.HeroDodgeEnabled,      Op.Override, 0),
+                Stat(Target.BossMaxHp,             Op.Override, 10),
+                Stat(Target.BossAttackDamage,      Op.Override, 2),
+            };
+            EditorUtility.SetDirty(d);
+        }
+
+        private static void PopulateHard(Difficulty d)
+        {
+            d.effects = new List<IDifficultyEffect>
+            {
+                Stat(Target.HeroMaxHp,             Op.Override, 3),
+                Stat(Target.HeroMoveSpeed,         Op.Override, 10),
+                Stat(Target.HeroMeleeEnabled,      Op.Override, 1),
+                Stat(Target.HeroMeleeDamage,       Op.Override, 2),
+                Stat(Target.HeroDodgeEnabled,      Op.Override, 1),
+                Stat(Target.HeroFireballEnabled,   Op.Override, 0),
+                Stat(Target.BossMaxHp,             Op.Override, 10),
+                Stat(Target.BossAttackDamage,      Op.Override, 1),
             };
             EditorUtility.SetDirty(d);
         }

@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8fb8e917ca7684ca999ed6184863be61, type: 3}
   m_Name: DifficultyProfile
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   gameConfig: {fileID: 11400000, guid: c8e18a3215fd94a9888840cc1b961b8e, type: 2}
   heroConfig: {fileID: 11400000, guid: 4978d48ee606748c89f956fe01dc2978, type: 2}
   attackConfigs:
@@ -20,3 +20,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a7c9e3b18f24d44f0a5c8de7b40b6c2e, type: 2}
   tiers:
   - {fileID: 11400000, guid: 1f19498169e114e61ac0ce60d5e8470d, type: 2}
+  - {fileID: 11400000, guid: f73eecd1f41474d238d2a92a0067bd43, type: 2}
+  - {fileID: 11400000, guid: 731ab168e99a14a838c5b78f22c9a193, type: 2}
