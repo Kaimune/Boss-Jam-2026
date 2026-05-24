@@ -248,12 +248,9 @@ namespace BossJam.Game
 
         private void EnterPreFightDialogue()
         {
-            int wave = (runtime != null) ? runtime.CurrentWaveIndex : 1;
-            string scriptName = $"intro_wave_{wave}";
-            postDialogueTarget = GameState.Playing;
-            EnterDialogue();
-            if (dialogueRig != null) dialogueRig.Play(scriptName);
-            else EnterPlaying();
+            // Dialogue no longer auto-plays at wave start — go straight into gameplay.
+            // dialogueRig.Play(...) can still be invoked manually (e.g. from a trigger).
+            EnterPlaying();
         }
 
         // Single source of truth for "transitioning into Playing". Anything
