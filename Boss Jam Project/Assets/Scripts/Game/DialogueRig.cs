@@ -8,11 +8,11 @@ namespace BossJam.Game
 {
     /// <summary>
     /// Scene-level glue around DialogueController: toggles the two portrait
-    /// cameras during playback, polls the keyboard for fast-forward (Space)
-    /// and skip (Esc). The portrait cameras are reparented onto each actor's
-    /// HeadAnchor at runtime so they rotate with the model — their local
-    /// position/rotation (the framing offset) is preserved, so authors set
-    /// the offset once in the inspector.
+    /// cameras during playback and polls the keyboard for the advance press
+    /// (Space). Dialogue is unskippable — there is no abort key. The portrait
+    /// cameras are reparented onto each actor's HeadAnchor at runtime so they
+    /// rotate with the model — their local position/rotation (the framing
+    /// offset) is preserved, so authors set the offset once in the inspector.
     /// </summary>
     [RequireComponent(typeof(DialogueController))]
     public sealed class DialogueRig : MonoBehaviour
@@ -63,8 +63,7 @@ namespace BossJam.Game
             if (controller == null || !controller.IsPlaying) return;
             var kb = Keyboard.current;
             if (kb == null) return;
-            controller.IsFastForwarding = kb.spaceKey.isPressed;
-            if (kb.escapeKey.wasPressedThisFrame) controller.SkipAll();
+            if (kb.spaceKey.wasPressedThisFrame) controller.RequestAdvance();
         }
 
         public void Play(string scriptName)
