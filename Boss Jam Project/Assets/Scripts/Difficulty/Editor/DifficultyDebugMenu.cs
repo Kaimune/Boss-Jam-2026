@@ -30,8 +30,42 @@ namespace BossJam.Difficulty.Editor
         [MenuItem(MenuRoot + "7 — Tutorial")]          public static void Set7() => SetStartingTier(7);
         [MenuItem(MenuRoot + "8 — Error.")]            public static void Set8() => SetStartingTier(8);
 
+        [MenuItem(MenuRoot + "Immortal (no tier)", true)]
+        public static bool Validate0() { return ValidateTick(MenuRoot + "Immortal (no tier)", 0); }
+        [MenuItem(MenuRoot + "1 — Impossible", true)]
+        public static bool Validate1() { return ValidateTick(MenuRoot + "1 — Impossible", 1); }
+        [MenuItem(MenuRoot + "2 — Very Hard", true)]
+        public static bool Validate2() { return ValidateTick(MenuRoot + "2 — Very Hard", 2); }
+        [MenuItem(MenuRoot + "3 — Hard", true)]
+        public static bool Validate3() { return ValidateTick(MenuRoot + "3 — Hard", 3); }
+        [MenuItem(MenuRoot + "4 — Medium", true)]
+        public static bool Validate4() { return ValidateTick(MenuRoot + "4 — Medium", 4); }
+        [MenuItem(MenuRoot + "5 — Easy", true)]
+        public static bool Validate5() { return ValidateTick(MenuRoot + "5 — Easy", 5); }
+        [MenuItem(MenuRoot + "6 — Beginner", true)]
+        public static bool Validate6() { return ValidateTick(MenuRoot + "6 — Beginner", 6); }
+        [MenuItem(MenuRoot + "7 — Tutorial", true)]
+        public static bool Validate7() { return ValidateTick(MenuRoot + "7 — Tutorial", 7); }
+        [MenuItem(MenuRoot + "8 — Error.", true)]
+        public static bool Validate8() { return ValidateTick(MenuRoot + "8 — Error.", 8); }
+
         [MenuItem("Tools/BossJam/Debug/Reset RunState")]
         public static void ResetRunState() => SetStartingTier(0);
+
+        private static bool ValidateTick(string menuPath, int tierIndex)
+        {
+            int current = GetCurrentStartingTierIndex();
+            Menu.SetChecked(menuPath, current == tierIndex);
+            return true;
+        }
+
+        private static int GetCurrentStartingTierIndex()
+        {
+            var guids = AssetDatabase.FindAssets("t:RunState");
+            if (guids.Length == 0) return -1;
+            var rs = AssetDatabase.LoadAssetAtPath<RunState>(AssetDatabase.GUIDToAssetPath(guids[0]));
+            return rs != null ? rs.appliedTiers.Count : -1;
+        }
 
         /// <summary>
         /// Tier index is 1-based (Impossible = 1, Error. = 8). 0 = Immortal
