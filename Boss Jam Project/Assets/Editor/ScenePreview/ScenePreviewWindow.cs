@@ -83,9 +83,9 @@ namespace BossJam.Editor.ScenePreview
         private void ApplyStartup(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
+            HideAllPanels(w);
             SetActive(w.startPanel, true);
-            SetActive(w.intermediatePanel, false);
-            SetActive(w.gameOverPanel, false);
+            HideGameplayHud(w);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, false);
@@ -95,9 +95,8 @@ namespace BossJam.Editor.ScenePreview
         private void ApplyNarration(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
-            SetActive(w.startPanel, false);
-            SetActive(w.intermediatePanel, false);
-            SetActive(w.gameOverPanel, false);
+            HideAllPanels(w);
+            HideGameplayHud(w);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 1f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, true, 1f);
@@ -113,29 +112,23 @@ namespace BossJam.Editor.ScenePreview
         private void ApplyIntermediate(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
-            SetActive(w.startPanel, false);
+            HideAllPanels(w);
             SetActive(w.intermediatePanel, true);
-            SetActive(w.gameOverPanel, false);
+            HideGameplayHud(w);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, false);
-            // IntermediateScreenUI's own labels are populated by its runtime
-            // Awake; in edit mode they show whatever was last serialized.
-            // Designers can hand-edit the labels in the scene to see different tiers.
             MarkSceneDirty();
         }
 
         private void ApplyDialogue(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
-            SetActive(w.startPanel, false);
-            SetActive(w.intermediatePanel, false);
-            SetActive(w.gameOverPanel, false);
+            HideAllPanels(w);
+            HideGameplayHud(w);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, false);
 
-            // Dialogue: PreviewLine sets the controller's CanvasGroup alpha to 1
-            // and applies the speaker profile.
             if (w.dialogueController != null
                 && !string.IsNullOrWhiteSpace(w.previewDialogueScriptName))
             {
@@ -148,7 +141,6 @@ namespace BossJam.Editor.ScenePreview
             }
             else
             {
-                // No sample script — still surface the panel so layout is visible.
                 SetCanvasGroupAlpha(w.dialogueCanvasGroup, 1f);
             }
             MarkSceneDirty();
@@ -157,11 +149,9 @@ namespace BossJam.Editor.ScenePreview
         private void ApplyDeath(ScenePreviewWiring w)
         {
             // Death state in runtime = OutroDirector fade-to-black; no panel.
-            // Static preview: just fade fully black, hide all UI.
             EnsureSnapshot(w);
-            SetActive(w.startPanel, false);
-            SetActive(w.intermediatePanel, false);
-            SetActive(w.gameOverPanel, false);
+            HideAllPanels(w);
+            HideGameplayHud(w);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, true, 1f);
@@ -172,13 +162,28 @@ namespace BossJam.Editor.ScenePreview
         {
             // GameOver state in runtime = fade fully black + GameOver panel on top.
             EnsureSnapshot(w);
-            SetActive(w.startPanel, false);
-            SetActive(w.intermediatePanel, false);
+            HideAllPanels(w);
             SetActive(w.gameOverPanel, true);
+            HideGameplayHud(w);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, true, 1f);
             MarkSceneDirty();
+        }
+
+        private static void HideAllPanels(ScenePreviewWiring w)
+        {
+            SetActive(w.startPanel, false);
+            SetActive(w.intermediatePanel, false);
+            SetActive(w.deathPanel, false);
+            SetActive(w.gameOverPanel, false);
+        }
+
+        private static void HideGameplayHud(ScenePreviewWiring w)
+        {
+            if (w.gameplayHudElements == null) return;
+            for (int i = 0; i < w.gameplayHudElements.Length; i++)
+                SetActive(w.gameplayHudElements[i], false);
         }
 
         // ---------- Helpers ----------
@@ -229,8 +234,12 @@ namespace BossJam.Editor.ScenePreview
 
             AddGo(w.startPanel);
             AddGo(w.intermediatePanel);
+            AddGo(w.deathPanel);
             AddGo(w.gameOverPanel);
             if (w.fadeOverlay != null) AddGo(w.fadeOverlay.gameObject);
+            if (w.gameplayHudElements != null)
+                for (int i = 0; i < w.gameplayHudElements.Length; i++)
+                    AddGo(w.gameplayHudElements[i]);
 
             AddCg(w.narrationCanvasGroup);
             AddCg(w.dialogueCanvasGroup);

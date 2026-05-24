@@ -23,8 +23,16 @@ namespace BossJam.Game
         public GameObject startPanel;
         [Tooltip("IntermediateScreen's Panel child — the difficulty card layout.")]
         public GameObject intermediatePanel;
+        [Tooltip("DeathScreen's Panel child — kept hidden in every preview state " +
+                 "(runtime forcibly hides DeathScreenUI; Death itself is just the fade).")]
+        public GameObject deathPanel;
         [Tooltip("GameOver's Panel child — the 'You died' layout.")]
         public GameObject gameOverPanel;
+
+        [Header("Gameplay HUD elements (hidden in every non-Playing preview)")]
+        [Tooltip("Children of HUDCanvas that are part of the gameplay HUD — health " +
+                 "bars, tier label, ability bar. Mirror HudVisibility's authored list.")]
+        public GameObject[] gameplayHudElements;
 
         [Header("Alpha-toggled overlays (runtime hides via CanvasGroup.alpha = 0)")]
         [Tooltip("CanvasGroup on NarrationPanel — alpha=1 shows the narration overlay.")]
