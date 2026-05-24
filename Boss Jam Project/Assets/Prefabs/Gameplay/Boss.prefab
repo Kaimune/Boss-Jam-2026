@@ -233,6 +233,7 @@ GameObject:
   - component: {fileID: 1971819836161944549}
   - component: {fileID: 3443990155727221842}
   - component: {fileID: 4846371717498683816}
+  - component: {fileID: 541648543773064997}
   m_Layer: 0
   m_Name: Boss
   m_TagString: Untagged
@@ -288,6 +289,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tickMultiplier: 1
   maxHp: 20
+  hitFx: {fileID: 0}
   deadzone: 0.3
   visual: {fileID: 0}
   turnDegreesPerSecond: 720
@@ -337,6 +339,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   footprintSize: {x: 1, y: 1}
+--- !u!114 &541648543773064997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8312937714101972278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e2305cd2490b4345a6c486bd30fef1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &14469139968185367
 PrefabInstance:
   m_ObjectHideFlags: 0

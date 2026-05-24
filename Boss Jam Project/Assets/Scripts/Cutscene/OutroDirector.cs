@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using BossJam.Audio;
 using BossJam.Game;
 using UnityEngine;
 
@@ -26,19 +27,25 @@ namespace BossJam.Cutscene
 
         public event Action OutroComplete;
 
-        public void PlayHeroDeath(int waveIndex)
+        public void PlayHeroDeath(int waveIndex, DeathFx victim = null)
         {
-            StartCoroutine(HeroDeathRoutine(waveIndex));
+            StartCoroutine(HeroDeathRoutine(waveIndex, victim));
         }
 
-        public void PlayBossDeath(int waveIndex)
+        public void PlayBossDeath(int waveIndex, DeathFx victim = null)
         {
-            StartCoroutine(BossDeathRoutine(waveIndex));
+            StartCoroutine(BossDeathRoutine(waveIndex, victim));
         }
 
-        private IEnumerator HeroDeathRoutine(int waveIndex)
+        private IEnumerator HeroDeathRoutine(int waveIndex, DeathFx victim)
         {
-            yield return new WaitForSecondsRealtime(heroDeathHoldSeconds);
+            // DeathFx.Play() was already fired at the kill site (HeroEnemy /
+            // BossController). Here we just wait long enough for the clip to
+            // complete before the dialogue cue starts.
+            float wait = (victim != null && victim.ClipLengthSeconds > 0f)
+                ? victim.ClipLengthSeconds
+                : heroDeathHoldSeconds;
+            yield return new WaitForSecondsRealtime(wait);
 
             yield return PlayLine(string.Format(heroDeathScriptFormat, waveIndex));
 
@@ -51,9 +58,12 @@ namespace BossJam.Cutscene
             OutroComplete?.Invoke();
         }
 
-        private IEnumerator BossDeathRoutine(int waveIndex)
+        private IEnumerator BossDeathRoutine(int waveIndex, DeathFx victim)
         {
-            yield return new WaitForSecondsRealtime(heroDeathHoldSeconds);
+            float wait = (victim != null && victim.ClipLengthSeconds > 0f)
+                ? victim.ClipLengthSeconds
+                : heroDeathHoldSeconds;
+            yield return new WaitForSecondsRealtime(wait);
 
             string scriptName = waveIndex > 0
                 ? string.Format(bossDeathScriptFormat, waveIndex)

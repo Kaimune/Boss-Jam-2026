@@ -72215,3 +72215,10 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
+  - time: 0.5
+    functionName: PlayProfile
+    data: 
+    objectReferenceParameter: {fileID: 11400000, guid: 7d66488245088477aa84b244df7a7447, type: 2}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0

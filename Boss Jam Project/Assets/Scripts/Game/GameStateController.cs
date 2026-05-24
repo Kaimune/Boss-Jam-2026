@@ -346,14 +346,21 @@ namespace BossJam.Game
         private void EnterDeathOutro()
         {
             State = GameState.Death;
-            Time.timeScale = 0f;
+            // Keep time flowing — the world finishes its in-flight animations.
+            // Boss.enabled = false stops new input, and BossController/HeroEnemy
+            // TakeDamage state-gates block in-flight damage during the cinematic.
             if (Boss != null) Boss.enabled = false;
+            LockMovers();
             StateChanged?.Invoke(State);
 
             if (outroDirector == null) { ResumeAfterDeathOutro(); return; }
             outroDirector.OutroComplete += OnDeathOutroComplete;
             int wave = (runtime != null) ? runtime.AppliedCount : 1;
-            outroDirector.PlayHeroDeath(wave);
+            // Forward the dying hero's DeathFx so the outro sizes its wait to
+            // the death clip length (DeathFx.Play() already fired at kill site).
+            var hero = FindFirstObjectByType<BossJam.Enemies.HeroEnemy>();
+            var heroFx = hero != null ? hero.DeathFx : null;
+            outroDirector.PlayHeroDeath(wave, heroFx);
         }
 
         private void OnDeathOutroComplete()
@@ -382,14 +389,15 @@ namespace BossJam.Game
         private void EnterGameOverOutro()
         {
             State = GameState.GameOver;
-            Time.timeScale = 0f;
+            // Keep time flowing — see EnterDeathOutro for the rationale.
             if (Boss != null) Boss.enabled = false;
+            LockMovers();
             StateChanged?.Invoke(State);
 
             if (outroDirector == null) return;
             outroDirector.OutroComplete += OnGameOverOutroComplete;
             int wave = (runtime != null) ? runtime.AppliedCount : 0;
-            outroDirector.PlayBossDeath(wave);
+            outroDirector.PlayBossDeath(wave, Boss != null ? Boss.DeathFx : null);
         }
 
         private void OnGameOverOutroComplete()
@@ -410,6 +418,27 @@ namespace BossJam.Game
         {
             if (State != GameState.GameOver) return;
             ReloadScene();
+        }
+
+        // Zero out cached InputDirection on every mover in the scene so latent
+        // movement (e.g. the player still holding W when the lethal blow lands)
+        // doesn't drift another cell after the cinematic starts. Update on the
+        // mover only stops emitting motion once InputDirection reads zero;
+        // BossController.Update / HeroEnemy.Update have both stopped writing to
+        // it by this point.
+        private void LockMovers()
+        {
+            if (Boss != null)
+            {
+                var bossMover = Boss.GetComponent<GridMover>();
+                if (bossMover != null) bossMover.InputDirection = Vector2.zero;
+            }
+            var hero = FindFirstObjectByType<BossJam.Enemies.HeroEnemy>();
+            if (hero != null)
+            {
+                var heroMover = hero.GetComponent<GridMover>();
+                if (heroMover != null) heroMover.InputDirection = Vector2.zero;
+            }
         }
 
         private void ReloadScene()
