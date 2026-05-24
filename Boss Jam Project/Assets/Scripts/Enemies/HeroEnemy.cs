@@ -99,6 +99,11 @@ namespace BossJam.Enemies
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             if (currentHp <= 0)
             {
+                if (TryConsumeRespawnOnLethal(amount))
+                {
+                    HpChanged?.Invoke(currentHp, spawnedMaxHp);
+                    return;
+                }
                 HeroKilledStatic?.Invoke();
                 Destroy(gameObject);
                 return;
@@ -138,6 +143,37 @@ namespace BossJam.Enemies
             if (seconds <= 0f) return;
             var until = Time.time + seconds;
             if (until > invulnUntil) invulnUntil = until;
+        }
+
+        private bool TryConsumeRespawnOnLethal(int incomingDamage)
+        {
+            if (rt == null) return false;
+            ref var f = ref rt.Flags;
+            switch (f.HeroRespawnMode)
+            {
+                case HeroRespawnMode.SaveScumOnFirstOneHp:
+                    if (saveScumConsumed) return false;
+                    saveScumConsumed = true;
+                    currentHp = Mathf.Clamp(f.HeroRespawnRestoreHp, 1, spawnedMaxHp);
+                    SetInvulnFor(0.5f);
+                    return true;
+
+                case HeroRespawnMode.FullHpIfNotInstakilled:
+                    if (conditionalRespawnArmedAt > 0f && Time.time <= conditionalRespawnArmedAt + f.HeroRespawnWindowSeconds)
+                    {
+                        if (incomingDamage < spawnedMaxHp)
+                        {
+                            currentHp = spawnedMaxHp;
+                            SetInvulnFor(0.5f);
+                            conditionalRespawnArmedAt = -1f;
+                            return true;
+                        }
+                    }
+                    return false;
+
+                default:
+                    return false;
+            }
         }
 
         private void BeginHitReaction()
@@ -202,6 +238,12 @@ namespace BossJam.Enemies
         // Tier-driven HP regen. Flags are populated by HeroRegenEffect.Apply; the
         // ticker advances during Playing state only and is suppressed at max hp.
         private float regenAccumulator;
+
+        // Respawn state — SaveScumOnFirstOneHp consumes once per tier (reset on
+        // TierApplied). FullHpIfNotInstakilled timer is armed each time hp falls
+        // below threshold and cleared when restored.
+        private static bool saveScumConsumed;
+        private float conditionalRespawnArmedAt = -1f;
         private Vector2 kiteTarget;
         private bool hasKiteTarget;
         private BossPredictor predictor;
@@ -220,7 +262,12 @@ namespace BossJam.Enemies
         {
             EnsureConfig();
             rt = FindFirstObjectByType<DifficultyRuntime>();
-            if (rt != null) rt.Hero = this;
+            if (rt != null)
+            {
+                rt.Hero = this;
+                rt.TierApplied -= OnTierApplied;
+                rt.TierApplied += OnTierApplied;
+            }
 
             // HP is snapshotted at spawn: debuffs that later raise/lower HeroMaxHp
             // affect the NEXT hero, not this living one.
@@ -279,9 +326,12 @@ namespace BossJam.Enemies
         private void OnDestroy()
         {
             if (rt != null && rt.Hero == this) rt.Hero = null;
+            if (rt != null) rt.TierApplied -= OnTierApplied;
             if (kiteLineMaterial != null) Destroy(kiteLineMaterial);
             if (kiteDotMaterial != null) Destroy(kiteDotMaterial);
         }
+
+        private void OnTierApplied(BossJam.Difficulty.Difficulty d) => saveScumConsumed = false;
 
         private void OnEnable() => ApplyTick();
         private void OnValidate() => ApplyTick();
@@ -346,6 +396,7 @@ namespace BossJam.Enemies
                 return;
 
             TickRegen(Time.deltaTime);
+            TickConditionalRespawn();
             if (target == null) { mover.InputDirection = Vector2.zero; return; }
 
             // Fire the deferred knockback once the combo window lapses.
@@ -518,6 +569,29 @@ namespace BossJam.Enemies
                 currentHp = Mathf.Min(spawnedMaxHp, currentHp + amt);
                 HpChanged?.Invoke(currentHp, spawnedMaxHp);
             }
+        }
+
+        private void TickConditionalRespawn()
+        {
+            if (rt == null) return;
+            ref var f = ref rt.Flags;
+            if (f.HeroRespawnMode != HeroRespawnMode.FullHpIfNotInstakilled) return;
+
+            if (currentHp <= f.HeroRespawnThresholdHp && conditionalRespawnArmedAt < 0f)
+                conditionalRespawnArmedAt = Time.time;
+
+            if (conditionalRespawnArmedAt > 0f && Time.time > conditionalRespawnArmedAt + f.HeroRespawnWindowSeconds)
+            {
+                if (currentHp > 0)
+                {
+                    currentHp = spawnedMaxHp;
+                    HpChanged?.Invoke(currentHp, spawnedMaxHp);
+                }
+                conditionalRespawnArmedAt = -1f;
+            }
+
+            if (conditionalRespawnArmedAt > 0f && currentHp > f.HeroRespawnThresholdHp)
+                conditionalRespawnArmedAt = -1f;
         }
 
         private void TickStuckDetector()

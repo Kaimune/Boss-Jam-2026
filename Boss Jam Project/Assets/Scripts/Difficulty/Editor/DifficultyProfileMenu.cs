@@ -56,6 +56,9 @@ namespace BossJam.Difficulty.Editor
             PopulateHard(byName["Hard"]);
             PopulateMedium(byName["Medium"]);
             PopulateEasy(byName["Easy"]);
+            PopulateBeginner(byName["Beginner"]);
+            PopulateTutorial(byName["Tutorial"]);
+            PopulateError(byName["Error."]);
 
             var profileGuids = AssetDatabase.FindAssets("t:DifficultyProfile");
             if (profileGuids.Length == 0)
@@ -75,6 +78,9 @@ namespace BossJam.Difficulty.Editor
                         byName["Hard"],
                         byName["Medium"],
                         byName["Easy"],
+                        byName["Beginner"],
+                        byName["Tutorial"],
+                        byName["Error."],
                     };
                     EditorUtility.SetDirty(profile);
                 }
@@ -167,6 +173,82 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.BossAttackDamage,      Op.Override, 1),
                 new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
                 new HeroIframesOnHitEffect { seconds = 1f },
+            };
+            EditorUtility.SetDirty(d);
+        }
+
+        private static void PopulateBeginner(Difficulty d)
+        {
+            d.effects = new List<IDifficultyEffect>
+            {
+                Stat(Target.HeroMaxHp,             Op.Override, 3),
+                Stat(Target.HeroMoveSpeed,         Op.Override, 10),
+                Stat(Target.HeroMeleeEnabled,      Op.Override, 1),
+                Stat(Target.HeroMeleeDamage,       Op.Override, 4),
+                Stat(Target.HeroDodgeEnabled,      Op.Override, 1),
+                Stat(Target.HeroFireballEnabled,   Op.Override, 1),
+                Stat(Target.BossMaxHp,             Op.Override, 10),
+                Stat(Target.BossAttackDamage,      Op.Override, 1),
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroIframesOnHitEffect { seconds = 1f },
+                new HeroRespawnEffect {
+                    mode = HeroRespawnMode.SaveScumOnFirstOneHp,
+                    thresholdHp = 1,
+                    restoreHp = 5,
+                    replayIntro = true,
+                },
+                new FireballSpeedEffect { multiplier = 1.2f },
+            };
+            EditorUtility.SetDirty(d);
+        }
+
+        private static void PopulateTutorial(Difficulty d)
+        {
+            d.effects = new List<IDifficultyEffect>
+            {
+                Stat(Target.HeroMaxHp,             Op.Override, 3),
+                Stat(Target.HeroMoveSpeed,         Op.Override, 15),
+                Stat(Target.HeroMeleeEnabled,      Op.Override, 1),
+                Stat(Target.HeroMeleeDamage,       Op.Override, 4),
+                Stat(Target.HeroDodgeEnabled,      Op.Override, 1),
+                Stat(Target.HeroFireballEnabled,   Op.Override, 1),
+                Stat(Target.BossMaxHp,             Op.Override, 10),
+                Stat(Target.BossAttackDamage,      Op.Override, 1),
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroIframesOnHitEffect { seconds = 1f },
+                new HeroRespawnEffect {
+                    mode = HeroRespawnMode.FullHpIfNotInstakilled,
+                    thresholdHp = 2,
+                    windowSeconds = 1.5f,
+                },
+                new FireballSpeedEffect { multiplier = 1.2f },
+                new FireballHomingEffect { turnRateDegPerSec = 180f },
+            };
+            EditorUtility.SetDirty(d);
+        }
+
+        private static void PopulateError(Difficulty d)
+        {
+            d.effects = new List<IDifficultyEffect>
+            {
+                Stat(Target.HeroMaxHp,             Op.Override, 3),
+                Stat(Target.HeroMoveSpeed,         Op.Override, 20),
+                Stat(Target.HeroMeleeEnabled,      Op.Override, 1),
+                Stat(Target.HeroMeleeDamage,       Op.Override, 4),
+                Stat(Target.HeroDodgeEnabled,      Op.Override, 1),
+                Stat(Target.HeroFireballEnabled,   Op.Override, 1),
+                Stat(Target.BossMaxHp,             Op.Override, 10),
+                Stat(Target.BossAttackDamage,      Op.Override, 1),
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroIframesOnHitEffect { seconds = 1f },
+                new HeroRespawnEffect {
+                    mode = HeroRespawnMode.FullHpIfNotInstakilled,
+                    thresholdHp = 2,
+                    windowSeconds = 1.5f,
+                },
+                new FireballSpeedEffect { multiplier = 1.44f },
+                new FireballHomingEffect { turnRateDegPerSec = 180f },
+                new BossInstakillEffect(),
             };
             EditorUtility.SetDirty(d);
         }

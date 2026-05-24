@@ -18,7 +18,113 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: "Boss instakill on any hit. Fireballs \xD71.44 faster. 20 movespeed."
   narrationScriptName: 
-  effects: []
+  effects:
+  - rid: 5190052753752982404
+  - rid: 5190052753752982405
+  - rid: 5190052753752982406
+  - rid: 5190052753752982407
+  - rid: 5190052753752982408
+  - rid: 5190052753752982409
+  - rid: 5190052753752982410
+  - rid: 5190052753752982411
+  - rid: 5190052753752982412
+  - rid: 5190052753752982413
+  - rid: 5190052753752982414
+  - rid: 5190052753752982415
+  - rid: 5190052753752982416
+  - rid: 5190052753752982417
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 5190052753752982404
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 0
+        op: 2
+        value: 3
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982405
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 2
+        op: 2
+        value: 20
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982406
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 13
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982407
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 14
+        op: 2
+        value: 4
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982408
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 18
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982409
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 22
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982410
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 23
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982411
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 29
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982412
+      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        hpPerInterval: 1
+        intervalSeconds: 5
+    - rid: 5190052753752982413
+      type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        seconds: 1
+    - rid: 5190052753752982414
+      type: {class: HeroRespawnEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        mode: 2
+        thresholdHp: 2
+        windowSeconds: 1.5
+        restoreHp: 3
+        replayIntro: 0
+    - rid: 5190052753752982415
+      type: {class: FireballSpeedEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        multiplier: 1.44
+    - rid: 5190052753752982416
+      type: {class: FireballHomingEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        turnRateDegPerSec: 180
+    - rid: 5190052753752982417
+      type: {class: BossInstakillEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data: 
