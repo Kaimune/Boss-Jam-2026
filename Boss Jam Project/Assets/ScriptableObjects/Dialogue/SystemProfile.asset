@@ -18,3 +18,4 @@ MonoBehaviour:
   portraitTexture: {fileID: 0}
   letterTickClip: {fileID: 8300000, guid: 28ccbf7dbf84142cd9c4cd5758ccb788, type: 3}
   pitchJitter: 0
+  useBlackoutBackground: 1

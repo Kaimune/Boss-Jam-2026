@@ -43,6 +43,10 @@ namespace BossJam.Dialogue
         [SerializeField] private RawImage portraitImage;
         [SerializeField] private CanvasGroup canvasGroup;
 
+        [Tooltip("Full-screen black panel toggled per-speaker. Speakers with useBlackoutBackground=true " +
+                 "activate it; others deactivate it.")]
+        [SerializeField] private GameObject blackoutPanel;
+
         [Header("Audio")]
         [SerializeField] private AudioSource letterAudioSource;
         [SerializeField] private bool letterSfxEnabled = true;
@@ -126,7 +130,21 @@ namespace BossJam.Dialogue
             if (profile == null) { Debug.LogWarning($"{nameof(DialogueController)}: no profile for '{speakerToken}'."); return; }
             if (nameplateText != null) nameplateText.text = profile.displayName;
             if (nameplateBackground != null) nameplateBackground.color = profile.nameplateColor;
-            if (portraitImage != null && profile.portraitTexture != null) portraitImage.texture = profile.portraitTexture;
+            if (portraitImage != null)
+            {
+                if (profile.portraitTexture != null)
+                {
+                    portraitImage.texture = profile.portraitTexture;
+                    portraitImage.enabled = true;
+                }
+                else
+                {
+                    // No portrait for this speaker (e.g. SYSTEM) — hide so the prior speaker's
+                    // headshot doesn't linger behind the blackout.
+                    portraitImage.enabled = false;
+                }
+            }
+            if (blackoutPanel != null) blackoutPanel.SetActive(profile.useBlackoutBackground);
         }
 
         private SpeakerProfile ResolveProfile(string token)
@@ -145,6 +163,8 @@ namespace BossJam.Dialogue
         private void HideUi()
         {
             if (canvasGroup != null) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; canvasGroup.interactable = false; }
+            if (blackoutPanel != null) blackoutPanel.SetActive(false);
+            if (portraitImage != null) portraitImage.enabled = true; // restore for next time
         }
     }
 }
