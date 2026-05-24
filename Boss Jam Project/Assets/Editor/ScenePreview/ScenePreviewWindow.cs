@@ -84,8 +84,10 @@ namespace BossJam.Editor.ScenePreview
         {
             EnsureSnapshot(w);
             HideAllPanels(w);
-            SetActive(w.startPanel, true);
             HideGameplayHud(w);
+            HideAllExtras(w);
+            SetActive(w.startPanel, true);
+            ShowArray(w.extraStartup);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, false);
@@ -97,14 +99,19 @@ namespace BossJam.Editor.ScenePreview
             EnsureSnapshot(w);
             HideAllPanels(w);
             HideGameplayHud(w);
+            HideAllExtras(w);
+            ShowArray(w.extraNarration);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 1f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, true, 1f);
 
+            // Only overwrite the body if a script loads cleanly; otherwise
+            // leave whatever's authored in the scene (matches how Intermediate /
+            // GameOver behave — show authored content as the default).
             if (w.narrationCaption != null)
             {
                 string sample = LoadNarrationFirstLine(w.previewNarrationScriptName);
-                w.narrationCaption.text = sample ?? "[no narration script]";
+                if (!string.IsNullOrEmpty(sample)) w.narrationCaption.text = sample;
             }
             MarkSceneDirty();
         }
@@ -113,8 +120,10 @@ namespace BossJam.Editor.ScenePreview
         {
             EnsureSnapshot(w);
             HideAllPanels(w);
-            SetActive(w.intermediatePanel, true);
             HideGameplayHud(w);
+            HideAllExtras(w);
+            SetActive(w.intermediatePanel, true);
+            ShowArray(w.extraIntermediate);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, false);
@@ -126,6 +135,8 @@ namespace BossJam.Editor.ScenePreview
             EnsureSnapshot(w);
             HideAllPanels(w);
             HideGameplayHud(w);
+            HideAllExtras(w);
+            ShowArray(w.extraDialogue);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, false);
 
@@ -152,6 +163,8 @@ namespace BossJam.Editor.ScenePreview
             EnsureSnapshot(w);
             HideAllPanels(w);
             HideGameplayHud(w);
+            HideAllExtras(w);
+            ShowArray(w.extraDeath);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, true, 1f);
@@ -163,8 +176,10 @@ namespace BossJam.Editor.ScenePreview
             // GameOver state in runtime = fade fully black + GameOver panel on top.
             EnsureSnapshot(w);
             HideAllPanels(w);
-            SetActive(w.gameOverPanel, true);
             HideGameplayHud(w);
+            HideAllExtras(w);
+            SetActive(w.gameOverPanel, true);
+            ShowArray(w.extraGameOver);
             SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
             SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
             SetFadeActive(w.fadeOverlay, true, 1f);
@@ -181,9 +196,29 @@ namespace BossJam.Editor.ScenePreview
 
         private static void HideGameplayHud(ScenePreviewWiring w)
         {
-            if (w.gameplayHudElements == null) return;
-            for (int i = 0; i < w.gameplayHudElements.Length; i++)
-                SetActive(w.gameplayHudElements[i], false);
+            HideArray(w.gameplayHudElements);
+        }
+
+        private static void HideAllExtras(ScenePreviewWiring w)
+        {
+            HideArray(w.extraStartup);
+            HideArray(w.extraNarration);
+            HideArray(w.extraIntermediate);
+            HideArray(w.extraDialogue);
+            HideArray(w.extraDeath);
+            HideArray(w.extraGameOver);
+        }
+
+        private static void HideArray(GameObject[] arr)
+        {
+            if (arr == null) return;
+            for (int i = 0; i < arr.Length; i++) SetActive(arr[i], false);
+        }
+
+        private static void ShowArray(GameObject[] arr)
+        {
+            if (arr == null) return;
+            for (int i = 0; i < arr.Length; i++) SetActive(arr[i], true);
         }
 
         // ---------- Helpers ----------
@@ -237,12 +272,22 @@ namespace BossJam.Editor.ScenePreview
             AddGo(w.deathPanel);
             AddGo(w.gameOverPanel);
             if (w.fadeOverlay != null) AddGo(w.fadeOverlay.gameObject);
-            if (w.gameplayHudElements != null)
-                for (int i = 0; i < w.gameplayHudElements.Length; i++)
-                    AddGo(w.gameplayHudElements[i]);
+            SnapArray(w.gameplayHudElements);
+            SnapArray(w.extraStartup);
+            SnapArray(w.extraNarration);
+            SnapArray(w.extraIntermediate);
+            SnapArray(w.extraDialogue);
+            SnapArray(w.extraDeath);
+            SnapArray(w.extraGameOver);
 
             AddCg(w.narrationCanvasGroup);
             AddCg(w.dialogueCanvasGroup);
+
+            void SnapArray(GameObject[] arr)
+            {
+                if (arr == null) return;
+                for (int i = 0; i < arr.Length; i++) AddGo(arr[i]);
+            }
 
             snapshotTaken = true;
             snapshotSceneName = activeScene;

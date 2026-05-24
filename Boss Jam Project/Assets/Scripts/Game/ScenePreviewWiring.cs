@@ -34,6 +34,20 @@ namespace BossJam.Game
                  "bars, tier label, ability bar. Mirror HudVisibility's authored list.")]
         public GameObject[] gameplayHudElements;
 
+        [Header("Per-state extras — shown only when previewing that state")]
+        [Tooltip("Extra GameObjects to show when previewing Startup. Hidden in every other state.")]
+        public GameObject[] extraStartup;
+        [Tooltip("Extra GameObjects to show when previewing Narration. Hidden in every other state.")]
+        public GameObject[] extraNarration;
+        [Tooltip("Extra GameObjects to show when previewing Intermediate. Hidden in every other state.")]
+        public GameObject[] extraIntermediate;
+        [Tooltip("Extra GameObjects to show when previewing Dialogue. Hidden in every other state.")]
+        public GameObject[] extraDialogue;
+        [Tooltip("Extra GameObjects to show when previewing Death. Hidden in every other state.")]
+        public GameObject[] extraDeath;
+        [Tooltip("Extra GameObjects to show when previewing GameOver. Hidden in every other state.")]
+        public GameObject[] extraGameOver;
+
         [Header("Alpha-toggled overlays (runtime hides via CanvasGroup.alpha = 0)")]
         [Tooltip("CanvasGroup on NarrationPanel — alpha=1 shows the narration overlay.")]
         public CanvasGroup narrationCanvasGroup;
