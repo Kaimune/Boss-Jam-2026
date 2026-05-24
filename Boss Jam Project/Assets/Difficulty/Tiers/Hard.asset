@@ -19,18 +19,19 @@ MonoBehaviour:
   description: 'Hero: 10 movespeed, melee + dodge, 2 dmg. Boss attacks deal 1.'
   narrationScriptName: 
   effects:
-  - rid: 5190052753752982476
-  - rid: 5190052753752982477
-  - rid: 5190052753752982478
-  - rid: 5190052753752982479
-  - rid: 5190052753752982480
-  - rid: 5190052753752982481
-  - rid: 5190052753752982482
-  - rid: 5190052753752982483
+  - rid: 5190052775017840692
+  - rid: 5190052775017840693
+  - rid: 5190052775017840694
+  - rid: 5190052775017840695
+  - rid: 5190052775017840696
+  - rid: 5190052775017840697
+  - rid: 5190052775017840698
+  - rid: 5190052775017840699
+  - rid: 5190052775017840700
   references:
     version: 2
     RefIds:
-    - rid: 5190052753752982476
+    - rid: 5190052775017840692
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 0
@@ -38,7 +39,7 @@ MonoBehaviour:
         value: 3
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982477
+    - rid: 5190052775017840693
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 2
@@ -46,7 +47,7 @@ MonoBehaviour:
         value: 10
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982478
+    - rid: 5190052775017840694
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 13
@@ -54,7 +55,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982479
+    - rid: 5190052775017840695
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 14
@@ -62,7 +63,15 @@ MonoBehaviour:
         value: 2
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982480
+    - rid: 5190052775017840696
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 12
+        op: 2
+        value: 2
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840697
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 18
@@ -70,7 +79,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982481
+    - rid: 5190052775017840698
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 22
@@ -78,7 +87,7 @@ MonoBehaviour:
         value: 0
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982482
+    - rid: 5190052775017840699
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 23
@@ -86,7 +95,7 @@ MonoBehaviour:
         value: 10
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982483
+    - rid: 5190052775017840700
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 29

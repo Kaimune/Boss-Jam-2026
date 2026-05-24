@@ -19,23 +19,24 @@ MonoBehaviour:
   description: Homing fireballs. Conditional respawn-to-full. 15 movespeed.
   narrationScriptName: 
   effects:
-  - rid: 5190052753752982440
-  - rid: 5190052753752982441
-  - rid: 5190052753752982442
-  - rid: 5190052753752982443
-  - rid: 5190052753752982444
-  - rid: 5190052753752982445
-  - rid: 5190052753752982446
-  - rid: 5190052753752982447
-  - rid: 5190052753752982448
-  - rid: 5190052753752982449
-  - rid: 5190052753752982450
-  - rid: 5190052753752982451
-  - rid: 5190052753752982452
+  - rid: 5190052775017840653
+  - rid: 5190052775017840654
+  - rid: 5190052775017840655
+  - rid: 5190052775017840656
+  - rid: 5190052775017840657
+  - rid: 5190052775017840658
+  - rid: 5190052775017840659
+  - rid: 5190052775017840660
+  - rid: 5190052775017840661
+  - rid: 5190052775017840662
+  - rid: 5190052775017840663
+  - rid: 5190052775017840664
+  - rid: 5190052775017840665
+  - rid: 5190052775017840666
   references:
     version: 2
     RefIds:
-    - rid: 5190052753752982440
+    - rid: 5190052775017840653
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 0
@@ -43,7 +44,7 @@ MonoBehaviour:
         value: 3
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982441
+    - rid: 5190052775017840654
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 2
@@ -51,7 +52,7 @@ MonoBehaviour:
         value: 15
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982442
+    - rid: 5190052775017840655
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 13
@@ -59,7 +60,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982443
+    - rid: 5190052775017840656
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 14
@@ -67,7 +68,15 @@ MonoBehaviour:
         value: 4
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982444
+    - rid: 5190052775017840657
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 12
+        op: 2
+        value: 4
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840658
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 18
@@ -75,7 +84,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982445
+    - rid: 5190052775017840659
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 22
@@ -83,7 +92,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982446
+    - rid: 5190052775017840660
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 23
@@ -91,7 +100,7 @@ MonoBehaviour:
         value: 10
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982447
+    - rid: 5190052775017840661
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 29
@@ -99,16 +108,16 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052753752982448
+    - rid: 5190052775017840662
       type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         hpPerInterval: 1
         intervalSeconds: 5
-    - rid: 5190052753752982449
+    - rid: 5190052775017840663
       type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         seconds: 1
-    - rid: 5190052753752982450
+    - rid: 5190052775017840664
       type: {class: HeroRespawnEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         mode: 2
@@ -116,11 +125,11 @@ MonoBehaviour:
         windowSeconds: 1.5
         restoreHp: 3
         replayIntro: 0
-    - rid: 5190052753752982451
+    - rid: 5190052775017840665
       type: {class: FireballSpeedEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         multiplier: 1.2
-    - rid: 5190052753752982452
+    - rid: 5190052775017840666
       type: {class: FireballHomingEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         turnRateDegPerSec: 180
