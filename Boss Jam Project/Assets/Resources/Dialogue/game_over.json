@@ -1,8 +1,5 @@
 {
   "lines": [
-    { "speaker": "minotaur", "text": "...I can't... feel my legs..." },
-    { "speaker": "theseus",  "text": "It's over. The labyrinth is empty now." },
-    { "speaker": "minotaur", "text": "Empty? No. The labyrinth IS me." },
-    { "speaker": "theseus",  "text": "Then I'll find my way out without you." }
+    { "speaker": "minotaur", "text": "…" }
   ]
 }

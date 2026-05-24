@@ -267,7 +267,7 @@ namespace BossJam.Game
 
         private void EnterPreFightDialogue()
         {
-            int wave = (runtime != null) ? runtime.CurrentWaveIndex : 1;
+            int wave = (runtime != null) ? runtime.AppliedCount : 1;
             string scriptName = $"intro_wave_{wave}";
             postDialogueTarget = GameState.Playing;
             EnterDialogue();
@@ -342,7 +342,7 @@ namespace BossJam.Game
 
             if (outroDirector == null) { ResumeAfterDeathOutro(); return; }
             outroDirector.OutroComplete += OnDeathOutroComplete;
-            int wave = (runtime != null) ? runtime.CurrentWaveIndex : 1;
+            int wave = (runtime != null) ? runtime.AppliedCount : 1;
             outroDirector.PlayHeroDeath(wave);
         }
 
@@ -378,7 +378,8 @@ namespace BossJam.Game
 
             if (outroDirector == null) return;
             outroDirector.OutroComplete += OnGameOverOutroComplete;
-            outroDirector.PlayBossDeath();
+            int wave = (runtime != null) ? runtime.AppliedCount : 0;
+            outroDirector.PlayBossDeath(wave);
         }
 
         private void OnGameOverOutroComplete()

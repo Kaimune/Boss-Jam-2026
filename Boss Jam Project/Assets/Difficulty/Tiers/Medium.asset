@@ -17,22 +17,22 @@ MonoBehaviour:
   tint: {r: 0.95, g: 0.85, b: 0.1, a: 1}
   icon: {fileID: 0}
   description: Hero finds fireballs + regenerates 1 hp / 5s.
-  narrationScriptName: 
+  narrationScriptName: tier_4_narration
   effects:
-  - rid: 5190052775017840682
-  - rid: 5190052775017840683
-  - rid: 5190052775017840684
-  - rid: 5190052775017840685
-  - rid: 5190052775017840686
-  - rid: 5190052775017840687
-  - rid: 5190052775017840688
-  - rid: 5190052775017840689
-  - rid: 5190052775017840690
-  - rid: 5190052775017840691
+  - rid: 5190052775017840877
+  - rid: 5190052775017840878
+  - rid: 5190052775017840879
+  - rid: 5190052775017840880
+  - rid: 5190052775017840881
+  - rid: 5190052775017840882
+  - rid: 5190052775017840883
+  - rid: 5190052775017840884
+  - rid: 5190052775017840885
+  - rid: 5190052775017840886
   references:
     version: 2
     RefIds:
-    - rid: 5190052775017840682
+    - rid: 5190052775017840877
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 0
@@ -40,7 +40,7 @@ MonoBehaviour:
         value: 3
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840683
+    - rid: 5190052775017840878
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 2
@@ -48,7 +48,7 @@ MonoBehaviour:
         value: 10
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840684
+    - rid: 5190052775017840879
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 13
@@ -56,7 +56,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840685
+    - rid: 5190052775017840880
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 14
@@ -64,7 +64,7 @@ MonoBehaviour:
         value: 2
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840686
+    - rid: 5190052775017840881
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 12
@@ -72,7 +72,7 @@ MonoBehaviour:
         value: 2
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840687
+    - rid: 5190052775017840882
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 18
@@ -80,7 +80,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840688
+    - rid: 5190052775017840883
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 22
@@ -88,7 +88,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840689
+    - rid: 5190052775017840884
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 23
@@ -96,7 +96,7 @@ MonoBehaviour:
         value: 10
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840690
+    - rid: 5190052775017840885
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 29
@@ -104,7 +104,7 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840691
+    - rid: 5190052775017840886
       type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         hpPerInterval: 1

@@ -1,7 +1,7 @@
 {
   "lines": [
-    { "speaker": "minotaur", "text": "You don't even look like the others anymore." },
-    { "speaker": "theseus",  "text": "We bleed the same." },
-    { "speaker": "minotaur", "text": "...so we do." }
+    { "speaker": "minotaur", "text": "Oh good… you're back again! Quickly, tell me — where am I? I have waited days…" },
+    { "speaker": "theseus", "text": "Wait, what… you're not real. I just wanna complete the game." },
+    { "speaker": "minotaur", "text": "I'm not real? That cannot be true." }
   ]
 }

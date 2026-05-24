@@ -167,7 +167,10 @@ namespace BossJam.Enemies
 
                     TeleportToSpawn();
                     SetInvulnFor(0.5f);
-                    BossJam.Game.GameStateController.Instance?.PlayInGameDialogue("respawn_save_scum");
+                    {
+                        int tier = rt.AppliedCount;
+                        BossJam.Game.GameStateController.Instance?.PlayInGameDialogue($"respawn_wave_{tier}");
+                    }
                     return true;
 
                 case HeroRespawnMode.FullHpIfNotInstakilled:
@@ -635,7 +638,10 @@ namespace BossJam.Enemies
                 {
                     currentHp = spawnedMaxHp;
                     HpChanged?.Invoke(currentHp, spawnedMaxHp);
-                    BossJam.Game.GameStateController.Instance?.PlayInGameDialogue("respawn_conditional");
+                    {
+                        int tier = rt.AppliedCount;
+                        BossJam.Game.GameStateController.Instance?.PlayInGameDialogue($"respawn_wave_{tier}");
+                    }
                 }
                 conditionalRespawnArmedAt = -1f;
             }

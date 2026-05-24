@@ -98,6 +98,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateImpossible(Difficulty d)
         {
+            d.narrationScriptName = "";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 1),
@@ -112,6 +113,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateVeryHard(Difficulty d)
         {
+            d.narrationScriptName = "tier_2_narration";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 3),
@@ -129,6 +131,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateHard(Difficulty d)
         {
+            d.narrationScriptName = "tier_3_narration";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 3),
@@ -146,6 +149,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateMedium(Difficulty d)
         {
+            d.narrationScriptName = "tier_4_narration";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 3),
@@ -164,6 +168,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateEasy(Difficulty d)
         {
+            d.narrationScriptName = "tier_5_narration";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 3),
@@ -183,6 +188,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateBeginner(Difficulty d)
         {
+            d.narrationScriptName = "tier_6_narration";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 3),
@@ -209,6 +215,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateTutorial(Difficulty d)
         {
+            d.narrationScriptName = "tier_7_narration";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 3),
@@ -235,6 +242,7 @@ namespace BossJam.Difficulty.Editor
 
         private static void PopulateError(Difficulty d)
         {
+            d.narrationScriptName = "tier_8_narration";
             d.effects = new List<IDifficultyEffect>
             {
                 Stat(Target.HeroMaxHp,             Op.Override, 3),

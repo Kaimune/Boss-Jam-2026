@@ -1424,7 +1424,8 @@ MonoBehaviour:
   dialogueRig: {fileID: 2035568464}
   fadeOverlay: {fileID: 1920869687}
   heroDeathScriptFormat: hero_death_wave_{0}
-  gameOverScript: game_over
+  bossDeathScriptFormat: boss_death_wave_{0}
+  gameOverScriptFallback: game_over
   heroDeathHoldSeconds: 0.4
   fadeDurationSeconds: 0.6
 --- !u!114 &130968485
@@ -9330,6 +9331,14 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 4656459118828139173, guid: 54882ebcafd304b05badfdab47dc9cf5, type: 3}
+      propertyPath: profiles.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4656459118828139173, guid: 54882ebcafd304b05badfdab47dc9cf5, type: 3}
+      propertyPath: 'profiles.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: bc7ba2233d3440a08425dc12ff24403f, type: 2}
     - target: {fileID: 7328820901946691239, guid: 54882ebcafd304b05badfdab47dc9cf5, type: 3}
       propertyPath: m_Pivot.x
       value: 0
