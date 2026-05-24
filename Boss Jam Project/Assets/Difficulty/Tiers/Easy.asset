@@ -18,7 +18,90 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: 'Hero: 4 melee dmg + post-hit iframes.'
   narrationScriptName: 
-  effects: []
+  effects:
+  - rid: 5190052753752982347
+  - rid: 5190052753752982348
+  - rid: 5190052753752982349
+  - rid: 5190052753752982350
+  - rid: 5190052753752982351
+  - rid: 5190052753752982352
+  - rid: 5190052753752982353
+  - rid: 5190052753752982354
+  - rid: 5190052753752982355
+  - rid: 5190052753752982356
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 5190052753752982347
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 0
+        op: 2
+        value: 3
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982348
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 2
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982349
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 13
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982350
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 14
+        op: 2
+        value: 4
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982351
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 18
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982352
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 22
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982353
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 23
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982354
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 29
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982355
+      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        hpPerInterval: 1
+        intervalSeconds: 5
+    - rid: 5190052753752982356
+      type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        seconds: 1

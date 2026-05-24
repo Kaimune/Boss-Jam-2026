@@ -18,7 +18,85 @@ MonoBehaviour:
   icon: {fileID: 0}
   description: Hero finds fireballs + regenerates 1 hp / 5s.
   narrationScriptName: 
-  effects: []
+  effects:
+  - rid: 5190052753752982371
+  - rid: 5190052753752982372
+  - rid: 5190052753752982373
+  - rid: 5190052753752982374
+  - rid: 5190052753752982375
+  - rid: 5190052753752982376
+  - rid: 5190052753752982377
+  - rid: 5190052753752982378
+  - rid: 5190052753752982379
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 5190052753752982371
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 0
+        op: 2
+        value: 3
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982372
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 2
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982373
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 13
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982374
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 14
+        op: 2
+        value: 2
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982375
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 18
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982376
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 22
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982377
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 23
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982378
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 29
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982379
+      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        hpPerInterval: 1
+        intervalSeconds: 5

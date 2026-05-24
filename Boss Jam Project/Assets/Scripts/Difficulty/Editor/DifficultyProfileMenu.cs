@@ -54,6 +54,8 @@ namespace BossJam.Difficulty.Editor
             PopulateImpossible(byName["Impossible"]);
             PopulateVeryHard(byName["Very Hard"]);
             PopulateHard(byName["Hard"]);
+            PopulateMedium(byName["Medium"]);
+            PopulateEasy(byName["Easy"]);
 
             var profileGuids = AssetDatabase.FindAssets("t:DifficultyProfile");
             if (profileGuids.Length == 0)
@@ -71,6 +73,8 @@ namespace BossJam.Difficulty.Editor
                         byName["Impossible"],
                         byName["Very Hard"],
                         byName["Hard"],
+                        byName["Medium"],
+                        byName["Easy"],
                     };
                     EditorUtility.SetDirty(profile);
                 }
@@ -128,6 +132,41 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.HeroFireballEnabled,   Op.Override, 0),
                 Stat(Target.BossMaxHp,             Op.Override, 10),
                 Stat(Target.BossAttackDamage,      Op.Override, 1),
+            };
+            EditorUtility.SetDirty(d);
+        }
+
+        private static void PopulateMedium(Difficulty d)
+        {
+            d.effects = new List<IDifficultyEffect>
+            {
+                Stat(Target.HeroMaxHp,             Op.Override, 3),
+                Stat(Target.HeroMoveSpeed,         Op.Override, 10),
+                Stat(Target.HeroMeleeEnabled,      Op.Override, 1),
+                Stat(Target.HeroMeleeDamage,       Op.Override, 2),
+                Stat(Target.HeroDodgeEnabled,      Op.Override, 1),
+                Stat(Target.HeroFireballEnabled,   Op.Override, 1),
+                Stat(Target.BossMaxHp,             Op.Override, 10),
+                Stat(Target.BossAttackDamage,      Op.Override, 1),
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+            };
+            EditorUtility.SetDirty(d);
+        }
+
+        private static void PopulateEasy(Difficulty d)
+        {
+            d.effects = new List<IDifficultyEffect>
+            {
+                Stat(Target.HeroMaxHp,             Op.Override, 3),
+                Stat(Target.HeroMoveSpeed,         Op.Override, 10),
+                Stat(Target.HeroMeleeEnabled,      Op.Override, 1),
+                Stat(Target.HeroMeleeDamage,       Op.Override, 4),
+                Stat(Target.HeroDodgeEnabled,      Op.Override, 1),
+                Stat(Target.HeroFireballEnabled,   Op.Override, 1),
+                Stat(Target.BossMaxHp,             Op.Override, 10),
+                Stat(Target.BossAttackDamage,      Op.Override, 1),
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroIframesOnHitEffect { seconds = 1f },
             };
             EditorUtility.SetDirty(d);
         }

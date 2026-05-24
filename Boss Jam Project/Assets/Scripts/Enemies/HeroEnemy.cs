@@ -104,6 +104,12 @@ namespace BossJam.Enemies
                 return;
             }
             BeginHitReaction();
+
+            // Tier-driven post-hit iframes. BeginHitReaction already grants iframes
+            // tied to the combo/knockback window; this stacks an extra window for
+            // tiers (e.g. Easy) that grant generous invulnerability between hits.
+            float iframeSec = rt != null ? rt.Flags.HeroPostHitIframeSeconds : 0f;
+            if (iframeSec > 0f) SetInvulnFor(iframeSec);
         }
 
         // ── Hit reaction ─────────────────────────────────────────────
@@ -192,6 +198,10 @@ namespace BossJam.Enemies
         private GridMover mover;
         private GridFootprint targetFootprint;
         private float stuckTimer;
+
+        // Tier-driven HP regen. Flags are populated by HeroRegenEffect.Apply; the
+        // ticker advances during Playing state only and is suppressed at max hp.
+        private float regenAccumulator;
         private Vector2 kiteTarget;
         private bool hasKiteTarget;
         private BossPredictor predictor;
@@ -334,6 +344,8 @@ namespace BossJam.Enemies
             if (BossJam.Game.GameStateController.Instance != null &&
                 BossJam.Game.GameStateController.Instance.State != BossJam.Game.GameState.Playing)
                 return;
+
+            TickRegen(Time.deltaTime);
             if (target == null) { mover.InputDirection = Vector2.zero; return; }
 
             // Fire the deferred knockback once the combo window lapses.
@@ -489,6 +501,23 @@ namespace BossJam.Enemies
             kiteTarget = r.TargetPoint;
             hasKiteTarget = r.ValidTargetFound;
             return r.Direction;
+        }
+
+        private void TickRegen(float dt)
+        {
+            if (rt == null) return;
+            int amt = rt.Flags.HeroRegenHpPerInterval;
+            float interval = rt.Flags.HeroRegenIntervalSeconds;
+            if (amt <= 0 || interval <= 0f) { regenAccumulator = 0f; return; }
+            if (currentHp >= spawnedMaxHp) { regenAccumulator = 0f; return; }
+
+            regenAccumulator += dt;
+            while (regenAccumulator >= interval && currentHp < spawnedMaxHp)
+            {
+                regenAccumulator -= interval;
+                currentHp = Mathf.Min(spawnedMaxHp, currentHp + amt);
+                HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            }
         }
 
         private void TickStuckDetector()
