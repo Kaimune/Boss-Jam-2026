@@ -43,6 +43,8 @@ namespace BossJam.Game
         public GameObject[] extraIntermediate;
         [Tooltip("Extra GameObjects to show when previewing Dialogue. Hidden in every other state.")]
         public GameObject[] extraDialogue;
+        [Tooltip("Extra GameObjects to show when previewing Playing. Hidden in every other state.")]
+        public GameObject[] extraPlaying;
         [Tooltip("Extra GameObjects to show when previewing Death. Hidden in every other state.")]
         public GameObject[] extraDeath;
         [Tooltip("Extra GameObjects to show when previewing GameOver. Hidden in every other state.")]

@@ -53,6 +53,7 @@ namespace BossJam.Editor.ScenePreview
             DrawStateButton("Narration", wiring, ApplyNarration);
             DrawStateButton("Intermediate", wiring, ApplyIntermediate);
             DrawStateButton("Dialogue", wiring, ApplyDialogue);
+            DrawStateButton("Playing", wiring, ApplyPlaying);
             DrawStateButton("Death", wiring, ApplyDeath);
             DrawStateButton("GameOver", wiring, ApplyGameOver);
 
@@ -157,6 +158,20 @@ namespace BossJam.Editor.ScenePreview
             MarkSceneDirty();
         }
 
+        private void ApplyPlaying(ScenePreviewWiring w)
+        {
+            // Playing state = gameplay HUD visible, everything else hidden.
+            EnsureSnapshot(w);
+            HideAllPanels(w);
+            HideAllExtras(w);
+            ShowArray(w.gameplayHudElements);
+            ShowArray(w.extraPlaying);
+            SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
+            SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
+            SetFadeActive(w.fadeOverlay, false);
+            MarkSceneDirty();
+        }
+
         private void ApplyDeath(ScenePreviewWiring w)
         {
             // Death state in runtime = OutroDirector fade-to-black; no panel.
@@ -205,6 +220,7 @@ namespace BossJam.Editor.ScenePreview
             HideArray(w.extraNarration);
             HideArray(w.extraIntermediate);
             HideArray(w.extraDialogue);
+            HideArray(w.extraPlaying);
             HideArray(w.extraDeath);
             HideArray(w.extraGameOver);
         }
@@ -277,6 +293,7 @@ namespace BossJam.Editor.ScenePreview
             SnapArray(w.extraNarration);
             SnapArray(w.extraIntermediate);
             SnapArray(w.extraDialogue);
+            SnapArray(w.extraPlaying);
             SnapArray(w.extraDeath);
             SnapArray(w.extraGameOver);
 
