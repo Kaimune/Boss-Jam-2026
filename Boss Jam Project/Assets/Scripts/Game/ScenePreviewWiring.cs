@@ -46,8 +46,10 @@ namespace BossJam.Game
         public DifficultyProfile profile;
         [Tooltip("1-based index into profile.tiers used for the Intermediate preview.")]
         [Min(1)] public int previewTierIndex = 3;
-        public DialogueScriptAsset previewDialogueScript;
-        [Tooltip("Index into previewDialogueScript.lines used for the Dialogue preview.")]
+        [Tooltip("Name of a dialogue script under Resources/Dialogue/ (no extension). " +
+                 "Previewer loads it and uses the line at previewDialogueLineIndex.")]
+        public string previewDialogueScriptName;
+        [Tooltip("Index into the loaded dialogue script's lines used for the Dialogue preview.")]
         [Min(0)] public int previewDialogueLineIndex = 0;
         [Tooltip("Name of a narration script under Resources/Narration/ (no extension). " +
                  "Previewer loads it and uses the first line.")]

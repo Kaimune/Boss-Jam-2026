@@ -173,13 +173,15 @@ namespace BossJam.Editor.ScenePreview
             SetLetterboxActive(w, true);
             SetFadeAlpha(w.fadeOverlay, enabled: false, alpha: 0f);
 
-            if (w.dialogueController != null && w.previewDialogueScript != null
-                && w.previewDialogueScript.lines != null
-                && w.previewDialogueScript.lines.Count > 0)
+            if (w.dialogueController != null
+                && !string.IsNullOrWhiteSpace(w.previewDialogueScriptName))
             {
-                int idx = Mathf.Clamp(w.previewDialogueLineIndex, 0,
-                                      w.previewDialogueScript.lines.Count - 1);
-                w.dialogueController.PreviewLine(w.previewDialogueScript.lines[idx]);
+                var asset = DialogueScriptLoader.Load(w.previewDialogueScriptName);
+                if (asset != null && asset.lines != null && asset.lines.Count > 0)
+                {
+                    int idx = Mathf.Clamp(w.previewDialogueLineIndex, 0, asset.lines.Count - 1);
+                    w.dialogueController.PreviewLine(asset.lines[idx]);
+                }
             }
             MarkSceneDirty();
         }
