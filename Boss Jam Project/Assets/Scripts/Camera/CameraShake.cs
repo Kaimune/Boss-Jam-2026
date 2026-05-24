@@ -17,7 +17,7 @@ namespace BossJam.CameraSys
     {
         private static CameraShake _instance;
 
-        private struct Impulse
+        private struct LiveImpulse
         {
             public ShakeProfile profile;
             public float startTime;
@@ -25,13 +25,13 @@ namespace BossJam.CameraSys
             public float seedY;
         }
 
-        private readonly List<Impulse> _active = new List<Impulse>(8);
+        private readonly List<LiveImpulse> _active = new List<LiveImpulse>(8);
         private Vector3 _lastOffset;
 
         public static void Impulse(ShakeProfile profile)
         {
             if (_instance == null || profile == null) return;
-            _instance._active.Add(new Impulse
+            _instance._active.Add(new LiveImpulse
             {
                 profile = profile,
                 startTime = Time.time,
