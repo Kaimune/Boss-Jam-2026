@@ -158,6 +158,7 @@ namespace BossJam.Enemies
                     saveScumConsumed = true;
                     currentHp = Mathf.Clamp(f.HeroRespawnRestoreHp, 1, spawnedMaxHp);
                     SetInvulnFor(0.5f);
+                    BossJam.Game.GameStateController.Instance?.PlayInGameDialogue("respawn_save_scum");
                     return true;
 
                 case HeroRespawnMode.FullHpIfNotInstakilled:
@@ -588,6 +589,7 @@ namespace BossJam.Enemies
                 {
                     currentHp = spawnedMaxHp;
                     HpChanged?.Invoke(currentHp, spawnedMaxHp);
+                    BossJam.Game.GameStateController.Instance?.PlayInGameDialogue("respawn_conditional");
                 }
                 conditionalRespawnArmedAt = -1f;
             }

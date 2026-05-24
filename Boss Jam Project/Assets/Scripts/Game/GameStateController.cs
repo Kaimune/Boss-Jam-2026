@@ -275,6 +275,28 @@ namespace BossJam.Game
             else EnterPlaying();
         }
 
+        /// <summary>
+        /// Play an ad-hoc dialogue script mid-gameplay. Pauses time + boss while
+        /// the dialogue runs; restores Playing state when the dialogue Finishes.
+        /// </summary>
+        public void PlayInGameDialogue(string scriptName)
+        {
+            if (string.IsNullOrEmpty(scriptName)) return;
+            if (dialogueRig == null || dialogueRig.Controller == null) return;
+            if (dialogueRig.Controller.IsPlaying) return;
+
+            // Sit in the existing Dialogue state — the rest of the state machine
+            // already pauses Time/Boss correctly. Save where we want to land
+            // after the dialogue finishes (back to Playing).
+            postDialogueTarget = GameState.Playing;
+            State = GameState.Dialogue;
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
+            StateChanged?.Invoke(State);
+
+            dialogueRig.Controller.Play(scriptName);
+        }
+
         // Single source of truth for "transitioning into Playing". Anything
         // that resumes gameplay routes through here so the boss is re-enabled
         // and time resumes consistently.
