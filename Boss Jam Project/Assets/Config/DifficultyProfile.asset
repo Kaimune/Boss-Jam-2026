@@ -11,85 +11,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8fb8e917ca7684ca999ed6184863be61, type: 3}
   m_Name: DifficultyProfile
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   gameConfig: {fileID: 11400000, guid: c8e18a3215fd94a9888840cc1b961b8e, type: 2}
   heroConfig: {fileID: 11400000, guid: 4978d48ee606748c89f956fe01dc2978, type: 2}
   attackConfigs:
   - {fileID: 11400000, guid: 1520cfe2c1ec343daa5c83de20106b3c, type: 2}
   - {fileID: 11400000, guid: 72d1682011f5647f49ae278891074a36, type: 2}
   - {fileID: 11400000, guid: a7c9e3b18f24d44f0a5c8de7b40b6c2e, type: 2}
-  debuffs:
-  - name: Extreme
-    description: '"Damn... Immortal is literally impossible"'
-    icon: {fileID: 0}
-    tint: {r: 1, g: 0.85, b: 0.5, a: 1}
-    tierName: Extreme
-    tierDescription: 'Boss made well... not immortal...
-
-
-      player: moves now,
-      melee atacks enabled, +3 hp'
-    effects:
-    - {fileID: 11400000, guid: 1d2535789ebe94a00a3a874f3e3a765f, type: 2}
-    - {fileID: 11400000, guid: 7c62c895696fb4e96ae1ded1eb0b6081, type: 2}
-    - {fileID: 11400000, guid: 8613bae6aab0b414ea06502794c9000c, type: 2}
-    narrationScriptName: extreme
-  - name: Very Hard
-    description: Boss gains +2 max HP.
-    icon: {fileID: 0}
-    tint: {r: 0.7, g: 0.9, b: 1, a: 1}
-    tierName: Very Hard
-    tierDescription: Its hide thickens.
-    effects:
-    - {fileID: 11400000, guid: 1d2535789ebe94a00a3a874f3e3a765f, type: 2}
-    - {fileID: 11400000, guid: 7c62c895696fb4e96ae1ded1eb0b6081, type: 2}
-    - {fileID: 11400000, guid: 8613bae6aab0b414ea06502794c9000c, type: 2}
-    narrationScriptName: 
-  - name: Hard
-    description: Boss acts 25% faster and gains +3 HP.
-    icon: {fileID: 0}
-    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
-    tierName: Tier 3 Frenzied
-    tierDescription: Pain becomes fuel.
-    effects: []
-    narrationScriptName: 
-  - name: Medium
-    description: Boss acts 25% faster and gains +3 HP.
-    icon: {fileID: 0}
-    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
-    tierName: Tier 3 Frenzied
-    tierDescription: Pain becomes fuel.
-    effects: []
-    narrationScriptName: 
-  - name: Easy
-    description: Boss acts 25% faster and gains +3 HP.
-    icon: {fileID: 0}
-    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
-    tierName: Tier 3 Frenzied
-    tierDescription: Pain becomes fuel.
-    effects: []
-    narrationScriptName: 
-  - name: Beginner
-    description: Boss acts 25% faster and gains +3 HP.
-    icon: {fileID: 0}
-    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
-    tierName: Tier 3 Frenzied
-    tierDescription: Pain becomes fuel.
-    effects: []
-    narrationScriptName: 
-  - name: Tutorial
-    description: Boss acts 25% faster and gains +3 HP.
-    icon: {fileID: 0}
-    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
-    tierName: Tier 3 Frenzied
-    tierDescription: Pain becomes fuel.
-    effects: []
-    narrationScriptName: 
-  - name: Error....
-    description: Boss acts 25% faster and gains +3 HP.
-    icon: {fileID: 0}
-    tint: {r: 1, g: 0.5, b: 0.5, a: 1}
-    tierName: Tier 3 Frenzied
-    tierDescription: Pain becomes fuel.
-    effects: []
-    narrationScriptName: 
+  tiers:
+  - {fileID: 11400000, guid: 1f19498169e114e61ac0ce60d5e8470d, type: 2}

@@ -6,7 +6,7 @@ namespace BossJam.Difficulty
     /// <summary>
     /// Persistent run state that survives scene reloads. DifficultyRuntime is
     /// destroyed every time the gameplay scene reloads between waves; the wave
-    /// counter and applied debuff list live here so they can be rehydrated.
+    /// counter and applied tier list live here so they can be rehydrated.
     ///
     /// ScriptableObjects keep their values across SceneManager.LoadScene within
     /// a playmode session and reset to their serialized defaults when playmode
@@ -17,32 +17,25 @@ namespace BossJam.Difficulty
     {
         [Header("Persisted across scene reloads")]
         public int currentWaveIndex = 1;
-        public List<DebuffEntry> appliedEntries = new();
+        public List<Difficulty> appliedTiers = new();
         public string currentTierName = "Immortal";
-        public DebuffEntry currentTierEntry;
+        public Difficulty currentTierEntry;
 
-        // Snapshot of the tier before the most recent ApplyNextDebuff. Used by
-        // the start screen to animate from the previous tier to the new one
-        // when entering a fresh wave's scene.
         public string previousTierName = "Immortal";
-        public DebuffEntry previousTierEntry;
+        public Difficulty previousTierEntry;
 
-        public bool IsMidRun => appliedEntries != null && appliedEntries.Count > 0;
+        public bool IsMidRun => appliedTiers != null && appliedTiers.Count > 0;
 
         public void ResetForNewRun()
         {
             currentWaveIndex = 1;
-            appliedEntries.Clear();
+            appliedTiers.Clear();
             currentTierName = "Immortal";
             currentTierEntry = null;
             previousTierName = "Immortal";
             previousTierEntry = null;
         }
 
-        // Guard against Unity's "Enter Play Mode → Reload Domain" being
-        // disabled. Without this, ScriptableObject state from the previous
-        // playmode session bleeds into the next one and the start screen
-        // gets skipped on a fresh play.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetAllOnSessionStart()
         {

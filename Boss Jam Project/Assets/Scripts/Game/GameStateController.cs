@@ -156,7 +156,7 @@ namespace BossJam.Game
         {
             // Only pause for a tier-advance screen if there's a debuff queued
             // to apply. Once the curve is exhausted, hero deaths are silent.
-            if (runtime == null || !runtime.HasNextDebuff) return;
+            if (runtime == null || !runtime.HasNextTier) return;
             TriggerDeath();
         }
 
@@ -318,7 +318,7 @@ namespace BossJam.Game
             // the next frame; DifficultyRuntime rehydrates the modifier ledger
             // from RunState in its Awake. GameStateController.Start sees
             // IsMidRun and auto-calls Begin() to roll into the next cutscene.
-            if (runtime != null) runtime.ApplyNextDebuff();
+            if (runtime != null) runtime.AdvanceTier();
             ReloadScene();
         }
 

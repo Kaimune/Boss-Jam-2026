@@ -13,19 +13,8 @@ MonoBehaviour:
   m_Name: RunState
   m_EditorClassIdentifier: 
   currentWaveIndex: 1
-  appliedEntries: []
+  appliedTiers: []
   currentTierName: Immortal
-  currentTierEntry:
-    name: 
-    description: 
-    icon: {fileID: 0}
-    tint: {r: 1, g: 1, b: 1, a: 1}
-    tierName: 
-    tierDescription: 
-    effect:
-      rid: -2
-  references:
-    version: 2
-    RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+  currentTierEntry: {fileID: 0}
+  previousTierName: Immortal
+  previousTierEntry: {fileID: 0}

@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a73878d60ec4c7b8e0d2263cee6661, type: 3}
+  m_Name: Impossible
+  m_EditorClassIdentifier: 
+  tierName: Impossible
+  tierDescription: 
+  tint: {r: 0.4, g: 0, b: 0, a: 1}
+  icon: {fileID: 0}
+  description: Hero dies in 1 hit. No movespeed. No abilities. Boss attacks deal
+    2.
+  narrationScriptName: 
+  effects:
+  - rid: 5190052753752982287
+  - rid: 5190052753752982288
+  - rid: 5190052753752982289
+  - rid: 5190052753752982290
+  - rid: 5190052753752982291
+  - rid: 5190052753752982292
+  references:
+    version: 2
+    RefIds:
+    - rid: 5190052753752982287
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 0
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982288
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 2
+        op: 2
+        value: 0
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982289
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 22
+        op: 2
+        value: 0
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982290
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 13
+        op: 2
+        value: 0
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982291
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 29
+        op: 2
+        value: 2
+        attackId: 
+        extensionKey: 
+    - rid: 5190052753752982292
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 23
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
