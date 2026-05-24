@@ -24,6 +24,11 @@ namespace BossJam.Difficulty
         public string previousTierName = "";
         public Difficulty previousTierEntry;
 
+        [Header("Debug (persists across ResetForNewRun)")]
+        [Tooltip("If > 0, the runtime pre-applies this many tiers at game start. " +
+                 "0 = normal flow (auto-advance to Tier 1 on Begin). Set via Tools > BossJam > Debug > Start At Tier.")]
+        public int debugStartingTier = 0;
+
         public bool IsMidRun => appliedTiers != null && appliedTiers.Count > 0;
 
         public void ResetForNewRun()

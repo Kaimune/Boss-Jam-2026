@@ -64,7 +64,7 @@ namespace BossJam.Difficulty.Editor
             var guids = AssetDatabase.FindAssets("t:RunState");
             if (guids.Length == 0) return -1;
             var rs = AssetDatabase.LoadAssetAtPath<RunState>(AssetDatabase.GUIDToAssetPath(guids[0]));
-            return rs != null ? rs.appliedTiers.Count : -1;
+            return rs != null ? rs.debugStartingTier : -1;
         }
 
         /// <summary>
@@ -97,40 +97,24 @@ namespace BossJam.Difficulty.Editor
                 return;
             }
 
-            runState.ResetForNewRun();
-
             if (tierIndex < 0) tierIndex = 0;
             if (tierIndex > profile.tiers.Count) tierIndex = profile.tiers.Count;
 
-            for (int i = 0; i < tierIndex; i++)
-            {
-                var tier = profile.tiers[i];
-                if (tier == null) continue;
-
-                // Mirror DifficultyRuntime.AdvanceTier()'s persistent-state
-                // mutations (without applying effects — those run at playmode
-                // start via the runtime's Awake rehydration).
-                runState.previousTierName = runState.currentTierName;
-                runState.previousTierEntry = runState.currentTierEntry;
-                runState.appliedTiers.Add(tier);
-
-                if (!string.IsNullOrEmpty(tier.tierName) && tier.tierName != runState.currentTierName)
-                {
-                    runState.currentTierName = tier.tierName;
-                    runState.currentTierEntry = tier;
-                }
-                runState.currentWaveIndex++;
-            }
+            // Also reset the live state so we don't carry over a half-played run.
+            // appliedTiers etc. will be repopulated by DifficultyRuntime.Awake on
+            // the next playmode entry based on debugStartingTier.
+            runState.ResetForNewRun();
+            runState.debugStartingTier = tierIndex;
 
             EditorUtility.SetDirty(runState);
             AssetDatabase.SaveAssets();
 
             string label = tierIndex == 0
                 ? "None (fresh run)"
-                : $"tier {tierIndex} — '{runState.currentTierName}'";
-            Debug.Log($"[BossJam] RunState set to start at {label}. " +
-                      $"appliedTiers.Count = {runState.appliedTiers.Count}, " +
-                      $"currentWaveIndex = {runState.currentWaveIndex}. " +
+                : (tierIndex <= profile.tiers.Count && profile.tiers[tierIndex - 1] != null
+                    ? $"tier {tierIndex} — '{profile.tiers[tierIndex - 1].tierName}'"
+                    : $"tier {tierIndex}");
+            Debug.Log($"[BossJam] RunState.debugStartingTier = {tierIndex} ({label}). " +
                       $"Enter playmode to run from this tier.");
         }
     }

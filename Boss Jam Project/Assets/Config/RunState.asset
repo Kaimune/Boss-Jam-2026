@@ -18,3 +18,4 @@ MonoBehaviour:
   currentTierEntry: {fileID: 0}
   previousTierName: 
   previousTierEntry: {fileID: 0}
+  debugStartingTier: 0

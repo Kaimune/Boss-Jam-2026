@@ -145,6 +145,30 @@ namespace BossJam.Difficulty
                 return;
             }
 
+            // Debug starting tier — honored once per playmode session. If set, we
+            // pre-populate appliedTiers to put the runtime at that tier; subsequent
+            // rehydration replays only the latest applied tier's effects (reset-on-
+            // advance). The debug field itself survives ResetForNewRun by design, so
+            // the user's choice persists across playmode entries until they clear it.
+            if (profile != null
+                && runState.appliedTiers.Count == 0
+                && runState.debugStartingTier > 0)
+            {
+                int target = Mathf.Min(runState.debugStartingTier, profile.tiers.Count);
+                for (int i = 0; i < target; i++)
+                {
+                    var tier = profile.tiers[i];
+                    if (tier == null) continue;
+                    runState.appliedTiers.Add(tier);
+                    if (!string.IsNullOrEmpty(tier.tierName))
+                    {
+                        runState.currentTierName = tier.tierName;
+                        runState.currentTierEntry = tier;
+                    }
+                    runState.currentWaveIndex++;
+                }
+            }
+
             // Mid-run rehydration: replay the most recent tier's effects so the
             // ledger / flag bag reflect the current tier (reset-on-advance means
             // only the LATEST tier defines current state).
