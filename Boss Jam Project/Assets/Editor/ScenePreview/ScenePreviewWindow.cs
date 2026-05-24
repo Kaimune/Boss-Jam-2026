@@ -12,9 +12,9 @@ namespace BossJam.Editor.ScenePreview
 {
     /// <summary>
     /// Editor window — opens via Tools/BossJam/Scene State Preview.
-    /// Finds the active scene's ScenePreviewWiring and exposes a button per
-    /// GameState that snaps the scene's UI to that state's composition.
-    /// Companion to the GameState enum in BossJam.Game.GameStateController.
+    /// Snaps the active scene's UI to a chosen GameState's visible composition.
+    /// Only touches what the runtime toggles: inner Panel children + CanvasGroup
+    /// alphas + the fade overlay. Never parent canvases (those must stay active).
     /// </summary>
     public sealed class ScenePreviewWindow : EditorWindow
     {
@@ -22,16 +22,14 @@ namespace BossJam.Editor.ScenePreview
         public static void Open()
         {
             var w = GetWindow<ScenePreviewWindow>("Scene State Preview");
-            w.minSize = new Vector2(280, 360);
+            w.minSize = new Vector2(260, 320);
         }
 
-        // Per-session snapshot of original visibility, captured lazily on the
-        // first Apply call after window-open / domain-reload / scene change.
+        // Per-session snapshot of original visibility. Captured lazily on first Apply.
         private class GameObjectSnap { public GameObject go; public bool active; }
-        private class RectSnap { public RectTransform rect; public Vector2 sizeDelta; }
-
+        private class CanvasGroupSnap { public CanvasGroup group; public float alpha; }
         private readonly List<GameObjectSnap> goSnaps = new();
-        private readonly List<RectSnap> rectSnaps = new();
+        private readonly List<CanvasGroupSnap> cgSnaps = new();
         private bool snapshotTaken;
         private string snapshotSceneName;
 
@@ -54,28 +52,25 @@ namespace BossJam.Editor.ScenePreview
             DrawStateButton("Startup", wiring, ApplyStartup);
             DrawStateButton("Narration", wiring, ApplyNarration);
             DrawStateButton("Intermediate", wiring, ApplyIntermediate);
-            DrawStateButton("CutsceneIntro", wiring, ApplyCutsceneIntro);
             DrawStateButton("Dialogue", wiring, ApplyDialogue);
-            DrawStateButton("Playing", wiring, ApplyPlaying);
             DrawStateButton("Death", wiring, ApplyDeath);
             DrawStateButton("GameOver", wiring, ApplyGameOver);
 
             EditorGUILayout.Space(12);
             if (GUILayout.Button("Restore Defaults", GUILayout.Height(28)))
-                RestoreDefaults(wiring);
+                RestoreDefaults();
 
             EditorGUILayout.Space(8);
             EditorGUILayout.HelpBox(
                 "Previewing modifies the scene and marks it dirty. Click " +
-                "Restore Defaults (or Cmd-Z) before saving if you don't want " +
-                "the preview state persisted.",
-                MessageType.None);
+                "Restore Defaults (or Cmd-Z) BEFORE saving or entering Play " +
+                "mode — otherwise the previewed state persists.",
+                MessageType.Warning);
         }
 
         private void DrawStateButton(string label, ScenePreviewWiring w, System.Action<ScenePreviewWiring> apply)
         {
-            if (GUILayout.Button(label, GUILayout.Height(24)))
-                apply(w);
+            if (GUILayout.Button(label, GUILayout.Height(24))) apply(w);
         }
 
         private static ScenePreviewWiring FindWiring()
@@ -83,35 +78,29 @@ namespace BossJam.Editor.ScenePreview
             return FindFirstObjectByType<ScenePreviewWiring>(FindObjectsInactive.Include);
         }
 
-        // ---------- Apply methods (one per GameState) ----------
+        // ---------- Apply methods ----------
 
         private void ApplyStartup(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
-            SetActive(w.startScreen, true);
-            SetActive(w.narrationRoot, false);
-            SetActive(w.intermediateRoot, false);
-            SetActive(w.dialogueRoot, false);
-            SetActive(w.deathScreenRoot, false);
-            SetActive(w.gameOverScreenRoot, false);
-            SetActive(w.gameplayHUD, false);
-            SetLetterboxActive(w, false);
-            SetFadeAlpha(w.fadeOverlay, enabled: false, alpha: 0f);
+            SetActive(w.startPanel, true);
+            SetActive(w.intermediatePanel, false);
+            SetActive(w.gameOverPanel, false);
+            SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
+            SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
+            SetFadeActive(w.fadeOverlay, false);
             MarkSceneDirty();
         }
 
         private void ApplyNarration(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
-            SetActive(w.startScreen, false);
-            SetActive(w.narrationRoot, true);
-            SetActive(w.intermediateRoot, false);
-            SetActive(w.dialogueRoot, false);
-            SetActive(w.deathScreenRoot, false);
-            SetActive(w.gameOverScreenRoot, false);
-            SetActive(w.gameplayHUD, false);
-            SetLetterboxActive(w, false);
-            SetFadeAlpha(w.fadeOverlay, enabled: true, alpha: 1f);
+            SetActive(w.startPanel, false);
+            SetActive(w.intermediatePanel, false);
+            SetActive(w.gameOverPanel, false);
+            SetCanvasGroupAlpha(w.narrationCanvasGroup, 1f);
+            SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
+            SetFadeActive(w.fadeOverlay, true, 1f);
 
             if (w.narrationCaption != null)
             {
@@ -124,55 +113,29 @@ namespace BossJam.Editor.ScenePreview
         private void ApplyIntermediate(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
-            SetActive(w.startScreen, false);
-            SetActive(w.narrationRoot, false);
-            SetActive(w.intermediateRoot, true);
-            SetActive(w.dialogueRoot, false);
-            SetActive(w.deathScreenRoot, false);
-            SetActive(w.gameOverScreenRoot, false);
-            SetActive(w.gameplayHUD, false);
-            SetLetterboxActive(w, false);
-            SetFadeAlpha(w.fadeOverlay, enabled: false, alpha: 0f);
-
-            if (w.tierCard != null && w.profile != null && w.profile.tiers != null
-                && w.profile.tiers.Count > 0)
-            {
-                int idx = Mathf.Clamp(w.previewTierIndex - 1, 0, w.profile.tiers.Count - 1);
-                var tier = w.profile.tiers[idx];
-                if (tier != null) w.tierCard.PreviewRender(tier.tierName, tier.description);
-                else w.tierCard.PreviewRender("[no tier]", "");
-            }
-            MarkSceneDirty();
-        }
-
-        private void ApplyCutsceneIntro(ScenePreviewWiring w)
-        {
-            EnsureSnapshot(w);
-            SetActive(w.startScreen, false);
-            SetActive(w.narrationRoot, false);
-            SetActive(w.intermediateRoot, false);
-            SetActive(w.dialogueRoot, false);
-            SetActive(w.deathScreenRoot, false);
-            SetActive(w.gameOverScreenRoot, false);
-            SetActive(w.gameplayHUD, false);
-            SetLetterboxActive(w, true);
-            SetFadeAlpha(w.fadeOverlay, enabled: false, alpha: 0f);
+            SetActive(w.startPanel, false);
+            SetActive(w.intermediatePanel, true);
+            SetActive(w.gameOverPanel, false);
+            SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
+            SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
+            SetFadeActive(w.fadeOverlay, false);
+            // IntermediateScreenUI's own labels are populated by its runtime
+            // Awake; in edit mode they show whatever was last serialized.
+            // Designers can hand-edit the labels in the scene to see different tiers.
             MarkSceneDirty();
         }
 
         private void ApplyDialogue(ScenePreviewWiring w)
         {
             EnsureSnapshot(w);
-            SetActive(w.startScreen, false);
-            SetActive(w.narrationRoot, false);
-            SetActive(w.intermediateRoot, false);
-            SetActive(w.dialogueRoot, true);
-            SetActive(w.deathScreenRoot, false);
-            SetActive(w.gameOverScreenRoot, false);
-            SetActive(w.gameplayHUD, false);
-            SetLetterboxActive(w, true);
-            SetFadeAlpha(w.fadeOverlay, enabled: false, alpha: 0f);
+            SetActive(w.startPanel, false);
+            SetActive(w.intermediatePanel, false);
+            SetActive(w.gameOverPanel, false);
+            SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
+            SetFadeActive(w.fadeOverlay, false);
 
+            // Dialogue: PreviewLine sets the controller's CanvasGroup alpha to 1
+            // and applies the speaker profile.
             if (w.dialogueController != null
                 && !string.IsNullOrWhiteSpace(w.previewDialogueScriptName))
             {
@@ -183,73 +146,58 @@ namespace BossJam.Editor.ScenePreview
                     w.dialogueController.PreviewLine(asset.lines[idx]);
                 }
             }
-            MarkSceneDirty();
-        }
-
-        private void ApplyPlaying(ScenePreviewWiring w)
-        {
-            EnsureSnapshot(w);
-            SetActive(w.startScreen, false);
-            SetActive(w.narrationRoot, false);
-            SetActive(w.intermediateRoot, false);
-            SetActive(w.dialogueRoot, false);
-            SetActive(w.deathScreenRoot, false);
-            SetActive(w.gameOverScreenRoot, false);
-            SetActive(w.gameplayHUD, true);
-            SetLetterboxActive(w, false);
-            SetFadeAlpha(w.fadeOverlay, enabled: false, alpha: 0f);
+            else
+            {
+                // No sample script — still surface the panel so layout is visible.
+                SetCanvasGroupAlpha(w.dialogueCanvasGroup, 1f);
+            }
             MarkSceneDirty();
         }
 
         private void ApplyDeath(ScenePreviewWiring w)
         {
+            // Death state in runtime = OutroDirector fade-to-black; no panel.
+            // Static preview: just fade fully black, hide all UI.
             EnsureSnapshot(w);
-            SetActive(w.startScreen, false);
-            SetActive(w.narrationRoot, false);
-            SetActive(w.intermediateRoot, false);
-            SetActive(w.dialogueRoot, false);
-            SetActive(w.deathScreenRoot, true);
-            SetActive(w.gameOverScreenRoot, false);
-            SetActive(w.gameplayHUD, false);
-            SetLetterboxActive(w, true);
-            // Fade enabled, alpha left at scene-authored value (do not overwrite).
-            if (w.fadeOverlay != null) w.fadeOverlay.gameObject.SetActive(true);
+            SetActive(w.startPanel, false);
+            SetActive(w.intermediatePanel, false);
+            SetActive(w.gameOverPanel, false);
+            SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
+            SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
+            SetFadeActive(w.fadeOverlay, true, 1f);
             MarkSceneDirty();
         }
 
         private void ApplyGameOver(ScenePreviewWiring w)
         {
+            // GameOver state in runtime = fade fully black + GameOver panel on top.
             EnsureSnapshot(w);
-            SetActive(w.startScreen, false);
-            SetActive(w.narrationRoot, false);
-            SetActive(w.intermediateRoot, false);
-            SetActive(w.dialogueRoot, false);
-            SetActive(w.deathScreenRoot, false);
-            SetActive(w.gameOverScreenRoot, true);
-            SetActive(w.gameplayHUD, false);
-            SetLetterboxActive(w, true);
-            if (w.fadeOverlay != null) w.fadeOverlay.gameObject.SetActive(true);
+            SetActive(w.startPanel, false);
+            SetActive(w.intermediatePanel, false);
+            SetActive(w.gameOverPanel, true);
+            SetCanvasGroupAlpha(w.narrationCanvasGroup, 0f);
+            SetCanvasGroupAlpha(w.dialogueCanvasGroup, 0f);
+            SetFadeActive(w.fadeOverlay, true, 1f);
             MarkSceneDirty();
         }
 
-        // ---------- Toggle helpers ----------
+        // ---------- Helpers ----------
 
         private static void SetActive(GameObject go, bool active)
         {
             if (go != null) go.SetActive(active);
         }
 
-        private static void SetLetterboxActive(ScenePreviewWiring w, bool active)
+        private static void SetCanvasGroupAlpha(CanvasGroup cg, float alpha)
         {
-            if (w.letterboxTop != null) w.letterboxTop.gameObject.SetActive(active);
-            if (w.letterboxBottom != null) w.letterboxBottom.gameObject.SetActive(active);
+            if (cg != null) cg.alpha = alpha;
         }
 
-        private static void SetFadeAlpha(FadeOverlay fade, bool enabled, float alpha)
+        private static void SetFadeActive(FadeOverlay fade, bool active, float alpha = 0f)
         {
             if (fade == null) return;
-            fade.gameObject.SetActive(enabled);
-            if (enabled) fade.SetAlpha(alpha);
+            fade.gameObject.SetActive(active);
+            if (active) fade.SetAlpha(alpha);
         }
 
         private static string LoadNarrationFirstLine(string scriptName)
@@ -268,34 +216,30 @@ namespace BossJam.Editor.ScenePreview
             if (snapshotTaken && snapshotSceneName == activeScene) return;
 
             goSnaps.Clear();
-            rectSnaps.Clear();
+            cgSnaps.Clear();
 
             void AddGo(GameObject go)
             {
                 if (go != null) goSnaps.Add(new GameObjectSnap { go = go, active = go.activeSelf });
             }
+            void AddCg(CanvasGroup cg)
+            {
+                if (cg != null) cgSnaps.Add(new CanvasGroupSnap { group = cg, alpha = cg.alpha });
+            }
 
-            AddGo(w.startScreen);
-            AddGo(w.narrationRoot);
-            AddGo(w.intermediateRoot);
-            AddGo(w.dialogueRoot);
-            AddGo(w.deathScreenRoot);
-            AddGo(w.gameOverScreenRoot);
-            AddGo(w.gameplayHUD);
-            if (w.letterboxTop != null) AddGo(w.letterboxTop.gameObject);
-            if (w.letterboxBottom != null) AddGo(w.letterboxBottom.gameObject);
+            AddGo(w.startPanel);
+            AddGo(w.intermediatePanel);
+            AddGo(w.gameOverPanel);
             if (w.fadeOverlay != null) AddGo(w.fadeOverlay.gameObject);
 
-            if (w.letterboxTop != null)
-                rectSnaps.Add(new RectSnap { rect = w.letterboxTop, sizeDelta = w.letterboxTop.sizeDelta });
-            if (w.letterboxBottom != null)
-                rectSnaps.Add(new RectSnap { rect = w.letterboxBottom, sizeDelta = w.letterboxBottom.sizeDelta });
+            AddCg(w.narrationCanvasGroup);
+            AddCg(w.dialogueCanvasGroup);
 
             snapshotTaken = true;
             snapshotSceneName = activeScene;
         }
 
-        private void RestoreDefaults(ScenePreviewWiring w)
+        private void RestoreDefaults()
         {
             if (!snapshotTaken)
             {
@@ -303,7 +247,7 @@ namespace BossJam.Editor.ScenePreview
                 return;
             }
             foreach (var s in goSnaps) if (s.go != null) s.go.SetActive(s.active);
-            foreach (var s in rectSnaps) if (s.rect != null) s.rect.sizeDelta = s.sizeDelta;
+            foreach (var s in cgSnaps) if (s.group != null) s.group.alpha = s.alpha;
             MarkSceneDirty();
         }
 

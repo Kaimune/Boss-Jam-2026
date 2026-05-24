@@ -8,57 +8,53 @@ namespace BossJam.Game
 {
     /// <summary>
     /// Scene-side address book for the Scene State Preview editor tool. Holds
-    /// refs to every UI module the previewer toggles, plus sample-input fields
-    /// so designers can choose which tier / dialogue line / narration line gets
-    /// injected.
+    /// refs to the same things the runtime UI scripts toggle — inner Panel
+    /// children and CanvasGroup alphas — never the parent canvases (those
+    /// must stay active for any UI to render).
     ///
-    /// Pure data — no Update, no event subscriptions, no runtime behavior. Only
-    /// used by ScenePreviewWindow (editor-only). Safe to leave in builds; the
-    /// component does nothing at runtime.
+    /// Pure data — no Update, no event subscriptions, no runtime behavior.
+    /// Only used by ScenePreviewWindow (editor-only). Safe to leave in builds.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ScenePreviewWiring : MonoBehaviour
     {
-        [Header("UI roots — GameObject toggles")]
-        public GameObject startScreen;
-        public GameObject narrationRoot;
-        public GameObject intermediateRoot;
-        public GameObject dialogueRoot;
-        public GameObject deathScreenRoot;
-        public GameObject gameOverScreenRoot;
-        public GameObject gameplayHUD;
+        [Header("Toggleable panels (inner Panel children that runtime SetActives)")]
+        [Tooltip("StartScreen's Panel child — the visible start-screen layout.")]
+        public GameObject startPanel;
+        [Tooltip("IntermediateScreen's Panel child — the difficulty card layout.")]
+        public GameObject intermediatePanel;
+        [Tooltip("GameOver's Panel child — the 'You died' layout.")]
+        public GameObject gameOverPanel;
 
-        [Header("Letterbox + fade")]
-        [Tooltip("Leave null if the project has no UI-based letterbox bars (e.g. camera-driven letterbox).")]
-        public RectTransform letterboxTop;
-        public RectTransform letterboxBottom;
-        public FadeOverlay fadeOverlay;
+        [Header("Alpha-toggled overlays (runtime hides via CanvasGroup.alpha = 0)")]
+        [Tooltip("CanvasGroup on NarrationPanel — alpha=1 shows the narration overlay.")]
+        public CanvasGroup narrationCanvasGroup;
+        [Tooltip("CanvasGroup on DialogueCanvas — toggled to alpha=1 by DialogueController.PreviewLine.")]
+        public CanvasGroup dialogueCanvasGroup;
 
         [Header("Sample-injection targets")]
-        [Tooltip("TMP_Text inside narrationRoot that the previewer writes a sample line into.")]
+        [Tooltip("TMP_Text inside NarrationPanel — previewer writes the first line here.")]
         public TMP_Text narrationCaption;
-        [Tooltip("TierCardUI inside intermediateRoot — previewer calls PreviewRender on this.")]
-        public TierCardUI tierCard;
-        [Tooltip("DialogueController inside dialogueRoot — previewer calls PreviewLine on this.")]
+        [Tooltip("DialogueController on DialogueCanvas — previewer calls PreviewLine.")]
         public DialogueController dialogueController;
+
+        [Header("Cutscene fade")]
+        [Tooltip("FadeOverlay component (Image-based fade). Previewer toggles enabled + alpha.")]
+        public FadeOverlay fadeOverlay;
 
         [Header("Sample inputs (designer-editable)")]
         public DifficultyProfile profile;
-        [Tooltip("1-based index into profile.tiers used for the Intermediate preview.")]
+        [Tooltip("1-based index into profile.tiers — currently unused for the simple preview but reserved for richer tier-card injection later.")]
         [Min(1)] public int previewTierIndex = 3;
-        [Tooltip("Name of a dialogue script under Resources/Dialogue/ (no extension). " +
-                 "Previewer loads it and uses the line at previewDialogueLineIndex.")]
+        [Tooltip("Name of a dialogue script under Resources/Dialogue/ (no extension).")]
         public string previewDialogueScriptName;
-        [Tooltip("Index into the loaded dialogue script's lines used for the Dialogue preview.")]
         [Min(0)] public int previewDialogueLineIndex = 0;
-        [Tooltip("Name of a narration script under Resources/Narration/ (no extension). " +
-                 "Previewer loads it and uses the first line.")]
+        [Tooltip("Name of a narration script under Resources/Narration/ (no extension).")]
         public string previewNarrationScriptName;
 
         private void OnValidate()
         {
 #if UNITY_EDITOR
-            // Catch duplicates so the previewer doesn't silently pick the wrong one.
             var all = FindObjectsByType<ScenePreviewWiring>(FindObjectsSortMode.None);
             if (all != null && all.Length > 1)
                 Debug.LogWarning($"{nameof(ScenePreviewWiring)}: multiple instances in scene ({all.Length}). " +
