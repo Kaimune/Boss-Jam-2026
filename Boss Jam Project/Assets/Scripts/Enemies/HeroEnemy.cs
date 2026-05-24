@@ -156,7 +156,16 @@ namespace BossJam.Enemies
                 case HeroRespawnMode.SaveScumOnFirstOneHp:
                     if (saveScumConsumed) return false;
                     saveScumConsumed = true;
-                    currentHp = Mathf.Clamp(f.HeroRespawnRestoreHp, 1, spawnedMaxHp);
+
+                    // Save-scum can permanently raise the max for this life —
+                    // the lore is "you reloaded a better save", and the design
+                    // intent is e.g. 5 hp on a tier where the base cap is 3.
+                    int restored = Mathf.Max(1, f.HeroRespawnRestoreHp);
+                    if (restored > spawnedMaxHp) spawnedMaxHp = restored;
+                    currentHp = restored;
+                    HpChanged?.Invoke(currentHp, spawnedMaxHp);
+
+                    TeleportToSpawn();
                     SetInvulnFor(0.5f);
                     BossJam.Game.GameStateController.Instance?.PlayInGameDialogue("respawn_save_scum");
                     return true;
@@ -234,6 +243,32 @@ namespace BossJam.Enemies
                 : new Vector2(0f, Mathf.Sign(away.y));
         }
 
+        // Moves the hero (and its grid footprint) back to the spawn location.
+        // Used by save-scum respawn — UX intent is "reload at scene start".
+        // GridFootprint owns the cell-space anchor; transform position is the
+        // world renderer position. Drive both so the grid system stays
+        // consistent with the visual.
+        private void TeleportToSpawn()
+        {
+            transform.position = spawnWorldPosition;
+            var fp = Footprint;
+            if (fp != null)
+            {
+                // Hard-set the anchor (bypass collision check) — the spawn
+                // cell is known-safe at scene start, and the hero already
+                // cleared the grid via the lethal hit that triggered this.
+                fp.Configure(spawnFootprintAnchor, fp.Footprint, fp.Grid);
+            }
+            // Brake any in-flight movement input so the hero plants for a
+            // frame before the brain re-engages.
+            if (mover != null) mover.InputDirection = Vector2.zero;
+
+            // Clear any in-flight hit-reaction state so the post-respawn
+            // hero is fully controllable.
+            knockbackFiresAt = -1f;
+            stunUntil = -1f;
+        }
+
         private GridMover mover;
         private GridFootprint targetFootprint;
         private float stuckTimer;
@@ -247,6 +282,11 @@ namespace BossJam.Enemies
         // below threshold and cleared when restored.
         private static bool saveScumConsumed;
         private float conditionalRespawnArmedAt = -1f;
+
+        // Spawn position captured at Awake — the post-intro spawn point. Used by
+        // save-scum to teleport the hero back to this exact spot on respawn.
+        private Vector3 spawnWorldPosition;
+        private Vector2 spawnFootprintAnchor;
         private Vector2 kiteTarget;
         private bool hasKiteTarget;
         private BossPredictor predictor;
@@ -280,6 +320,12 @@ namespace BossJam.Enemies
             mover = GetComponent<GridMover>();
             if (grid == null && Footprint != null) grid = Footprint.Grid;
             if (visual == null) visual = transform;
+
+            // Capture the scene-authored spawn pose BEFORE the brain ever
+            // moves us — Awake runs before the first Update, so this is the
+            // post-intro spawn point. Save-scum teleports back to this.
+            spawnWorldPosition = transform.position;
+            spawnFootprintAnchor = Footprint != null ? Footprint.Anchor : Vector2.zero;
             // Honour the scene-authored idle rotation as the starting facing.
             facingTarget = visual.rotation;
 
