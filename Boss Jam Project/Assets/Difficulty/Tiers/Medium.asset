@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tierName: Medium
   tierDescription: 
-  tint: {r: 0.95, g: 0.85, b: 0.1, a: 1}
+  tint: {r: 0.6901961, g: 0.54509807, b: 0.32156864, a: 1}
   icon: {fileID: 0}
   description: Hero finds fireballs + regenerates 1 hp / 5s.
   narrationScriptName: tier_4_narration

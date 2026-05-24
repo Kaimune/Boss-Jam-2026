@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tierName: Very Hard
   tierDescription: 
-  tint: {r: 0.85, g: 0.15, b: 0.15, a: 1}
+  tint: {r: 0.5411765, g: 0.24705882, b: 0.24705882, a: 1}
   icon: {fileID: 0}
   description: 'Hero: 3 hp, 5 movespeed, melee enabled.'
   narrationScriptName: tier_2_narration

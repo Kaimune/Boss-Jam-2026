@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tierName: Easy
   tierDescription: 
-  tint: {r: 0.3, g: 0.85, b: 0.3, a: 1}
+  tint: {r: 0.6039216, g: 0.60784316, b: 0.3882353, a: 1}
   icon: {fileID: 0}
   description: 'Hero: 4 melee dmg + post-hit iframes.'
   narrationScriptName: tier_5_narration
