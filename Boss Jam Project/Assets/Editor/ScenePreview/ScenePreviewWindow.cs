@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using BossJam.Cutscene;
 using BossJam.Dialogue;
 using BossJam.Game;
 using UnityEditor;
@@ -27,11 +28,9 @@ namespace BossJam.Editor.ScenePreview
         // Per-session snapshot of original visibility, captured lazily on the
         // first Apply call after window-open / domain-reload / scene change.
         private class GameObjectSnap { public GameObject go; public bool active; }
-        private class CanvasGroupSnap { public CanvasGroup group; public float alpha; }
         private class RectSnap { public RectTransform rect; public Vector2 sizeDelta; }
 
         private readonly List<GameObjectSnap> goSnaps = new();
-        private readonly List<CanvasGroupSnap> cgSnaps = new();
         private readonly List<RectSnap> rectSnaps = new();
         private bool snapshotTaken;
         private string snapshotSceneName;
@@ -244,11 +243,11 @@ namespace BossJam.Editor.ScenePreview
             if (w.letterboxBottom != null) w.letterboxBottom.gameObject.SetActive(active);
         }
 
-        private static void SetFadeAlpha(CanvasGroup fade, bool enabled, float alpha)
+        private static void SetFadeAlpha(FadeOverlay fade, bool enabled, float alpha)
         {
             if (fade == null) return;
             fade.gameObject.SetActive(enabled);
-            if (enabled) fade.alpha = alpha;
+            if (enabled) fade.SetAlpha(alpha);
         }
 
         private static string LoadNarrationFirstLine(string scriptName)
@@ -267,7 +266,6 @@ namespace BossJam.Editor.ScenePreview
             if (snapshotTaken && snapshotSceneName == activeScene) return;
 
             goSnaps.Clear();
-            cgSnaps.Clear();
             rectSnaps.Clear();
 
             void AddGo(GameObject go)
@@ -286,8 +284,6 @@ namespace BossJam.Editor.ScenePreview
             if (w.letterboxBottom != null) AddGo(w.letterboxBottom.gameObject);
             if (w.fadeOverlay != null) AddGo(w.fadeOverlay.gameObject);
 
-            if (w.fadeOverlay != null)
-                cgSnaps.Add(new CanvasGroupSnap { group = w.fadeOverlay, alpha = w.fadeOverlay.alpha });
             if (w.letterboxTop != null)
                 rectSnaps.Add(new RectSnap { rect = w.letterboxTop, sizeDelta = w.letterboxTop.sizeDelta });
             if (w.letterboxBottom != null)
@@ -305,7 +301,6 @@ namespace BossJam.Editor.ScenePreview
                 return;
             }
             foreach (var s in goSnaps) if (s.go != null) s.go.SetActive(s.active);
-            foreach (var s in cgSnaps) if (s.group != null) s.group.alpha = s.alpha;
             foreach (var s in rectSnaps) if (s.rect != null) s.rect.sizeDelta = s.sizeDelta;
             MarkSceneDirty();
         }

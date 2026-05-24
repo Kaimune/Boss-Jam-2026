@@ -29,9 +29,10 @@ namespace BossJam.Game
         public GameObject gameplayHUD;
 
         [Header("Letterbox + fade")]
+        [Tooltip("Leave null if the project has no UI-based letterbox bars (e.g. camera-driven letterbox).")]
         public RectTransform letterboxTop;
         public RectTransform letterboxBottom;
-        public CanvasGroup fadeOverlay;
+        public FadeOverlay fadeOverlay;
 
         [Header("Sample-injection targets")]
         [Tooltip("TMP_Text inside narrationRoot that the previewer writes a sample line into.")]
