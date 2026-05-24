@@ -26,6 +26,22 @@ namespace BossJam.Cutscene
             if (root != null) root.localScale = startScale;
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Editor-only: snap the card to fully-shown state with the given label
+        /// and debuff text. Used by ScenePreviewWindow to render the Intermediate
+        /// state without running the animation coroutine. Does not start any
+        /// coroutines, does not touch Time.timeScale.
+        /// </summary>
+        public void PreviewRender(string label, string debuff)
+        {
+            if (labelText != null) labelText.text = label;
+            if (debuffText != null) debuffText.text = debuff;
+            if (canvasGroup != null) canvasGroup.alpha = 1f;
+            if (root != null) root.localScale = Vector3.one;
+        }
+#endif
+
         public IEnumerator Show(string label, string debuff, float holdSeconds)
         {
             if (labelText != null) labelText.text = label;

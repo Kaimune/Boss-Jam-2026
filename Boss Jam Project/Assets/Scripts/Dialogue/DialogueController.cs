@@ -82,6 +82,27 @@ namespace BossJam.Dialogue
             StartCoroutine(RunScript());
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Editor-only: snap the dialogue panel to a fully-typed single line with
+        /// the speaker's nameplate + portrait applied. Used by ScenePreviewWindow.
+        /// Does not start the typewriter, does not raise Finished, does not flip
+        /// IsPlaying. Safe at edit time.
+        /// </summary>
+        public void PreviewLine(DialogueLine line)
+        {
+            if (line == null) return;
+            ApplySpeakerProfile(line.speaker);
+            if (dialogueText != null) dialogueText.text = line.text ?? string.Empty;
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
+        }
+#endif
+
         // Press-to-advance: during typing, completes the current line instantly;
         // once the line is fully typed, advances to the next line. Dialogue is
         // intentionally unskippable — there is no way to abort the whole sequence.
