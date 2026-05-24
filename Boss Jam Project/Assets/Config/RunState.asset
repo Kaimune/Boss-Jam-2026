@@ -19,4 +19,4 @@ MonoBehaviour:
   previousTierName: 
   previousTierEntry: {fileID: 0}
   pendingTierNarration: 0
-  debugStartingTier: 5
+  debugStartingTier: 8
