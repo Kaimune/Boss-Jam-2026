@@ -72202,13 +72202,13 @@ AnimationClip:
   m_HasMotionFloatCurves: 0
   m_Events:
   - time: 0.75
-    functionName: PlayForwardSlash
+    functionName: PlayForwardSlashVFX
     data: 
-    objectReferenceParameter: {fileID: 8300000, guid: f0cbc67e70386df45a290fc189edfc21, type: 3}
+    objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.8333333
+  - time: 0.75
     functionName: PlaySfx
     data: 
     objectReferenceParameter: {fileID: 8300000, guid: f0cbc67e70386df45a290fc189edfc21, type: 3}

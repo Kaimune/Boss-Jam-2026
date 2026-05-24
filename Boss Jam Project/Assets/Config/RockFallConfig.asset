@@ -30,8 +30,10 @@ MonoBehaviour:
   perSpawnTelegraphSeconds: 1
   perSpawnHitboxSeconds: 0.25
   spawnTimeJitter: 0.15
-  fallingRockPrefab: {fileID: 2524736848277884699, guid: e86a2a53ecc8b4f8889aff8f3aefa328, type: 3}
-  fallStartHeight: 10
+  fallingRockPrefabs:
+  - {fileID: 4341788495186895452, guid: b1a4dd6dd05b46c47a5ce76ed77e8af5, type: 3}
+  - {fileID: 1869254975478912276, guid: 3cdad120f3c22f448837bba6739e774a, type: 3}
+  fallStartHeight: 25
   telegraphPrefab: {fileID: 8097395814287246815, guid: 75e1c9e648a1e412f92ad9fa5bc1e4d9, type: 3}
   hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}
   attackStateName: ult_stepped

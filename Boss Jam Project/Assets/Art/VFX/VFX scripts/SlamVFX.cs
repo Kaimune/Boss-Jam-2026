@@ -1,24 +1,30 @@
 using UnityEngine;
+using DG.Tweening;
 
 public class SlamVFX : MonoBehaviour
 {
     public Renderer slamRenderer;
 
+    [Header("Timing")]
     public float lifetime = 0.22f;
-    public float steppedFPS = 8f;
+    public float steppedFPS = 6f;
 
+    [Header("Scale")]
     public Vector3 startScale = new Vector3(0.4f, 0.4f, 1f);
     public Vector3 endScale = new Vector3(3f, 3f, 1f);
 
+    [Header("Position")]
     public float heightOffset = 0.03f;
 
     private Material mat;
     private Color startColor;
-    private Vector3 originalScale;
-    private Quaternion originalRotation;
 
-    private float timer;
-    private bool playing;
+    private Transform originalParent;
+    private Vector3 originalLocalPosition;
+    private Quaternion originalLocalRotation;
+    private Vector3 originalLocalScale;
+
+    private Tween activeTween;
 
     private void Awake()
     {
@@ -28,53 +34,66 @@ public class SlamVFX : MonoBehaviour
         mat = slamRenderer.material;
         startColor = mat.color;
 
-        originalScale = transform.localScale;
-        originalRotation = transform.localRotation;
+        originalParent = transform.parent;
+        originalLocalPosition = transform.localPosition;
+        originalLocalRotation = transform.localRotation;
+        originalLocalScale = transform.localScale;
 
         slamRenderer.enabled = false;
     }
 
-    private void Update()
-    {
-        if (!playing)
-            return;
-
-        timer += Time.deltaTime;
-
-        float rawT = Mathf.Clamp01(timer / lifetime);
-        float steppedT = Mathf.Floor(rawT * steppedFPS) / steppedFPS;
-
-        transform.localScale = Vector3.Lerp(startScale, endScale, steppedT);
-
-        Color c = startColor;
-        c.a = 1f - steppedT;
-        mat.color = c;
-
-        if (timer >= lifetime)
-        {
-            playing = false;
-            slamRenderer.enabled = false;
-            transform.localScale = originalScale;
-            transform.localRotation = originalRotation;
-        }
-    }
-
     public void PlaySlam()
     {
-        timer = 0f;
-        playing = true;
+        if (activeTween != null)
+            activeTween.Kill();
 
-        transform.localScale = startScale;
-        transform.localRotation = originalRotation;
+        Vector3 worldPos = transform.position;
+        Quaternion worldRot = transform.rotation;
 
-        Vector3 p = transform.localPosition;
-        p.y = heightOffset;
-        transform.localPosition = p;
-
-        Color c = startColor;
-        c.a = 1f;
-        mat.color = c;
+        transform.SetParent(null, true);
+        transform.position = worldPos + Vector3.up * heightOffset;
+        transform.rotation = worldRot;
 
         slamRenderer.enabled = true;
+
+        float tweenValue = 0f;
+
+        activeTween = DOTween.To(
+            () => tweenValue,
+            x =>
+            {
+                tweenValue = x;
+
+                float stepped =
+                    Mathf.Floor(tweenValue * steppedFPS) / steppedFPS;
+
+                stepped = Mathf.Clamp01(stepped);
+
+                transform.localScale =
+                    Vector3.Lerp(startScale, endScale, stepped);
+
+                Color c = startColor;
+                c.a = 1f - stepped;
+                mat.color = c;
+            },
+            1f,
+            lifetime
+        )
+        .SetEase(Ease.Linear)
+        .OnComplete(() =>
+        {
+            slamRenderer.enabled = false;
+
+            transform.SetParent(originalParent, false);
+            transform.localPosition = originalLocalPosition;
+            transform.localRotation = originalLocalRotation;
+            transform.localScale = originalLocalScale;
+        });
+    }
+
+    private void OnDestroy()
+    {
+        if (mat != null)
+            Destroy(mat);
     }
 }

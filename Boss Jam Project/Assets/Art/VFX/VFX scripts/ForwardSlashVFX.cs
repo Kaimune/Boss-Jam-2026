@@ -7,6 +7,7 @@ public class ForwardSlashVFX : MonoBehaviour
 
     [Header("Timing")]
     public float lifetime = 0.18f;
+    public float steppedFPS = 6f;
 
     [Header("Scale")]
     public Vector3 startScale = new Vector3(0.6f, 0.6f, 1f);
@@ -18,10 +19,13 @@ public class ForwardSlashVFX : MonoBehaviour
 
     private Material mat;
     private Color startColor;
-    private Vector3 originalScale;
-    private Quaternion originalRotation;
 
-    private Sequence sequence;
+    private Transform originalParent;
+    private Vector3 originalLocalPosition;
+    private Quaternion originalLocalRotation;
+    private Vector3 originalLocalScale;
+
+    private Tween activeTween;
 
     private void Awake()
     {
@@ -31,68 +35,79 @@ public class ForwardSlashVFX : MonoBehaviour
         mat = slashRenderer.material;
         startColor = mat.color;
 
-        originalScale = transform.localScale;
-        originalRotation = transform.localRotation;
+        originalParent = transform.parent;
+        originalLocalPosition = transform.localPosition;
+        originalLocalRotation = transform.localRotation;
+        originalLocalScale = transform.localScale;
 
         slashRenderer.enabled = false;
     }
 
-    private void OnDestroy()
-    {
-        sequence?.Kill();
-
-        if (mat != null)
-            Destroy(mat);
-    }
-
     public void PlaySlash()
     {
-        sequence?.Kill();
+        if (activeTween != null)
+            activeTween.Kill();
 
-        transform.localScale = startScale;
-        transform.localRotation = originalRotation * Quaternion.Euler(0f, 0f, rotationKick);
+        Vector3 worldPos = transform.position;
+        Quaternion worldRot = transform.rotation;
 
-        if (randomFlipY && Random.value > 0.5f)
-        {
-            Vector3 s = transform.localScale;
-            s.y *= -1f;
-            transform.localScale = s;
-        }
-
-        Color c = startColor;
-        c.a = 1f;
-        mat.color = c;
+        transform.SetParent(null, true);
+        transform.position = worldPos;
+        transform.rotation = worldRot;
 
         slashRenderer.enabled = true;
 
-        sequence = DOTween.Sequence();
+        Vector3 initialScale = startScale;
 
-        sequence.Append(
-            transform.DOScale(endScale, lifetime)
-                .SetEase(Ease.OutQuad)
-        );
+        if (randomFlipY && Random.value > 0.5f)
+        {
+            initialScale.y *= -1f;
+        }
 
-        sequence.Join(
-            transform.DOLocalRotateQuaternion(
-                originalRotation * Quaternion.Euler(0f, 0f, -rotationKick),
-                lifetime
-            ).SetEase(Ease.OutQuad)
-        );
+        float tweenValue = 0f;
 
-        sequence.Join(
-            mat.DOFade(0f, lifetime)
-                .SetEase(Ease.Linear)
-        );
+        activeTween = DOTween.To(
+            () => tweenValue,
+            x =>
+            {
+                tweenValue = x;
 
-        sequence.OnComplete(() =>
+                float stepped =
+                    Mathf.Floor(tweenValue * steppedFPS) / steppedFPS;
+
+                stepped = Mathf.Clamp01(stepped);
+
+                transform.localScale =
+                    Vector3.Lerp(initialScale, endScale, stepped);
+
+                float rot =
+                    Mathf.Lerp(rotationKick, -rotationKick, stepped);
+
+                transform.localRotation =
+                    worldRot * Quaternion.Euler(0f, 0f, rot);
+
+                Color c = startColor;
+                c.a = 1f - stepped;
+                mat.color = c;
+            },
+            1f,
+            lifetime
+        )
+        .SetEase(Ease.Linear)
+        .OnComplete(() =>
         {
             slashRenderer.enabled = false;
-            transform.localScale = originalScale;
-            transform.localRotation = originalRotation;
 
-            Color reset = startColor;
-            reset.a = startColor.a;
-            mat.color = reset;
+            transform.SetParent(originalParent, false);
+            transform.localPosition = originalLocalPosition;
+            transform.localRotation = originalLocalRotation;
+            transform.localScale = originalLocalScale;
         });
+    }
+
+    private void OnDestroy()
+    {
+        if (mat != null)
+            Destroy(mat);
     }
 }
