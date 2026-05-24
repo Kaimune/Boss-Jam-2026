@@ -176,7 +176,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: (movespeed +1)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2043026cd2b494022be314be6b8d5fd1, type: 2}
   m_sharedMaterial: {fileID: -5307860144744709187, guid: 2043026cd2b494022be314be6b8d5fd1, type: 2}
@@ -185,7 +185,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4292467161
   m_fontColor: {r: 0.85, g: 0.85, b: 0.85, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -594,7 +594,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4899741668845553458, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5002679101099550035, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_fontAsset
@@ -922,7 +922,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8919608452350151555, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9066771635181248367, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_Pivot.x
@@ -1263,16 +1263,22 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  extraStartup: []
+  extraNarration: []
+  extraIntermediate: []
+  extraDialogue: []
+  extraDeath: []
+  extraGameOver: []
   narrationCanvasGroup: {fileID: 1194304839}
   dialogueCanvasGroup: {fileID: 2035568474}
   narrationCaption: {fileID: 1301125033}
   dialogueController: {fileID: 2035568472}
   fadeOverlay: {fileID: 1920869687}
   profile: {fileID: 11400000, guid: 6c60fc184e7cc40b1a42ab0296c519be, type: 2}
-  previewTierIndex: 3
+  previewTierIndex: 2
   previewDialogueScriptName: intro_wave_1
   previewDialogueLineIndex: 0
-  previewNarrationScriptName: tier_3_narration
+  previewNarrationScriptName: tier_2_narration
 --- !u!4 &215385259
 Transform:
   m_ObjectHideFlags: 0
@@ -1403,56 +1409,6 @@ PrefabInstance:
       addedObject: {fileID: 1486562437}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a04c495bc8742d04b9ecaf00f61d5353, type: 3}
---- !u!1 &258728834
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 258728836}
-  - component: {fileID: 258728835}
-  m_Layer: 0
-  m_Name: FireballSpawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &258728835
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 258728834}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b2e5cfaf711a408ea031bedb2ba9da7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fireballPrefab: {fileID: 5340630882246654578, guid: c6b5382f5ee7f4b64a1bef0f1dbf3403, type: 3}
-  grid: {fileID: 1980397631}
-  target: {fileID: 2100364673}
-  spawnAnchor: {x: 19.2, y: 19.2}
-  fireballSize: {x: 1, y: 1}
-  intervalSeconds: 5
---- !u!4 &258728836
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 258728834}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &273611935
 GameObject:
   m_ObjectHideFlags: 0
@@ -2580,7 +2536,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Immortal
+  m_text: Very Hard
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4fb15619488354e44bd634236c75dd78, type: 2}
   m_sharedMaterial: {fileID: 7664300432318410115, guid: 4fb15619488354e44bd634236c75dd78, type: 2}
@@ -3239,7 +3195,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: 'Hero: 3 hp, 5 movespeed, melee enabled.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2043026cd2b494022be314be6b8d5fd1, type: 2}
   m_sharedMaterial: {fileID: -5307860144744709187, guid: 2043026cd2b494022be314be6b8d5fd1, type: 2}
@@ -3248,7 +3204,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4291282887
   m_fontColor: {r: 0.78, g: 0.78, b: 0.78, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -3477,7 +3433,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 4}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1764902943
@@ -3516,7 +3472,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1350776733127740354, guid: bc6f3b4c6fcea41d792c0e33b75ecbb6, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1737455654645563388, guid: bc6f3b4c6fcea41d792c0e33b75ecbb6, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
@@ -4822,7 +4778,6 @@ SceneRoots:
   - {fileID: 385688494}
   - {fileID: 1980397632}
   - {fileID: 2100364672}
-  - {fileID: 258728836}
   - {fileID: 256225436}
   - {fileID: 273611937}
   - {fileID: 2012644730}
