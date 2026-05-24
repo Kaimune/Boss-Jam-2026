@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BossJam.Audio;
 using BossJam.Difficulty;
 using BossJam.GridSystem;
 using BossJam.Player;
@@ -26,6 +27,9 @@ namespace BossJam.Enemies
         [SerializeField] private HeroMelee melee;
         [SerializeField] private HeroFireball fireball;
         [SerializeField] private HeroDodge dodge;
+
+        [Tooltip("Optional hit-feedback bundle (SFX + hurt animator state). Fires when HP actually drops.")]
+        [SerializeField] private HitReactionFx hitFx;
 
         // Public read-only views the ability components query each frame.
         public HeroConfig Config => config;
@@ -97,6 +101,7 @@ namespace BossJam.Enemies
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"HeroEnemy '{name}' took {amount} damage (hp={currentHp})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            if (hitFx != null) hitFx.Play();
             if (currentHp <= 0)
             {
                 if (TryConsumeRespawnOnLethal(amount))

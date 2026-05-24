@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BossJam.Attacks;
+using BossJam.Audio;
 using BossJam.Difficulty;
 using BossJam.Game;
 using BossJam.GridSystem;
@@ -18,6 +19,8 @@ namespace BossJam.Player
 
         [Header("HP")]
         [SerializeField, Min(1), FormerlySerializedAs("hp")] private int maxHp = 10;
+        [Tooltip("Optional hit-feedback bundle (SFX + hurt animator state). Fires when HP actually drops.")]
+        [SerializeField] private HitReactionFx hitFx;
         private int currentHp;
         private int spawnedMaxHp;
 
@@ -130,6 +133,7 @@ namespace BossJam.Player
             Debug.Log($"Boss took {dealt} damage{(instakill ? " (instakill)" : "")} (hp={currentHp}, from {source})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             rt?.RaiseBossDamaged(dealt, source);
+            if (hitFx != null) hitFx.Play();
             if (currentHp <= 0) Die();
         }
 

@@ -73,6 +73,11 @@ namespace BossJam.Attacks
             lastAimDirection = d2.sqrMagnitude < 0.0001f ? Vector2.right : d2.normalized;
             fsm.Init(BuildTimings());
             rt?.RaiseAttackStarted(config);
+            // Per-swing reset: the AnimationEvent is the source of truth for when
+            // damage lands, and it may fire during Windup (before OnActiveEnter
+            // resets the latch). Without this, a Windup-time event on swing N+1
+            // sees hasStruck==true from swing N and bails silently.
+            hasStruck = false;
             return fsm.TryStart();
         }
 
@@ -187,7 +192,6 @@ namespace BossJam.Attacks
         private void OnActiveEnter()
         {
             DestroyTelegraph();
-            hasStruck = false;
             if (autoStrikeOnActive) Strike();
         }
 
@@ -204,7 +208,13 @@ namespace BossJam.Attacks
         /// </summary>
         public void Strike()
         {
-            if (fsm.State != AttackState.Active) return;
+            // The animation drives damage timing. The clip's strike event can land
+            // a frame outside the nominal Active window due to animator/Update
+            // ordering — gating on fsm.State==Active caused first-swing whiffs
+            // when the event fired right at the Active→Recovery boundary. Allow
+            // any non-Idle/Cooldown state; the hasStruck latch + TryStart reset
+            // still enforce once-per-swing.
+            if (fsm.State == AttackState.Idle || fsm.State == AttackState.Cooldown) return;
             if (hasStruck) return;
             hasStruck = true;
             SpawnHitboxAtCurrentAim();
