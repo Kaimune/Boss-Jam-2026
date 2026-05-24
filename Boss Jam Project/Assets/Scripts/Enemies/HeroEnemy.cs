@@ -30,6 +30,9 @@ namespace BossJam.Enemies
 
         [Tooltip("Optional hit-feedback bundle (SFX + hurt animator state). Fires when HP actually drops.")]
         [SerializeField] private HitReactionFx hitFx;
+        [Tooltip("Optional death-feedback bundle (SFX + death animator state). Fires once on the lethal blow. Outro waits its clip length.")]
+        [SerializeField] private DeathFx deathFx;
+        public DeathFx DeathFx => deathFx;
 
         // Public read-only views the ability components query each frame.
         public HeroConfig Config => config;
@@ -40,6 +43,7 @@ namespace BossJam.Enemies
 
         public int MaxHp => spawnedMaxHp;
         public int CurrentHp => currentHp;
+        public bool IsDead => currentHp <= 0;
         public event System.Action<int, int> HpChanged;
 
         // Static so subscribers (e.g. DifficultyRuntime) survive hero respawns.
@@ -97,11 +101,20 @@ namespace BossJam.Enemies
 
         public void TakeDamage(int amount, IGridEntity source)
         {
+            // Corpse can't take more damage — re-entering would re-fire
+            // HeroKilledStatic and re-trigger the outro cascade.
+            if (currentHp <= 0) return;
+            // Block in-flight damage during the cinematic. The world keeps
+            // ticking but no kill-shots can land while the outro plays.
+            if (BossJam.Game.GameStateController.Instance != null
+                && BossJam.Game.GameStateController.Instance.State != BossJam.Game.GameState.Playing) return;
             if (IsInvulnerable) return;
             currentHp = Mathf.Max(0, currentHp - amount);
             Debug.Log($"HeroEnemy '{name}' took {amount} damage (hp={currentHp})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
-            if (hitFx != null) hitFx.Play();
+            // Lethal blow plays DeathFx (below), not hitFx — the hurt anim
+            // would otherwise briefly clobber the death state on the same frame.
+            if (hitFx != null && currentHp > 0) hitFx.Play();
             if (currentHp <= 0)
             {
                 if (TryConsumeRespawnOnLethal(amount))
@@ -109,8 +122,13 @@ namespace BossJam.Enemies
                     HpChanged?.Invoke(currentHp, spawnedMaxHp);
                     return;
                 }
+                if (deathFx != null) deathFx.Play();
                 HeroKilledStatic?.Invoke();
-                Destroy(gameObject);
+                // Hero NEVER despawns from its own death code — the dialogue
+                // cam needs a body to frame for the final lines. ReloadScene
+                // (after the outro) is the sole owner of hero disposal.
+                // Silent-death tiers (HasNextTier == false → no outro fires)
+                // leave a corpse on the grid intentionally.
                 return;
             }
             BeginHitReaction();

@@ -47,11 +47,15 @@ namespace BossJam.Enemies
         {
             if (animator == null) return;
 
-            // While an ability is mid-clip or we're stunned, yield the Animator
-            // to whoever owns that clip so it isn't crossfaded back to idle/run.
+            // While an ability is mid-clip, we're stunned, OR the hero is dead,
+            // yield the Animator so the death clip / ability clip plays without
+            // interference. Without the IsDead branch, this Update would crossfade
+            // back to idle on the same frame DeathFx.Play() set the death state,
+            // clobbering the death anim.
             if ((dodge != null && dodge.IsActive)
                 || (melee != null && melee.IsBusy)
-                || (hero != null && hero.IsStunned))
+                || (hero != null && hero.IsStunned)
+                || (hero != null && hero.IsDead))
             {
                 currentRunning = null;
                 return;

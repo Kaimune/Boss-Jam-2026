@@ -1690,9 +1690,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1980397631}
     - target: {fileID: 1982423208079333074, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
+      propertyPath: hitFx
+      value: 
+      objectReference: {fileID: 1251395573}
+    - target: {fileID: 1982423208079333074, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
       propertyPath: target
       value: 
       objectReference: {fileID: 2100364673}
+    - target: {fileID: 1982423208079333074, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
+      propertyPath: deathFx
+      value: 
+      objectReference: {fileID: 1251395583}
     - target: {fileID: 2974191284882127775, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.28
@@ -1810,6 +1818,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1432158357741170, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1251395573}
+    - targetCorrespondingSourceObject: {fileID: 1432158357741170, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1251395583}
   m_SourcePrefab: {fileID: 100100000, guid: 00ebb815d9477476d83b60a7c28736c3, type: 3}
 --- !u!95 &310678173 stripped
 Animator:
@@ -3117,6 +3128,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &917463161 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4847358227465373026, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+  m_PrefabInstance: {fileID: 2100364672}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &917463166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 917463161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e2305cd2490b4345a6c486bd30fef1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &922371685
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4156,6 +4184,22 @@ MonoBehaviour:
   hurtSfx: {fileID: 8300000, guid: bcf60e12453dd1c4fb5031da111f824c, type: 3}
   animator: {fileID: 1447797081}
   hurtStateName: take dmg_stepped
+  crossfadeSeconds: 0.05
+--- !u!114 &1251395583
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1251395553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d093f68717e824fc0b3ae73c22baf99a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  deathSfx: {fileID: 8300000, guid: 128ac93f63abe4dcc8a017d4a0ce13e4, type: 3}
+  animator: {fileID: 1447797081}
+  deathStateName: hero_die_stepped
   crossfadeSeconds: 0.05
 --- !u!1 &1293870149
 GameObject:
@@ -5889,7 +5933,7 @@ PrefabInstance:
     - target: {fileID: 1101258938867755037, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
       propertyPath: animator
       value: 
-      objectReference: {fileID: 1447797081}
+      objectReference: {fileID: 310678173}
     - target: {fileID: 1101258938867755037, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
       propertyPath: crossfadeSeconds
       value: 0
@@ -5927,9 +5971,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: hitFx
+      value: 
+      objectReference: {fileID: 2100364683}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
       propertyPath: maxHp
       value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      propertyPath: deathFx
+      value: 
+      objectReference: {fileID: 2100364689}
     - target: {fileID: 2230902327352124818, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
       propertyPath: diedSfx
       value: 
@@ -6076,6 +6128,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8312937714101972278, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2100364683}
+    - targetCorrespondingSourceObject: {fileID: 8312937714101972278, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2100364689}
+    - targetCorrespondingSourceObject: {fileID: 4847358227465373026, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 917463166}
   m_SourcePrefab: {fileID: 100100000, guid: f9b206d8eb5224969b8256d43909212c, type: 3}
 --- !u!4 &2100364673 stripped
 Transform:
@@ -6109,6 +6167,22 @@ MonoBehaviour:
   hurtSfx: {fileID: 8300000, guid: 2e5c743e698b18f46aa65ca7957bda5b, type: 3}
   animator: {fileID: 310678173}
   hurtStateName: take dmg_stepped
+  crossfadeSeconds: 0.05
+--- !u!114 &2100364689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1180471694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d093f68717e824fc0b3ae73c22baf99a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  deathSfx: {fileID: 8300000, guid: 28ccbf7dbf84142cd9c4cd5758ccb788, type: 3}
+  animator: {fileID: 310678173}
+  deathStateName: jump_stepped
   crossfadeSeconds: 0.05
 --- !u!1 &2127531883
 GameObject:

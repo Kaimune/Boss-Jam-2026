@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da673202c7e1349249e63041410e2adc, type: 3}
   m_Name: shake_charge
   m_EditorClassIdentifier: 
-  amplitude: 0.6
-  duration: 0.5
+  amplitude: 1.5
+  duration: 0.75
   frequency: 40
   decayCurve:
     serializedVersion: 2

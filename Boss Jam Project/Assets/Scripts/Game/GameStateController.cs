@@ -346,14 +346,20 @@ namespace BossJam.Game
         private void EnterDeathOutro()
         {
             State = GameState.Death;
-            Time.timeScale = 0f;
+            // Keep time flowing — the world finishes its in-flight animations.
+            // Boss.enabled = false stops new input, and BossController/HeroEnemy
+            // TakeDamage state-gates block in-flight damage during the cinematic.
             if (Boss != null) Boss.enabled = false;
             StateChanged?.Invoke(State);
 
             if (outroDirector == null) { ResumeAfterDeathOutro(); return; }
             outroDirector.OutroComplete += OnDeathOutroComplete;
             int wave = (runtime != null) ? runtime.AppliedCount : 1;
-            outroDirector.PlayHeroDeath(wave);
+            // Forward the dying hero's DeathFx so the outro sizes its wait to
+            // the death clip length (DeathFx.Play() already fired at kill site).
+            var hero = FindFirstObjectByType<BossJam.Enemies.HeroEnemy>();
+            var heroFx = hero != null ? hero.DeathFx : null;
+            outroDirector.PlayHeroDeath(wave, heroFx);
         }
 
         private void OnDeathOutroComplete()
@@ -382,14 +388,14 @@ namespace BossJam.Game
         private void EnterGameOverOutro()
         {
             State = GameState.GameOver;
-            Time.timeScale = 0f;
+            // Keep time flowing — see EnterDeathOutro for the rationale.
             if (Boss != null) Boss.enabled = false;
             StateChanged?.Invoke(State);
 
             if (outroDirector == null) return;
             outroDirector.OutroComplete += OnGameOverOutroComplete;
             int wave = (runtime != null) ? runtime.AppliedCount : 0;
-            outroDirector.PlayBossDeath(wave);
+            outroDirector.PlayBossDeath(wave, Boss != null ? Boss.DeathFx : null);
         }
 
         private void OnGameOverOutroComplete()

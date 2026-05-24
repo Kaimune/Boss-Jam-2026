@@ -19,12 +19,14 @@ namespace BossJam.Player
         [SerializeField, Min(0f)] private float crossfadeSeconds = 0.1f;
 
         private GridMover mover;
+        private BossController boss;
         private readonly List<IAttack> attacks = new List<IAttack>();
         private bool? currentRunning;   // nullable forces a fresh transition after yielding
 
         private void Awake()
         {
             mover = GetComponent<GridMover>();
+            boss = GetComponent<BossController>();
             if (animator == null) animator = transform.root.GetComponentInChildren<Animator>(includeInactive: true);
             GetComponentsInChildren<IAttack>(true, attacks);
         }
@@ -32,6 +34,15 @@ namespace BossJam.Player
         private void Update()
         {
             if (animator == null) return;
+
+            // Dead boss owns its animator — DeathFx already crossfaded to the
+            // death state, and this Update would otherwise immediately clobber
+            // it back to idle (no attack busy, mover not moving).
+            if (boss != null && boss.IsDead)
+            {
+                currentRunning = null;
+                return;
+            }
 
             // Defer to AttackAnimationBinder only while an attack's *animation* is
             // playing (Windup/Active/Recovery). Cooldown is a post-animation logical

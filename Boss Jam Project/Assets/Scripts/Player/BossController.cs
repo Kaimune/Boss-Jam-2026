@@ -129,6 +129,12 @@ namespace BossJam.Player
         {
             if (isDead) return;
             if (IsInvulnerable) return;
+            // Block in-flight damage during the death cinematic: in-flight
+            // hitboxes/fireballs keep their visual trajectory but can't kill
+            // the boss while the world is locked. Same gate covers Dialogue /
+            // Intermediate / Narration so a fireball that lands during the
+            // pre-fight dialogue does nothing.
+            if (gameState != null && gameState.State != GameState.Playing) return;
 
             bool instakill = rt != null && rt.Flags.BossInstakill;
             int dealt = instakill ? Mathf.Max(amount, currentHp) : amount;
@@ -136,7 +142,9 @@ namespace BossJam.Player
             Debug.Log($"Boss took {dealt} damage{(instakill ? " (instakill)" : "")} (hp={currentHp}, from {source})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             rt?.RaiseBossDamaged(dealt, source);
-            if (hitFx != null) hitFx.Play();
+            // Lethal blow plays DeathFx (in Die()), not hitFx — the hurt anim
+            // would otherwise briefly clobber the death state on the same frame.
+            if (hitFx != null && currentHp > 0) hitFx.Play();
             if (currentHp <= 0) Die();
         }
 
@@ -161,6 +169,11 @@ namespace BossJam.Player
             isDead = true;
             Debug.Log("Boss died — entering GameOver.");
             BossDied?.Invoke();
+            // Fire DeathFx at the kill site so the death anim begins on the
+            // same frame the boss died — silent-runs without an OutroDirector
+            // still get the visual, and the OutroDirector reads ClipLengthSeconds
+            // to size its wait instead of re-triggering Play().
+            if (deathFx != null) deathFx.Play();
             // GameStateController handles the pause + GameOver screen; the
             // boss is brought back via Respawn() when the player presses Space.
             if (gameState != null) gameState.TriggerGameOver();
