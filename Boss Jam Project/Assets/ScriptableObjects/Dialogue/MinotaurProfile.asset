@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speakerToken: minotaur
   displayName: Minotaur
-  nameplateColor: {r: 0.831, g: 0.604, b: 0.29, a: 1}
+  nameplateColor: {r: 1, g: 1, b: 1, a: 1}
   portraitTexture: {fileID: 8400000, guid: 684b1ae8667974777bef8c06f3e3f401, type: 2}
   letterTickClip: {fileID: 8300000, guid: 28ccbf7dbf84142cd9c4cd5758ccb788, type: 3}
   pitchJitter: 0.06

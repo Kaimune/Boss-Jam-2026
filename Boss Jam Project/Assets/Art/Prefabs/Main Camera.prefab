@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 8430767648849942930}
   - component: {fileID: 6961411599341943404}
   - component: {fileID: 2282948588343599371}
-  - component: {fileID: 9160563210073215526}
   - component: {fileID: 316516274262163233}
   m_Layer: 0
   m_Name: Main Camera
@@ -167,19 +166,6 @@ MonoBehaviour:
   TargetScale: 1
   FullscreenColorGradingLUT: {fileID: 0}
   EnableProPixelizer: 1
---- !u!114 &9160563210073215526
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2888393227661034330}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dcdddbea00c50f246af4b9ad65bee416, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rotationSpeed: 600
 --- !u!114 &316516274262163233
 MonoBehaviour:
   m_ObjectHideFlags: 0

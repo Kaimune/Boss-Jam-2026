@@ -18,7 +18,7 @@ namespace BossJam.Dialogue
         public string displayName;
 
         [Tooltip("Nameplate background colour.")]
-        public Color nameplateColor = new Color(0.83f, 0.60f, 0.29f, 1f);
+        public Color nameplateColor = new Color(1f, 1f, 1f, 1f);
 
         [Tooltip("Render texture the dialogue UI swaps in when this speaker is active.")]
         public RenderTexture portraitTexture;
