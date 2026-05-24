@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tierName: Impossible
   tierDescription: 
-  tint: {r: 0.4, g: 0, b: 0, a: 1}
+  tint: {r: 1, g: 0.1040318, b: 0, a: 1}
   icon: {fileID: 0}
   description: Hero dies in 1 hit. No movespeed. No abilities. Boss attacks deal
     2.

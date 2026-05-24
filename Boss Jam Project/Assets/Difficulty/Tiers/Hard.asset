@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tierName: Hard
   tierDescription: 
-  tint: {r: 0.95, g: 0.55, b: 0.1, a: 1}
+  tint: {r: 0.6117647, g: 0.35686275, b: 0.2784314, a: 1}
   icon: {fileID: 0}
   description: 'Hero: 10 movespeed, melee + dodge, 2 dmg. Boss attacks deal 1.'
   narrationScriptName: tier_3_narration

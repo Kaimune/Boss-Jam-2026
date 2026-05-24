@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tierName: Error.
   tierDescription: 
-  tint: {r: 0.65, g: 0.2, b: 0.85, a: 1}
+  tint: {r: 0.735849, g: 0.210573, b: 0.5382203, a: 1}
   icon: {fileID: 0}
   description: "Boss instakill on any hit. Fireballs \xD71.44 faster. 20 movespeed."
   narrationScriptName: tier_8_narration

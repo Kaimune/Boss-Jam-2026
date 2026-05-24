@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tierName: Beginner
   tierDescription: 
-  tint: {r: 0.15, g: 0.75, b: 0.95, a: 1}
+  tint: {r: 0.43137255, g: 0.56078434, b: 0.41568628, a: 1}
   icon: {fileID: 0}
   description: "Hero save-scums on first 1hp. Fireballs \xD71.2 faster."
   narrationScriptName: tier_6_narration
