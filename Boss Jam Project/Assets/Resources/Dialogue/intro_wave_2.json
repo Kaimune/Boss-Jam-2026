@@ -1,7 +1,7 @@
 {
   "lines": [
-    { "speaker": "minotaur", "text": "Back again? Or did they send another one?" },
-    { "speaker": "theseus",  "text": "There are always more of us." },
-    { "speaker": "minotaur", "text": "Good. I was getting hungry." }
+    { "speaker": "minotaur", "text": "So… the labyrinth spits… wait… haven't we done this before? Why do I feel weaker?" },
+    { "speaker": "theseus", "text": "… ok, gotta lock in now… Very Hard can't be that hard, right?" },
+    { "speaker": "minotaur", "text": "I'm confused… let's just get this over with." }
   ]
 }

@@ -2,6 +2,7 @@ using System.Collections;
 using BossJam.Difficulty;
 using TMPro;
 using UnityEngine;
+using DifficultyTier = BossJam.Difficulty.Difficulty;
 
 namespace BossJam.UI
 {
@@ -44,13 +45,14 @@ namespace BossJam.UI
             runtime.TierChanged -= OnTierChanged;
         }
 
-        private void OnTierChanged(DebuffEntry entry) => ApplyEntry(entry, flashing: true);
+        private void OnTierChanged(DifficultyTier entry) => ApplyEntry(entry, flashing: true);
 
-        private void ApplyEntry(DebuffEntry entry, bool flashing)
+        private void ApplyEntry(DifficultyTier entry, bool flashing)
         {
-            // Pull the canonical tier name from the runtime so the "Immortal"
-            // default (before any debuff lands) surfaces here too.
-            label.text = runtime != null ? runtime.CurrentTierName : DifficultyRuntime.ImmortalTierName;
+            // Pull the canonical tier name from the runtime. Fresh runs
+            // auto-advance to tier 1 before this UI binds, so an empty
+            // fallback should only surface in degenerate cases.
+            label.text = runtime != null ? runtime.CurrentTierName : "";
             label.color = entry != null ? entry.tint : Color.white;
             if (descriptionLabel != null)
                 descriptionLabel.text = entry != null ? entry.tierDescription : "";

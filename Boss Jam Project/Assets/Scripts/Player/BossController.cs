@@ -123,10 +123,13 @@ namespace BossJam.Player
         {
             if (isDead) return;
             if (IsInvulnerable) return;
-            currentHp = Mathf.Max(0, currentHp - amount);
-            Debug.Log($"Boss took {amount} damage (hp={currentHp}, from {source})");
+
+            bool instakill = rt != null && rt.Flags.BossInstakill;
+            int dealt = instakill ? Mathf.Max(amount, currentHp) : amount;
+            currentHp = Mathf.Max(0, currentHp - dealt);
+            Debug.Log($"Boss took {dealt} damage{(instakill ? " (instakill)" : "")} (hp={currentHp}, from {source})");
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
-            rt?.RaiseBossDamaged(amount, source);
+            rt?.RaiseBossDamaged(dealt, source);
             if (currentHp <= 0) Die();
         }
 

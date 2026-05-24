@@ -1,12 +1,14 @@
+using BossJam.Difficulty;
 using BossJam.GridSystem;
+using BossJam.Player;
 using UnityEngine;
 
 namespace BossJam.Enemies
 {
     /// <summary>
-    /// Simple enemy projectile. Moves in a fixed direction at constant speed.
-    /// Reaches the boss → boss's OnEnteredBy damages itself + destroys this fireball.
-    /// Goes out of bounds → self-destructs.
+    /// Hero projectile. Moves in a fixed direction at constant speed by default;
+    /// when the difficulty runtime's FireballHoming flag is set, re-steers toward
+    /// the boss center each frame at FireballTurnRateDegPerSec.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(GridFootprint))]
@@ -28,12 +30,8 @@ namespace BossJam.Enemies
         [SerializeField, Range(0.1f, 2f)] private float visualScaleFactor = 0.8f;
 
         public int Damage => damage;
-
-        // Set by HeroFireball at spawn so per-wave difficulty modifiers on
-        // Target.HeroFireballDamage flow through to the projectile.
         public void SetDamage(int amount) { damage = Mathf.Max(0, amount); }
 
-        // IGridEntity
         private GridFootprint cachedFootprint;
         public GridFootprint Footprint =>
             cachedFootprint != null ? cachedFootprint : (cachedFootprint = GetComponent<GridFootprint>());
@@ -41,13 +39,28 @@ namespace BossJam.Enemies
         public Team Team => Team.Enemy;
         public Verdict OnEnteredBy(IGridEntity mover) => Verdict.Pass;
 
-        // ITickScalable — could drive speed; default-1 keeps absolute cellsPerSecond.
         private float tickMultiplier = 1f;
         public void ApplyTick(float m) => tickMultiplier = m;
+
+        private DifficultyRuntime rt;
+        private BossController bossRef;
+        private float speedMul = 1f;
+        private bool homing;
+        private float turnRateDegPerSec;
 
         private void Start()
         {
             ApplyVisualSize();
+
+            rt = FindFirstObjectByType<DifficultyRuntime>();
+            bossRef = FindFirstObjectByType<BossController>();
+            if (rt != null)
+            {
+                ref var f = ref rt.Flags;
+                speedMul = f.FireballSpeedMultiplier > 0.01f ? f.FireballSpeedMultiplier : 1f;
+                homing = f.FireballHoming;
+                turnRateDegPerSec = f.FireballTurnRateDegPerSec;
+            }
         }
 
         private void ApplyVisualSize()
@@ -71,25 +84,35 @@ namespace BossJam.Enemies
             var grid = fp != null ? fp.Grid : null;
             if (grid == null || Direction == Vector2.zero) return;
 
-            var delta = Direction * (cellsPerSecond * tickMultiplier * Time.deltaTime);
+            if (homing && bossRef != null && bossRef.Footprint != null)
+            {
+                Vector2 myCenter = fp.Anchor + fp.Footprint * 0.5f;
+                Vector2 bossCenter = bossRef.Footprint.Anchor + bossRef.Footprint.Footprint * 0.5f;
+                Vector2 desired = bossCenter - myCenter;
+                if (desired.sqrMagnitude > 0.0001f)
+                {
+                    desired.Normalize();
+                    float maxDeg = turnRateDegPerSec * Time.deltaTime;
+                    Direction = TurnTowards(Direction, desired, maxDeg);
+                }
+            }
+
+            var delta = Direction * (cellsPerSecond * speedMul * tickMultiplier * Time.deltaTime);
             var target = fp.Anchor + delta;
 
-            // Out of grid bounds → vanish.
-            if (!grid.InBounds(target, fp.Footprint))
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            if (!fp.TryMoveTo(target))
-            {
-                // Move was blocked. Receiver's Apply may have destroyed us already; if not,
-                // we're now stuck against something solid — vanish gracefully.
-                Destroy(gameObject);
-                return;
-            }
+            if (!grid.InBounds(target, fp.Footprint)) { Destroy(gameObject); return; }
+            if (!fp.TryMoveTo(target)) { Destroy(gameObject); return; }
 
             transform.position = grid.FootprintCenterWorld(fp.Anchor, fp.Footprint);
+        }
+
+        private static Vector2 TurnTowards(Vector2 from, Vector2 to, float maxDegrees)
+        {
+            float currentAngle = Mathf.Atan2(from.y, from.x) * Mathf.Rad2Deg;
+            float targetAngle  = Mathf.Atan2(to.y,   to.x)   * Mathf.Rad2Deg;
+            float newAngle     = Mathf.MoveTowardsAngle(currentAngle, targetAngle, maxDegrees);
+            float r            = newAngle * Mathf.Deg2Rad;
+            return new Vector2(Mathf.Cos(r), Mathf.Sin(r));
         }
     }
 }

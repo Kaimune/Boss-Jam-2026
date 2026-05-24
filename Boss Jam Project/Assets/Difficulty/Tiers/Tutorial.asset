@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a73878d60ec4c7b8e0d2263cee6661, type: 3}
+  m_Name: Tutorial
+  m_EditorClassIdentifier: 
+  tierName: Tutorial
+  tierDescription: 
+  tint: {r: 0.15, g: 0.45, b: 0.95, a: 1}
+  icon: {fileID: 0}
+  description: Homing fireballs. Conditional respawn-to-full. 15 movespeed.
+  narrationScriptName: tier_7_narration
+  effects:
+  - rid: 5190052775017840848
+  - rid: 5190052775017840849
+  - rid: 5190052775017840850
+  - rid: 5190052775017840851
+  - rid: 5190052775017840852
+  - rid: 5190052775017840853
+  - rid: 5190052775017840854
+  - rid: 5190052775017840855
+  - rid: 5190052775017840856
+  - rid: 5190052775017840857
+  - rid: 5190052775017840858
+  - rid: 5190052775017840859
+  - rid: 5190052775017840860
+  - rid: 5190052775017840861
+  references:
+    version: 2
+    RefIds:
+    - rid: 5190052775017840848
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 0
+        op: 2
+        value: 3
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840849
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 2
+        op: 2
+        value: 15
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840850
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 13
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840851
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 14
+        op: 2
+        value: 4
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840852
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 12
+        op: 2
+        value: 4
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840853
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 18
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840854
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 22
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840855
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 23
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840856
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 29
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840857
+      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        hpPerInterval: 1
+        intervalSeconds: 5
+    - rid: 5190052775017840858
+      type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        seconds: 1
+    - rid: 5190052775017840859
+      type: {class: HeroRespawnEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        mode: 2
+        thresholdHp: 2
+        windowSeconds: 1.5
+        restoreHp: 3
+        replayIntro: 0
+    - rid: 5190052775017840860
+      type: {class: FireballSpeedEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        multiplier: 1.2
+    - rid: 5190052775017840861
+      type: {class: FireballHomingEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        turnRateDegPerSec: 180

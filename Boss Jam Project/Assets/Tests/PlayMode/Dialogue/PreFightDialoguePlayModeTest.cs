@@ -11,7 +11,7 @@ namespace BossJam.Dialogue.PlayModeTests
 {
     public class PreFightDialoguePlayModeTest
     {
-        private static (DialogueController controller, GameObject canvas) BuildScene(float secondsPerChar, float interLine)
+        private static (DialogueController controller, GameObject canvas) BuildScene(float secondsPerChar)
         {
             var canvasGo = new GameObject("Canvas");
             canvasGo.AddComponent<Canvas>();
@@ -30,7 +30,6 @@ namespace BossJam.Dialogue.PlayModeTests
 
             const BindingFlags F = BindingFlags.Instance | BindingFlags.NonPublic;
             typeof(DialogueController).GetField("secondsPerChar", F).SetValue(controller, secondsPerChar);
-            typeof(DialogueController).GetField("interLineHoldSeconds", F).SetValue(controller, interLine);
             typeof(DialogueController).GetField("dialogueText", F).SetValue(controller, text);
             typeof(DialogueController).GetField("canvasGroup", F).SetValue(controller, group);
 
@@ -38,38 +37,44 @@ namespace BossJam.Dialogue.PlayModeTests
         }
 
         [UnityTest]
-        public IEnumerator Controller_AutoAdvancesAndFiresFinished()
+        public IEnumerator Controller_DoesNotAutoAdvance()
         {
-            var (controller, canvas) = BuildScene(0f, 0f);
+            var (controller, canvas) = BuildScene(0f);
             bool finished = false;
             controller.Finished += () => finished = true;
 
             controller.Play("intro_wave_1");
             Assert.IsTrue(controller.IsPlaying);
 
-            float timeout = 5f;
-            while (!finished && timeout > 0f) { timeout -= Time.deltaTime; yield return null; }
+            float wait = 1.5f;
+            while (wait > 0f) { wait -= Time.deltaTime; yield return null; }
 
-            Assert.IsTrue(finished, "Finished must fire within 5s without manual advance.");
-            Assert.IsFalse(controller.IsPlaying);
+            Assert.IsFalse(finished, "Without RequestAdvance presses, dialogue must not auto-finish.");
+            Assert.IsTrue(controller.IsPlaying);
             Object.Destroy(canvas);
         }
 
         [UnityTest]
-        public IEnumerator Controller_SkipAllImmediatelyFinishes()
+        public IEnumerator Controller_AdvancesEveryLineOnRequestAdvance()
         {
-            var (controller, canvas) = BuildScene(0.5f, 1f);
+            var (controller, canvas) = BuildScene(0f);
             bool finished = false;
             controller.Finished += () => finished = true;
 
             controller.Play("intro_wave_1");
             yield return null;
-            controller.SkipAll();
 
-            float timeout = 1.5f;
-            while (!finished && timeout > 0f) { timeout -= Time.deltaTime; yield return null; }
+            // Press through every line; each press first completes typing, then advances.
+            // 32 presses is a generous upper bound — once Finished fires we stop.
+            for (int i = 0; i < 32 && !finished; i++)
+            {
+                controller.RequestAdvance();
+                yield return null;
+                yield return null;
+            }
 
-            Assert.IsTrue(finished, "SkipAll must terminate within ~1s.");
+            Assert.IsTrue(finished, "Dialogue must terminate after enough RequestAdvance presses.");
+            Assert.IsFalse(controller.IsPlaying);
             Object.Destroy(canvas);
         }
     }

@@ -1,5 +1,9 @@
 {
   "lines": [
-    { "speaker": "minotaur", "text": "Pathetic." }
+    { "speaker": "minotaur", "text": "I need answers from you." },
+    { "speaker": "theseus", "text": "…" },
+    { "speaker": "minotaur", "text": "When will this endless cycle finish…" },
+    { "speaker": "theseus", "text": "When I kill you…" },
+    { "speaker": "minotaur", "text": "I need to escape from here." }
   ]
 }

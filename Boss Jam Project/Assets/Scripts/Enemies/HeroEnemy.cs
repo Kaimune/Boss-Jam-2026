@@ -99,26 +99,41 @@ namespace BossJam.Enemies
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
             if (currentHp <= 0)
             {
+                if (TryConsumeRespawnOnLethal(amount))
+                {
+                    HpChanged?.Invoke(currentHp, spawnedMaxHp);
+                    return;
+                }
                 HeroKilledStatic?.Invoke();
                 Destroy(gameObject);
                 return;
             }
             BeginHitReaction();
+
+            // Tier-driven post-hit iframes. BeginHitReaction already grants iframes
+            // tied to the combo/knockback window; this stacks an extra window for
+            // tiers (e.g. Easy) that grant generous invulnerability between hits.
+            float iframeSec = rt != null ? rt.Flags.HeroPostHitIframeSeconds : 0f;
+            if (iframeSec > 0f) SetInvulnFor(iframeSec);
         }
 
         // ── Hit reaction ─────────────────────────────────────────────
+        // Two-phase model so the player can combo:
+        //   T=0       hit lands. Hero stunned, NO iframes, NO push yet.
+        //   T=combo   big knockback fires + iframes start. The combo window
+        //             between T=0 and T=combo is when chained player hits
+        //             can stack damage.
         [Header("Hit reaction")]
-        [Tooltip("Seconds the hero is shoved in the random push direction after a non-killing hit.")]
-        [SerializeField, Min(0f)] private float pushDurationSeconds = 0.15f;
-        [Tooltip("Seconds the hero is stunned (no kiting, no abilities) after a non-killing hit. Push runs inside this window.")]
-        [SerializeField, Min(0.05f)] private float stunDurationSeconds = 0.5f;
-        [Tooltip("Iframe window granted after a hit. Usually matches stun so chained boss hits can't connect mid-stun.")]
-        [SerializeField, Min(0f)] private float iframesOnHitSeconds = 0.5f;
+        [Tooltip("Combo window after a hit. Hero is stunned but vulnerable — chained player attacks landing in this window all do damage. When it lapses, the big knockback fires.")]
+        [SerializeField, Min(0f)] private float comboWindowSeconds = 0.5f;
+        [Tooltip("Cells the hero teleports along the knockback direction when the combo window ends. The shove is instant, not a per-frame push.")]
+        [SerializeField, Min(0)] private int knockbackDistanceCells = 6;
+        [Tooltip("Iframe + stun window that begins when the knockback fires (after the combo window). The brain resumes once this lapses.")]
+        [SerializeField, Min(0f)] private float iframesAfterKnockbackSeconds = 0.5f;
 
         private float invulnUntil = -1f;
         private float stunUntil = -1f;
-        private float pushUntil = -1f;
-        private Vector2 pushDir;
+        private float knockbackFiresAt = -1f;
 
         public bool IsInvulnerable => Time.time < invulnUntil;
         public bool IsStunned => Time.time < stunUntil;
@@ -130,20 +145,84 @@ namespace BossJam.Enemies
             if (until > invulnUntil) invulnUntil = until;
         }
 
+        private bool TryConsumeRespawnOnLethal(int incomingDamage)
+        {
+            if (rt == null) return false;
+            ref var f = ref rt.Flags;
+            switch (f.HeroRespawnMode)
+            {
+                // Tier 6 only. Tier 7+ switches the flag to FullHpIfNotInstakilled,
+                // so this branch is unreachable from tier 7 onward.
+                case HeroRespawnMode.SaveScumOnFirstOneHp:
+                    if (saveScumConsumed) return false;
+                    saveScumConsumed = true;
+
+                    // Save-scum can permanently raise the max for this life —
+                    // the lore is "you reloaded a better save", and the design
+                    // intent is e.g. 5 hp on a tier where the base cap is 3.
+                    int restored = Mathf.Max(1, f.HeroRespawnRestoreHp);
+                    if (restored > spawnedMaxHp) spawnedMaxHp = restored;
+                    currentHp = restored;
+                    HpChanged?.Invoke(currentHp, spawnedMaxHp);
+
+                    TeleportToSpawn();
+                    SetInvulnFor(0.5f);
+                    {
+                        int tier = rt.AppliedCount;
+                        BossJam.Game.GameStateController.Instance?.PlayInGameDialogue($"respawn_wave_{tier}");
+                    }
+                    return true;
+
+                case HeroRespawnMode.FullHpIfNotInstakilled:
+                    if (conditionalRespawnArmedAt > 0f && Time.time <= conditionalRespawnArmedAt + f.HeroRespawnWindowSeconds)
+                    {
+                        if (incomingDamage < spawnedMaxHp)
+                        {
+                            currentHp = spawnedMaxHp;
+                            SetInvulnFor(0.5f);
+                            conditionalRespawnArmedAt = -1f;
+                            return true;
+                        }
+                    }
+                    return false;
+
+                default:
+                    return false;
+            }
+        }
+
         private void BeginHitReaction()
         {
-            // Push direction is "away from the boss" — reads as knockback and
-            // can't accidentally shove the hero deeper into trouble. Snapped
-            // to the nearest cardinal so the shove stays grid-aligned.
-            pushDir = ComputeKnockbackDirection();
-            pushUntil = Time.time + pushDurationSeconds;
-            stunUntil = Time.time + stunDurationSeconds;
-            SetInvulnFor(iframesOnHitSeconds);
+            // Hero plants in place for the combo window — no iframes — so
+            // chained player attacks can stack damage. FireDelayedKnockback
+            // teleports the hero away and flips on iframes when the window ends.
+            float now = Time.time;
+            knockbackFiresAt = now + comboWindowSeconds;
+            stunUntil = now + comboWindowSeconds + iframesAfterKnockbackSeconds;
 
             // Abort any in-progress ability so the brain isn't mid-dodge or
             // mid-fireball-spawn when control resumes. Brain.CancelAll calls
             // Cancel() on each registered ability.
             if (brain != null) brain.CancelAll();
+        }
+
+        // Instant displacement. Tries the full knockback distance first, then
+        // walks the target closer one cell at a time until GridFootprint
+        // accepts (walls, other actors). No-op if even a one-cell shove is
+        // blocked.
+        private void FireDelayedKnockback()
+        {
+            knockbackFiresAt = -1f;
+            SetInvulnFor(iframesAfterKnockbackSeconds);
+
+            if (mover == null || Footprint == null || knockbackDistanceCells <= 0) return;
+            Vector2 dir = ComputeKnockbackDirection();
+            Vector2 origin = Footprint.Anchor;
+            for (int d = knockbackDistanceCells; d > 0; d--)
+            {
+                Vector2 target = origin + dir * d;
+                if (mover.DriveTo(target)) return;
+            }
         }
 
         private Vector2 ComputeKnockbackDirection()
@@ -167,9 +246,50 @@ namespace BossJam.Enemies
                 : new Vector2(0f, Mathf.Sign(away.y));
         }
 
+        // Moves the hero (and its grid footprint) back to the spawn location.
+        // Used by save-scum respawn — UX intent is "reload at scene start".
+        // GridFootprint owns the cell-space anchor; transform position is the
+        // world renderer position. Drive both so the grid system stays
+        // consistent with the visual.
+        private void TeleportToSpawn()
+        {
+            transform.position = spawnWorldPosition;
+            var fp = Footprint;
+            if (fp != null)
+            {
+                // Hard-set the anchor (bypass collision check) — the spawn
+                // cell is known-safe at scene start, and the hero already
+                // cleared the grid via the lethal hit that triggered this.
+                fp.Configure(spawnFootprintAnchor, fp.Footprint, fp.Grid);
+            }
+            // Brake any in-flight movement input so the hero plants for a
+            // frame before the brain re-engages.
+            if (mover != null) mover.InputDirection = Vector2.zero;
+
+            // Clear any in-flight hit-reaction state so the post-respawn
+            // hero is fully controllable.
+            knockbackFiresAt = -1f;
+            stunUntil = -1f;
+        }
+
         private GridMover mover;
         private GridFootprint targetFootprint;
         private float stuckTimer;
+
+        // Tier-driven HP regen. Flags are populated by HeroRegenEffect.Apply; the
+        // ticker advances during Playing state only and is suppressed at max hp.
+        private float regenAccumulator;
+
+        // Respawn state — SaveScumOnFirstOneHp consumes once per tier (reset on
+        // TierApplied). FullHpIfNotInstakilled timer is armed each time hp falls
+        // below threshold and cleared when restored.
+        private static bool saveScumConsumed;
+        private float conditionalRespawnArmedAt = -1f;
+
+        // Spawn position captured at Awake — the post-intro spawn point. Used by
+        // save-scum to teleport the hero back to this exact spot on respawn.
+        private Vector3 spawnWorldPosition;
+        private Vector2 spawnFootprintAnchor;
         private Vector2 kiteTarget;
         private bool hasKiteTarget;
         private BossPredictor predictor;
@@ -188,7 +308,12 @@ namespace BossJam.Enemies
         {
             EnsureConfig();
             rt = FindFirstObjectByType<DifficultyRuntime>();
-            if (rt != null) rt.Hero = this;
+            if (rt != null)
+            {
+                rt.Hero = this;
+                rt.TierApplied -= OnTierApplied;
+                rt.TierApplied += OnTierApplied;
+            }
 
             // HP is snapshotted at spawn: debuffs that later raise/lower HeroMaxHp
             // affect the NEXT hero, not this living one.
@@ -198,6 +323,12 @@ namespace BossJam.Enemies
             mover = GetComponent<GridMover>();
             if (grid == null && Footprint != null) grid = Footprint.Grid;
             if (visual == null) visual = transform;
+
+            // Capture the scene-authored spawn pose BEFORE the brain ever
+            // moves us — Awake runs before the first Update, so this is the
+            // post-intro spawn point. Save-scum teleports back to this.
+            spawnWorldPosition = transform.position;
+            spawnFootprintAnchor = Footprint != null ? Footprint.Anchor : Vector2.zero;
             // Honour the scene-authored idle rotation as the starting facing.
             facingTarget = visual.rotation;
 
@@ -247,9 +378,12 @@ namespace BossJam.Enemies
         private void OnDestroy()
         {
             if (rt != null && rt.Hero == this) rt.Hero = null;
+            if (rt != null) rt.TierApplied -= OnTierApplied;
             if (kiteLineMaterial != null) Destroy(kiteLineMaterial);
             if (kiteDotMaterial != null) Destroy(kiteDotMaterial);
         }
+
+        private void OnTierApplied(BossJam.Difficulty.Difficulty d) => saveScumConsumed = false;
 
         private void OnEnable() => ApplyTick();
         private void OnValidate() => ApplyTick();
@@ -312,15 +446,22 @@ namespace BossJam.Enemies
             if (BossJam.Game.GameStateController.Instance != null &&
                 BossJam.Game.GameStateController.Instance.State != BossJam.Game.GameState.Playing)
                 return;
+
+            TickRegen(Time.deltaTime);
+            TickConditionalRespawn();
             if (target == null) { mover.InputDirection = Vector2.zero; return; }
 
-            // Stun gate: brain ignored, kiting paused. Push direction drives
-            // the mover for the first slice of the stun, then the hero sits
-            // until iframes/stun lapse together.
+            // Fire the deferred knockback once the combo window lapses.
+            if (knockbackFiresAt > 0f && Time.time >= knockbackFiresAt)
+                FireDelayedKnockback();
+
+            // Stun gate: brain ignored, kiting paused. The hero plants for the
+            // whole combo window + post-knockback iframe period — the actual
+            // shove is an instant teleport inside FireDelayedKnockback, not a
+            // per-frame push.
             if (IsStunned)
             {
-                mover.InputDirection = (Time.time < pushUntil) ? pushDir : Vector2.zero;
-                ApplyFacing(mover.InputDirection);
+                mover.InputDirection = Vector2.zero;
                 return;
             }
 
@@ -463,6 +604,50 @@ namespace BossJam.Enemies
             kiteTarget = r.TargetPoint;
             hasKiteTarget = r.ValidTargetFound;
             return r.Direction;
+        }
+
+        private void TickRegen(float dt)
+        {
+            if (rt == null) return;
+            int amt = rt.Flags.HeroRegenHpPerInterval;
+            float interval = rt.Flags.HeroRegenIntervalSeconds;
+            if (amt <= 0 || interval <= 0f) { regenAccumulator = 0f; return; }
+            if (currentHp >= spawnedMaxHp) { regenAccumulator = 0f; return; }
+
+            regenAccumulator += dt;
+            while (regenAccumulator >= interval && currentHp < spawnedMaxHp)
+            {
+                regenAccumulator -= interval;
+                currentHp = Mathf.Min(spawnedMaxHp, currentHp + amt);
+                HpChanged?.Invoke(currentHp, spawnedMaxHp);
+            }
+        }
+
+        private void TickConditionalRespawn()
+        {
+            if (rt == null) return;
+            ref var f = ref rt.Flags;
+            if (f.HeroRespawnMode != HeroRespawnMode.FullHpIfNotInstakilled) return;
+
+            if (currentHp <= f.HeroRespawnThresholdHp && conditionalRespawnArmedAt < 0f)
+                conditionalRespawnArmedAt = Time.time;
+
+            if (conditionalRespawnArmedAt > 0f && Time.time > conditionalRespawnArmedAt + f.HeroRespawnWindowSeconds)
+            {
+                if (currentHp > 0)
+                {
+                    currentHp = spawnedMaxHp;
+                    HpChanged?.Invoke(currentHp, spawnedMaxHp);
+                    {
+                        int tier = rt.AppliedCount;
+                        BossJam.Game.GameStateController.Instance?.PlayInGameDialogue($"respawn_wave_{tier}");
+                    }
+                }
+                conditionalRespawnArmedAt = -1f;
+            }
+
+            if (conditionalRespawnArmedAt > 0f && currentHp > f.HeroRespawnThresholdHp)
+                conditionalRespawnArmedAt = -1f;
         }
 
         private void TickStuckDetector()

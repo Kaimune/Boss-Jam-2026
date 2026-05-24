@@ -4,6 +4,7 @@ using BossJam.Difficulty;
 using BossJam.Dialogue;
 using BossJam.Player;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace BossJam.Game
@@ -11,6 +12,7 @@ namespace BossJam.Game
     public enum GameState
     {
         Startup,
+        Narration,       // black-screen flavour text shown before the difficulty card on the next wave
         Intermediate,    // difficulty card between title screen and cutscene; timescale 0
         CutsceneIntro,   // letterbox + hero walks in
         Dialogue,        // pre-fight typewriter; timescale 0
@@ -38,6 +40,9 @@ namespace BossJam.Game
 
         [Header("Dialogue")]
         [SerializeField] private DialogueRig dialogueRig;
+
+        [Header("Narration")]
+        [SerializeField] private NarrationController narrationController;
 
         [Header("Cutscene")]
         [SerializeField] private IntroDirector introDirector;
@@ -135,20 +140,66 @@ namespace BossJam.Game
             {
                 OnDialogueFinished();
             }
+
+            // Narration is owned here — forward Space to the controller (the
+            // Dialogue asmdef doesn't reference InputSystem so the controller
+            // can't poll input itself).
+            if (State == GameState.Narration && narrationController != null)
+            {
+                var kb = Keyboard.current;
+                if (kb != null && kb.spaceKey.wasPressedThisFrame)
+                    narrationController.RequestAdvance();
+            }
         }
 
         private void OnHeroKilled()
         {
             // Only pause for a tier-advance screen if there's a debuff queued
             // to apply. Once the curve is exhausted, hero deaths are silent.
-            if (runtime == null || !runtime.HasNextDebuff) return;
+            if (runtime == null || !runtime.HasNextTier) return;
             TriggerDeath();
         }
 
         public void Begin()
         {
             if (State != GameState.Startup) return;
-            EnterIntermediate();
+
+            // Fresh-run auto-advance: the player should never see the empty
+            // pre-tier state. On the first wave (no tiers applied yet), commit
+            // tier 1 (Impossible) before the difficulty card renders so the
+            // card picks up the freshly-applied tier. Mid-run reloads skip
+            // this — DifficultyRuntime.Awake already rehydrates from RunState.
+            bool freshRunAutoAdvanced = false;
+            if (runtime != null
+                && runtime.State != null
+                && runtime.State.appliedTiers.Count == 0
+                && runtime.HasNextTier)
+            {
+                runtime.AdvanceTier();
+                freshRunAutoAdvanced = true;
+            }
+
+            // Mid-run: if the just-applied debuff names a narration script,
+            // play it before the difficulty card. Fresh runs skip narration
+            // and go straight to the difficulty card — narration is reserved
+            // for the death→tier-up transitions.
+            var entry = runtime != null ? runtime.LastAppliedEntry : null;
+            bool wantsNarration =
+                !freshRunAutoAdvanced
+                && entry != null
+                && !string.IsNullOrWhiteSpace(entry.narrationScriptName)
+                && runtime.State != null
+                && runtime.State.pendingTierNarration;
+
+            // Consume the flag regardless of whether we end up playing — a subsequent
+            // reload at the same tier (e.g. boss death) should not replay the narration.
+            if (runtime != null && runtime.State != null)
+                runtime.State.pendingTierNarration = false;
+
+            if (wantsNarration)
+                EnterNarration(entry.narrationScriptName);
+            else
+                EnterIntermediate();
         }
 
         // Called by IntermediateScreenUI after the player presses SPACE on the
@@ -157,6 +208,30 @@ namespace BossJam.Game
         {
             if (State != GameState.Intermediate) return;
             EnterCutsceneIntro();
+        }
+
+        private void EnterNarration(string scriptName)
+        {
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
+            State = GameState.Narration;
+            StateChanged?.Invoke(State);
+
+            if (narrationController == null)
+            {
+                Debug.LogWarning($"{nameof(GameStateController)}: NarrationController not assigned; skipping narration '{scriptName}'.");
+                EnterIntermediate();
+                return;
+            }
+            narrationController.Finished += OnNarrationFinished;
+            narrationController.Play(scriptName);
+        }
+
+        private void OnNarrationFinished()
+        {
+            if (narrationController != null) narrationController.Finished -= OnNarrationFinished;
+            if (State != GameState.Narration) return;
+            EnterIntermediate();
         }
 
         private void EnterIntermediate()
@@ -202,12 +277,34 @@ namespace BossJam.Game
 
         private void EnterPreFightDialogue()
         {
-            int wave = (runtime != null) ? runtime.CurrentWaveIndex : 1;
+            int wave = (runtime != null) ? runtime.AppliedCount : 1;
             string scriptName = $"intro_wave_{wave}";
             postDialogueTarget = GameState.Playing;
             EnterDialogue();
             if (dialogueRig != null) dialogueRig.Play(scriptName);
             else EnterPlaying();
+        }
+
+        /// <summary>
+        /// Play an ad-hoc dialogue script mid-gameplay. Pauses time + boss while
+        /// the dialogue runs; restores Playing state when the dialogue Finishes.
+        /// </summary>
+        public void PlayInGameDialogue(string scriptName)
+        {
+            if (string.IsNullOrEmpty(scriptName)) return;
+            if (dialogueRig == null || dialogueRig.Controller == null) return;
+            if (dialogueRig.Controller.IsPlaying) return;
+
+            // Sit in the existing Dialogue state — the rest of the state machine
+            // already pauses Time/Boss correctly. Save where we want to land
+            // after the dialogue finishes (back to Playing).
+            postDialogueTarget = GameState.Playing;
+            State = GameState.Dialogue;
+            Time.timeScale = 0f;
+            if (Boss != null) Boss.enabled = false;
+            StateChanged?.Invoke(State);
+
+            dialogueRig.Controller.Play(scriptName);
         }
 
         // Single source of truth for "transitioning into Playing". Anything
@@ -255,7 +352,7 @@ namespace BossJam.Game
 
             if (outroDirector == null) { ResumeAfterDeathOutro(); return; }
             outroDirector.OutroComplete += OnDeathOutroComplete;
-            int wave = (runtime != null) ? runtime.CurrentWaveIndex : 1;
+            int wave = (runtime != null) ? runtime.AppliedCount : 1;
             outroDirector.PlayHeroDeath(wave);
         }
 
@@ -272,7 +369,7 @@ namespace BossJam.Game
             // the next frame; DifficultyRuntime rehydrates the modifier ledger
             // from RunState in its Awake. GameStateController.Start sees
             // IsMidRun and auto-calls Begin() to roll into the next cutscene.
-            if (runtime != null) runtime.ApplyNextDebuff();
+            if (runtime != null) runtime.AdvanceTier();
             ReloadScene();
         }
 
@@ -291,14 +388,17 @@ namespace BossJam.Game
 
             if (outroDirector == null) return;
             outroDirector.OutroComplete += OnGameOverOutroComplete;
-            outroDirector.PlayBossDeath();
+            int wave = (runtime != null) ? runtime.AppliedCount : 0;
+            outroDirector.PlayBossDeath(wave);
         }
 
         private void OnGameOverOutroComplete()
         {
             if (outroDirector != null) outroDirector.OutroComplete -= OnGameOverOutroComplete;
-            // State stays GameOver. GameOverScreenUI listens for StateChanged
-            // and shows its panel; player presses Space to call Resume().
+            // Boss death just replays the current tier — no GameOver screen, no
+            // tier advance. The RunState persists so the player retries the same
+            // wave with the same difficulty.
+            ReloadScene();
         }
 
         /// <summary>

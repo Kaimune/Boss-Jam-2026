@@ -22,7 +22,7 @@ MonoBehaviour:
   velocityWindowSeconds: 0.1
   maxExtrapolationCells: 0
   perceptionBufferSeconds: 1
-  fireballIntervalSeconds: 2.5
+  fireballIntervalSeconds: 5
   fireballSize: {x: 1, y: 1}
   fireballDamage: 1
   firstShotDelay: 1
@@ -31,5 +31,5 @@ MonoBehaviour:
   meleeApproachDistanceCells: 1.5
   meleeCooldownSeconds: 0.9
   dodgeSpeedMultiplier: 4.5
-  dodgeDurationSeconds: 0.35
+  dodgeDurationSeconds: 0.2625
   dodgeCooldownSeconds: 1.5

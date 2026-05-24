@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using BossJam.Difficulty;
 using BossJam.GridSystem;
+using BossJam.Player;
 using UnityEngine;
 using DG.Tweening;
 
@@ -22,6 +23,7 @@ namespace BossJam.Attacks
 
         private GridFootprint cachedBossFootprint;
         private BossGrid cachedGrid;
+        private BossController cachedBoss;
         private float tickScale = 1f;
 
         private DifficultyRuntime rt;
@@ -91,8 +93,24 @@ namespace BossJam.Attacks
             if (config != null)
                 fsm.Init(BuildTimings());
 
+            fsm.OnEnter(AttackState.Windup, ArmWindupInvulnerability);
             fsm.OnEnter(AttackState.Active, BuildSpawnSchedule);
             fsm.OnEnter(AttackState.Idle, DestroyLive);
+        }
+
+        private BossController BossControllerRef =>
+            cachedBoss != null
+                ? cachedBoss
+                : (cachedBoss = GetComponentInParent<BossController>());
+
+        // Boss is rooted during the ult cast — give it iframes for the whole
+        // windup so the hero can't trivially punish it while it can't move.
+        private void ArmWindupInvulnerability()
+        {
+            var boss = BossControllerRef;
+            if (boss == null || config == null) return;
+            float windupSec = Eff(Target.BossAttackWindupSeconds, config.windupSeconds);
+            boss.SetInvulnFor(windupSec * tickScale);
         }
 
         private void Update()

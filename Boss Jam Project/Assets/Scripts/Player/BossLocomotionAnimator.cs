@@ -33,10 +33,17 @@ namespace BossJam.Player
         {
             if (animator == null) return;
 
-            // While any attack is busy, defer to AttackAnimationBinder.
+            // Defer to AttackAnimationBinder only while an attack's *animation* is
+            // playing (Windup/Active/Recovery). Cooldown is a post-animation logical
+            // wait — the attack clip is already done, and movement isn't locked, so
+            // locomotion needs to resume immediately or the boss visibly freezes in
+            // idle for the whole cooldown (up to 5s on Ult) while the player moves.
             for (int i = 0; i < attacks.Count; i++)
             {
-                if (attacks[i] != null && attacks[i].IsBusy)
+                var a = attacks[i];
+                if (a == null) continue;
+                var s = a.State;
+                if (s != AttackState.Idle && s != AttackState.Cooldown)
                 {
                     currentRunning = null;   // re-evaluate next time we own the animator
                     return;

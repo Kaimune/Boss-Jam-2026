@@ -19,7 +19,8 @@ namespace BossJam.Cutscene
         [SerializeField] private FadeOverlay fadeOverlay;
 
         [SerializeField] private string heroDeathScriptFormat = "hero_death_wave_{0}";
-        [SerializeField] private string gameOverScript = "game_over";
+        [SerializeField] private string bossDeathScriptFormat = "boss_death_wave_{0}";
+        [SerializeField] private string gameOverScriptFallback = "game_over";
         [SerializeField] private float heroDeathHoldSeconds = 0.4f;
         [SerializeField] private float fadeDurationSeconds = 0.6f;
 
@@ -30,9 +31,9 @@ namespace BossJam.Cutscene
             StartCoroutine(HeroDeathRoutine(waveIndex));
         }
 
-        public void PlayBossDeath()
+        public void PlayBossDeath(int waveIndex)
         {
-            StartCoroutine(BossDeathRoutine());
+            StartCoroutine(BossDeathRoutine(waveIndex));
         }
 
         private IEnumerator HeroDeathRoutine(int waveIndex)
@@ -50,11 +51,15 @@ namespace BossJam.Cutscene
             OutroComplete?.Invoke();
         }
 
-        private IEnumerator BossDeathRoutine()
+        private IEnumerator BossDeathRoutine(int waveIndex)
         {
             yield return new WaitForSecondsRealtime(heroDeathHoldSeconds);
 
-            yield return PlayLine(gameOverScript);
+            string scriptName = waveIndex > 0
+                ? string.Format(bossDeathScriptFormat, waveIndex)
+                : gameOverScriptFallback;
+
+            yield return PlayLine(scriptName);
 
             if (fadeOverlay != null) yield return fadeOverlay.FadeIn(fadeDurationSeconds);
 

@@ -4,6 +4,7 @@ using BossJam.Game;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using DifficultyTier = BossJam.Difficulty.Difficulty;
 
 namespace BossJam.UI
 {
@@ -175,8 +176,8 @@ namespace BossJam.UI
             // Big top label = tier name (e.g. "Extreme"). Small lines below
             // are the debuff description (what changed this wave) and tier
             // flavour text. Tier tint colours the big name.
-            DebuffEntry tierEntry = showPrevious ? difficulty.PreviousTierEntry : difficulty.CurrentTierEntry;
-            DebuffEntry debuffEntry = ResolveDebuffEntry(showPrevious);
+            DifficultyTier tierEntry = showPrevious ? difficulty.PreviousTierEntry : difficulty.CurrentTierEntry;
+            DifficultyTier debuffEntry = ResolveDifficulty(showPrevious);
 
             string tierName = tierEntry != null
                 ? tierEntry.tierName
@@ -209,7 +210,7 @@ namespace BossJam.UI
         // Latest applied debuff (or the wave-before-this-one when previewing the
         // previous tier during the punch transition). Wave 1 with nothing applied
         // returns null so the subtitle stays hidden.
-        private DebuffEntry ResolveDebuffEntry(bool showPrevious)
+        private DifficultyTier ResolveDifficulty(bool showPrevious)
         {
             if (difficulty == null) return null;
             var applied = difficulty.Applied;

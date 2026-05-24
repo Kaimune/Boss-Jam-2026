@@ -71,7 +71,7 @@ namespace BossJam.UI
             var next = runtime != null ? runtime.NextPreview : null;
             string nextName = next != null && !string.IsNullOrEmpty(next.tierName)
                 ? next.tierName
-                : (runtime != null ? runtime.CurrentTierName : DifficultyRuntime.ImmortalTierName);
+                : (runtime != null ? runtime.CurrentTierName : "");
 
             tierLabel.text = nextName;
             tierLabel.color = next != null ? next.tint : Color.white;

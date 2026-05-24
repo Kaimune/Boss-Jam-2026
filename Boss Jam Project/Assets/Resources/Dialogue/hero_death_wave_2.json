@@ -1,5 +1,9 @@
 {
   "lines": [
-    { "speaker": "minotaur", "text": "Athens runs out of sons before I run out of patience." }
+    { "speaker": "minotaur", "text": "Why do I get the sense that you'll be back…" },
+    { "speaker": "theseus", "text": "This dialogue should really be skippable…" },
+    { "speaker": "minotaur", "text": "Do you… not die?" },
+    { "speaker": "theseus", "text": "Not in this game…" },
+    { "speaker": "minotaur", "text": "Game? What? This is not a game…." }
   ]
 }

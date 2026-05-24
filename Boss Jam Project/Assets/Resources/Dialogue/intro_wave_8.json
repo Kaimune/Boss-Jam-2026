@@ -1,0 +1,8 @@
+{
+  "lines": [
+    { "speaker": "theseus", "text": "[ boss_hp: 3 → 1 ]" },
+    { "speaker": "minotaur", "text": "Oh god… I feel so weak." },
+    { "speaker": "system", "text": "ERR: BOSS_NULL · no actor to as▒ign · diffic▒lty undefined" },
+    { "speaker": "theseus", "text": "[ hero_speed: 10 → 20 ]" }
+  ]
+}

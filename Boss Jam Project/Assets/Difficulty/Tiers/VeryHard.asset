@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a73878d60ec4c7b8e0d2263cee6661, type: 3}
+  m_Name: VeryHard
+  m_EditorClassIdentifier: 
+  tierName: Very Hard
+  tierDescription: 
+  tint: {r: 0.85, g: 0.15, b: 0.15, a: 1}
+  icon: {fileID: 0}
+  description: 'Hero: 3 hp, 5 movespeed, melee enabled.'
+  narrationScriptName: tier_2_narration
+  effects:
+  - rid: 5190052775017840862
+  - rid: 5190052775017840863
+  - rid: 5190052775017840864
+  - rid: 5190052775017840865
+  - rid: 5190052775017840866
+  - rid: 5190052775017840867
+  - rid: 5190052775017840868
+  - rid: 5190052775017840869
+  - rid: 5190052775017840870
+  references:
+    version: 2
+    RefIds:
+    - rid: 5190052775017840862
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 0
+        op: 2
+        value: 3
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840863
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 2
+        op: 2
+        value: 5
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840864
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 13
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840865
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 14
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840866
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 12
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840867
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 22
+        op: 2
+        value: 0
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840868
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 18
+        op: 2
+        value: 0
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840869
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 23
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840870
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 29
+        op: 2
+        value: 2
+        attackId: 
+        extensionKey: 

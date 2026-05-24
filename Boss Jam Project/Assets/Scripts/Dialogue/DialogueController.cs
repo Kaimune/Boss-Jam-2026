@@ -43,6 +43,10 @@ namespace BossJam.Dialogue
         [SerializeField] private RawImage portraitImage;
         [SerializeField] private CanvasGroup canvasGroup;
 
+        [Tooltip("Full-screen black panel toggled per-speaker. Speakers with useBlackoutBackground=true " +
+                 "activate it; others deactivate it.")]
+        [SerializeField] private GameObject blackoutPanel;
+
         [Header("Audio")]
         [SerializeField] private AudioSource letterAudioSource;
         [SerializeField] private bool letterSfxEnabled = true;
@@ -52,18 +56,13 @@ namespace BossJam.Dialogue
 
         [Header("Typewriter")]
         [SerializeField] private float secondsPerChar = 0.032f;
-        [Tooltip("How long to hold each fully-typed line before auto-advancing.")]
-        [SerializeField] private float interLineHoldSeconds = 0.75f;
-        [Tooltip("Multiplier applied to typing + inter-line wait while IsFastForwarding is true.")]
-        [SerializeField] private float fastForwardMultiplier = 8f;
 
         public bool IsPlaying { get; private set; }
-        public bool IsFastForwarding { get; set; }
         public event Action Finished;
 
         private DialogueRunner runner;
-        private bool skipAllRequested;
         private string currentLineText;
+        private bool advanceRequested;
 
         private void Awake() { HideUi(); }
 
@@ -78,24 +77,26 @@ namespace BossJam.Dialogue
                 return;
             }
             runner = new DialogueRunner(asset);
-            skipAllRequested = false;
             IsPlaying = true;
             ShowUi();
             StartCoroutine(RunScript());
         }
 
-        public void SkipAll() { skipAllRequested = true; }
+        // Press-to-advance: during typing, completes the current line instantly;
+        // once the line is fully typed, advances to the next line. Dialogue is
+        // intentionally unskippable — there is no way to abort the whole sequence.
+        public void RequestAdvance() { advanceRequested = true; }
 
         private IEnumerator RunScript()
         {
             while (!runner.IsFinished)
             {
-                if (skipAllRequested) break;
                 if (runner.SpeakerChangedSincePrevious) ApplySpeakerProfile(runner.Current.speaker);
                 currentLineText = runner.Current.text ?? string.Empty;
                 yield return TypeLine(runner.Current);
-                if (skipAllRequested) break;
-                yield return WaitInterLine();
+                // Wait for an explicit advance press before moving to the next line.
+                advanceRequested = false;
+                while (!advanceRequested) yield return null;
                 runner.Advance();
             }
             HideUi();
@@ -108,9 +109,10 @@ namespace BossJam.Dialogue
             if (dialogueText == null) yield break;
             dialogueText.text = string.Empty;
             var profile = ResolveProfile(line.speaker);
+            advanceRequested = false;
             for (int i = 0; i < currentLineText.Length; i++)
             {
-                if (skipAllRequested) { dialogueText.text = currentLineText; yield break; }
+                if (advanceRequested) { dialogueText.text = currentLineText; yield break; }
                 char c = currentLineText[i];
                 dialogueText.text += c;
                 if (!char.IsWhiteSpace(c) && letterSfxEnabled && profile != null && profile.letterTickClip != null && letterAudioSource != null)
@@ -118,20 +120,7 @@ namespace BossJam.Dialogue
                     letterAudioSource.pitch = 1f + UnityEngine.Random.Range(-profile.pitchJitter, profile.pitchJitter);
                     letterAudioSource.PlayOneShot(profile.letterTickClip);
                 }
-                float delay = IsFastForwarding ? secondsPerChar / fastForwardMultiplier : secondsPerChar;
-                if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
-            }
-        }
-
-        private IEnumerator WaitInterLine()
-        {
-            float remaining = interLineHoldSeconds;
-            while (remaining > 0f)
-            {
-                if (skipAllRequested) yield break;
-                float step = IsFastForwarding ? Time.unscaledDeltaTime * fastForwardMultiplier : Time.unscaledDeltaTime;
-                remaining -= step;
-                yield return null;
+                if (secondsPerChar > 0f) yield return new WaitForSecondsRealtime(secondsPerChar);
             }
         }
 
@@ -141,7 +130,21 @@ namespace BossJam.Dialogue
             if (profile == null) { Debug.LogWarning($"{nameof(DialogueController)}: no profile for '{speakerToken}'."); return; }
             if (nameplateText != null) nameplateText.text = profile.displayName;
             if (nameplateBackground != null) nameplateBackground.color = profile.nameplateColor;
-            if (portraitImage != null && profile.portraitTexture != null) portraitImage.texture = profile.portraitTexture;
+            if (portraitImage != null)
+            {
+                if (profile.portraitTexture != null)
+                {
+                    portraitImage.texture = profile.portraitTexture;
+                    portraitImage.enabled = true;
+                }
+                else
+                {
+                    // No portrait for this speaker (e.g. SYSTEM) — hide so the prior speaker's
+                    // headshot doesn't linger behind the blackout.
+                    portraitImage.enabled = false;
+                }
+            }
+            if (blackoutPanel != null) blackoutPanel.SetActive(profile.useBlackoutBackground);
         }
 
         private SpeakerProfile ResolveProfile(string token)
@@ -160,6 +163,8 @@ namespace BossJam.Dialogue
         private void HideUi()
         {
             if (canvasGroup != null) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; canvasGroup.interactable = false; }
+            if (blackoutPanel != null) blackoutPanel.SetActive(false);
+            if (portraitImage != null) portraitImage.enabled = true; // restore for next time
         }
     }
 }

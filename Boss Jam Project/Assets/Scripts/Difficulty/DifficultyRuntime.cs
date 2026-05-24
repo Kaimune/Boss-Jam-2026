@@ -9,116 +9,115 @@ using UnityEngine;
 namespace BossJam.Difficulty
 {
     /// <summary>
-    /// Per-scene hub for the difficulty system. Owns the applied debuff
-    /// ledger, the shared flag bag, and the lifecycle events that effects
-    /// hook into. Consumers (HeroEnemy, BossController, IAttack scripts)
-    /// query Get / GetInt against this runtime to read effective stat values.
+    /// Per-scene hub for the difficulty system. Owns the modifier ledger,
+    /// the shared flag bag, and lifecycle events. Consumers (HeroEnemy,
+    /// BossController, IAttack scripts) query Get / GetInt against this
+    /// runtime to read effective stat values.
     ///
-    /// Baseline assets are never mutated — Get reads the supplied baseValue
-    /// and folds the ledger over it. With an empty profile the runtime is
-    /// inert and the game plays exactly as it would without it.
+    /// Tier semantics: each tier in the profile defines ABSOLUTE state.
+    /// AdvanceTier() clears the modifier ledger AND the flag bag before
+    /// applying the next tier's effects.
     /// </summary>
-    // Run before any consumer Awake (HeroEnemy, BossController, ability scripts)
-    // so the modifier ledger is rebuilt from RunState before they snapshot
-    // spawn-time stats (HP, IsEnabled, register-with-brain). Without this,
-    // consumers race the rebuild and read empty modifiers → debuffs appear inert.
     [DefaultExecutionOrder(-1000)]
     [DisallowMultipleComponent]
     public sealed class DifficultyRuntime : MonoBehaviour
     {
         [SerializeField] private DifficultyProfile profile;
 
-        [Tooltip("Persists wave/applied debuffs across scene reloads. The runtime " +
+        [Tooltip("Persists wave / applied tier list across scene reloads. The runtime " +
                  "rebuilds its modifier ledger from this on Awake.")]
         [SerializeField] private RunState runState;
 
         public DifficultyProfile Profile => profile;
         public RunState State => runState;
 
-        // ── Modifier ledger (rebuilt on Awake from runState.appliedEntries) ──
+        // ── Modifier ledger (rebuilt on Awake by replaying applied tier effects) ──
         private readonly List<Modifier> applied = new();
 
-        public int AppliedCount => runState != null ? runState.appliedEntries.Count : 0;
-        public IReadOnlyList<DebuffEntry> Applied =>
-            runState != null ? runState.appliedEntries : System.Array.Empty<DebuffEntry>();
-        public DebuffEntry NextPreview =>
-            (profile != null && AppliedCount < profile.debuffs.Count)
-                ? profile.debuffs[AppliedCount]
+        public int AppliedCount => runState != null ? runState.appliedTiers.Count : 0;
+        public IReadOnlyList<Difficulty> Applied =>
+            runState != null ? runState.appliedTiers : System.Array.Empty<Difficulty>();
+        public Difficulty NextPreview =>
+            (profile != null && AppliedCount < profile.tiers.Count)
+                ? profile.tiers[AppliedCount]
                 : null;
 
         // ── Actor handles ────────────────────────────────────────────
-        // Set by consumers in their Awake/OnEnable. May be null between
-        // hero deaths or before the boss spawns.
         public BossController Boss { get; set; }
         public HeroEnemy Hero { get; set; }
 
         // ── Flag bag ─────────────────────────────────────────────────
-        // Populated as content demands. Effects mutate via `rt.Flags.X = …`;
-        // consumers read via `rt.Flags.X` inline at the relevant call site.
+        // Cleared on AdvanceTier(); populated by IDifficultyEffect.Apply.
         [Serializable]
         public struct DifficultyFlags
         {
-            // (no flags yet — add fields here as behavioral debuffs land)
+            // Boss
+            public bool BossInstakill;
+
+            // Hero — regen
+            public int   HeroRegenHpPerInterval;
+            public float HeroRegenIntervalSeconds;
+
+            // Hero — iframes after taking damage
+            public float HeroPostHitIframeSeconds;
+
+            // Hero — respawn rules
+            public HeroRespawnMode HeroRespawnMode;
+            public int   HeroRespawnThresholdHp;
+            public float HeroRespawnWindowSeconds;
+            public int   HeroRespawnRestoreHp;
+            public bool  HeroRespawnReplayIntro;
+
+            // Fireball
+            public float FireballSpeedMultiplier;
+            public bool  FireballHoming;
+            public float FireballTurnRateDegPerSec;
         }
 
         private DifficultyFlags flags;
         public ref DifficultyFlags Flags => ref flags;
 
         // ── Lifecycle events ─────────────────────────────────────────
-        // Re-broadcast so effects only depend on the runtime, not on the
-        // static event source.
         public event Action HeroKilled;
         public event Action<int, IGridEntity> BossDamaged;
         public event Action<AttackConfig> AttackStarted;
         public event Action<AttackConfig, IDamageable> AttackHit;
 
         // UI-facing events
-        public event Action<DebuffEntry> DebuffApplied;
-        public event Action<DebuffEntry> TierChanged;
-
-        // Default tier name shown before any debuff has been applied.
-        // Anything asking the runtime for the tier prior to the first hero
-        // kill sees this string.
-        public const string ImmortalTierName = "Immortal";
+        public event Action<Difficulty> TierApplied;
+        public event Action<Difficulty> TierChanged;
 
         public string CurrentTierName =>
-            runState != null ? runState.currentTierName : ImmortalTierName;
-        public DebuffEntry CurrentTierEntry =>
+            runState != null ? runState.currentTierName : "";
+        public Difficulty CurrentTierEntry =>
             runState != null ? runState.currentTierEntry : null;
 
         public string PreviousTierName =>
-            runState != null ? runState.previousTierName : ImmortalTierName;
-        public DebuffEntry PreviousTierEntry =>
+            runState != null ? runState.previousTierName : "";
+        public Difficulty PreviousTierEntry =>
             runState != null ? runState.previousTierEntry : null;
 
-        /// <summary>
-        /// Most recently applied debuff, or null on wave 1 (nothing applied yet).
-        /// The start screen uses this for the "what changed" line.
-        /// </summary>
-        public DebuffEntry LastAppliedEntry
+        public Difficulty LastAppliedEntry
         {
             get
             {
                 if (runState == null) return null;
-                int n = runState.appliedEntries.Count;
-                return n > 0 ? runState.appliedEntries[n - 1] : null;
+                int n = runState.appliedTiers.Count;
+                return n > 0 ? runState.appliedTiers[n - 1] : null;
             }
         }
 
         // ── Cutscene-facing surface ──────────────────────────────────
-        /// <summary>1-based wave counter. Starts at 1, increments inside ApplyNextDebuff.</summary>
         public int CurrentWaveIndex =>
             runState != null ? runState.currentWaveIndex : 1;
 
-        /// <summary>Tier label shown on the tier card during the hero-death cutscene.</summary>
         public string NextTierLabel => $"TIER {CurrentWaveIndex + 1}";
 
-        /// <summary>One-line description of the debuff that's about to be applied. "(final wave)" when none queued.</summary>
         public string NextDebuffDescription
         {
             get
             {
-                if (!HasNextDebuff) return "(final wave)";
+                if (!HasNextTier) return "(final wave)";
                 return PeekNextDebuffDescription();
             }
         }
@@ -129,34 +128,65 @@ namespace BossJam.Difficulty
             if (entry == null) return "(final wave)";
             if (!string.IsNullOrWhiteSpace(entry.description)) return entry.description;
             if (!string.IsNullOrWhiteSpace(entry.tierDescription)) return entry.tierDescription;
-            if (!string.IsNullOrWhiteSpace(entry.name)) return entry.name;
-            return "(unnamed debuff)";
+            if (!string.IsNullOrWhiteSpace(entry.tierName)) return entry.tierName;
+            return "(unnamed tier)";
         }
 
         // ── Wire-up ──────────────────────────────────────────────────
         private void Awake()
         {
+            ResetFlagsToDefaults();
+
             if (runState == null)
             {
                 Debug.LogWarning(
-                    $"{nameof(DifficultyRuntime)}: no RunState assigned — wave/debuff state will not persist.",
+                    $"{nameof(DifficultyRuntime)}: no RunState assigned — wave/tier state will not persist.",
                     this);
                 return;
             }
 
-            // Rebuild the modifier ledger from persisted debuffs. The scene
-            // was just reloaded, so `applied` is empty; replay each entry's
-            // effect(s) so consumers see the correct effective values.
-            for (int i = 0; i < runState.appliedEntries.Count; i++)
+            // Debug starting tier — honored once per playmode session. If set, we
+            // pre-populate appliedTiers to put the runtime at that tier; subsequent
+            // rehydration replays only the latest applied tier's effects (reset-on-
+            // advance). The debug field itself survives ResetForNewRun by design, so
+            // the user's choice persists across playmode entries until they clear it.
+            if (profile != null
+                && runState.appliedTiers.Count == 0
+                && runState.debugStartingTier > 0)
             {
-                ApplyAllEffects(runState.appliedEntries[i]);
+                int target = Mathf.Min(runState.debugStartingTier, profile.tiers.Count);
+                for (int i = 0; i < target; i++)
+                {
+                    var tier = profile.tiers[i];
+                    if (tier == null) continue;
+                    runState.appliedTiers.Add(tier);
+                    if (!string.IsNullOrEmpty(tier.tierName))
+                    {
+                        runState.currentTierName = tier.tierName;
+                        runState.currentTierEntry = tier;
+                    }
+                    runState.currentWaveIndex++;
+                }
+            }
+
+            // Mid-run rehydration: replay the most recent tier's effects so the
+            // ledger / flag bag reflect the current tier (reset-on-advance means
+            // only the LATEST tier defines current state).
+            if (runState.appliedTiers.Count > 0)
+            {
+                var current = runState.appliedTiers[runState.appliedTiers.Count - 1];
+                ApplyAllEffects(current);
             }
         }
 
-        // Each DebuffEntry can carry multiple DebuffEffect SO assets via its
-        // `effects` list. Iterates each one — null entries are tolerated so
-        // designers can leave a slot empty without breaking application.
-        private void ApplyAllEffects(DebuffEntry entry)
+        private void ResetFlagsToDefaults()
+        {
+            flags = default;
+            flags.FireballSpeedMultiplier = 1f;
+            flags.HeroRespawnMode = HeroRespawnMode.None;
+        }
+
+        private void ApplyAllEffects(Difficulty entry)
         {
             if (entry == null || entry.effects == null) return;
             for (int i = 0; i < entry.effects.Count; i++)
@@ -173,36 +203,32 @@ namespace BossJam.Difficulty
             HeroEnemy.HeroKilledStatic -= OnHeroKilled;
         }
 
-        // ── Trigger ──────────────────────────────────────────────────
-        // Hero death just raises the event now — debuff application is
-        // gated by ApplyNextDebuff() so the game can pause + show a
-        // next-tier preview screen first.
         private void OnHeroKilled() => HeroKilled?.Invoke();
 
         /// <summary>
-        /// Commit the next debuff from the profile. Called by
-        /// GameStateController.Resume() after the player presses Space on the
-        /// tier-advance screen. No-op if the curve is exhausted.
+        /// Commit the next tier. Clears the modifier ledger and flag bag,
+        /// then applies the new tier's effects. No-op if the curve is exhausted.
         /// </summary>
-        public void ApplyNextDebuff()
+        public void AdvanceTier()
         {
             if (profile == null || runState == null) return;
-            if (AppliedCount >= profile.debuffs.Count) return;
+            if (AppliedCount >= profile.tiers.Count) return;
 
-            var entry = profile.debuffs[AppliedCount];
+            var entry = profile.tiers[AppliedCount];
+            if (entry == null) return;
 
-            // Snapshot the pre-application tier so the next-wave start screen
-            // can animate from the old label to the new one. Unconditional so
-            // debuffs that inherit the previous tierName still get a stable
-            // "previous" reference.
+            // Snapshot pre-application tier for transition animations.
             runState.previousTierName = runState.currentTierName;
             runState.previousTierEntry = runState.currentTierEntry;
 
-            runState.appliedEntries.Add(entry);
+            // Reset before applying: every tier defines absolute state.
+            applied.Clear();
+            ResetFlagsToDefaults();
+
+            runState.appliedTiers.Add(entry);
+            runState.pendingTierNarration = !string.IsNullOrWhiteSpace(entry.narrationScriptName);
             ApplyAllEffects(entry);
 
-            // Promote tier if this entry names a new one. Blank tierName
-            // inherits the previous label (lets multiple debuffs share a tier).
             bool tierPromoted = false;
             if (!string.IsNullOrEmpty(entry.tierName) && entry.tierName != runState.currentTierName)
             {
@@ -211,16 +237,16 @@ namespace BossJam.Difficulty
                 tierPromoted = true;
             }
 
-            DebuffApplied?.Invoke(entry);
-            Debug.Log($"[Difficulty] Applied #{AppliedCount} '{entry.name}' — {entry.description}");
+            TierApplied?.Invoke(entry);
+            Debug.Log($"[Difficulty] Advanced to #{AppliedCount} '{entry.tierName}' — {entry.description}");
 
             if (tierPromoted) TierChanged?.Invoke(runState.currentTierEntry);
 
             runState.currentWaveIndex++;
         }
 
-        public bool HasNextDebuff =>
-            profile != null && AppliedCount < profile.debuffs.Count;
+        public bool HasNextTier =>
+            profile != null && AppliedCount < profile.tiers.Count;
 
         // ── Effect-side helpers ──────────────────────────────────────
         public void AddModifier(Target target, Op op, float value,
@@ -236,8 +262,6 @@ namespace BossJam.Difficulty
             });
         }
 
-        // Plumbing used by BossController / attack hitboxes to feed events
-        // through the runtime so effects can subscribe to them generically.
         public void RaiseBossDamaged(int amount, IGridEntity source)
             => BossDamaged?.Invoke(amount, source);
 
@@ -277,7 +301,6 @@ namespace BossJam.Difficulty
                           string attackId = null, string extensionKey = null)
             => Mathf.RoundToInt(Get(target, baseValue, attackId, extensionKey));
 
-        // ── Internals ────────────────────────────────────────────────
         private struct Modifier
         {
             public Target target;

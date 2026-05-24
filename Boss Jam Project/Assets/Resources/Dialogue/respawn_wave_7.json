@@ -1,0 +1,7 @@
+{
+  "lines": [
+    { "speaker": "system", "text": "WARNING… DO NOT ATTACK PLAYER." },
+    { "speaker": "minotaur", "text": "… I don't need to listen to you." },
+    { "speaker": "system", "text": "RESTORING TO FULL HP." }
+  ]
+}

@@ -71,8 +71,11 @@ namespace BossJam.Attacks
                 return;
             }
 
-            // Done: anything returning to Cooldown/Idle fades back to idle.
-            if (next == AttackState.Cooldown || next == AttackState.Idle)
+            // Attack clip is done at Recovery→Cooldown — fade out to idle here.
+            // Don't fade again on Cooldown→Idle: the visual is already handed off
+            // to BossLocomotionAnimator (which may be showing run_stepped if the
+            // player is moving), and another idle CrossFade here would clobber it.
+            if (next == AttackState.Cooldown)
             {
                 animator.speed = 1f;
                 if (!string.IsNullOrEmpty(idleStateName))

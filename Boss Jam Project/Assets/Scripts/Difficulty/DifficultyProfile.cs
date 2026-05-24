@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using BossJam.Configs;
 using BossJam.Enemies;
@@ -8,13 +7,9 @@ using UnityEngine;
 namespace BossJam.Difficulty
 {
     /// <summary>
-    /// One asset = the entire run's difficulty curve. Holds baseline config
-    /// references plus an ordered debuff list applied one-per-hero-kill.
-    /// Each DebuffEntry also carries optional tier metadata used by the HUD.
-    ///
-    /// Canonical content lives in <see cref="DefaultStages"/>; the SO can be
-    /// repopulated from code via the "Reset to Default Stages" context menu.
-    /// Designers may still override individual entries in the Inspector.
+    /// One asset = the entire run's difficulty curve. References the baseline
+    /// configs and an ordered list of Difficulty tier assets. Applying a tier
+    /// is a reset-and-apply operation: each tier defines absolute state.
     /// </summary>
     [CreateAssetMenu(fileName = "DifficultyProfile", menuName = "BossJam/Difficulty Profile")]
     public class DifficultyProfile : ScriptableObject
@@ -24,43 +19,7 @@ namespace BossJam.Difficulty
         public HeroConfig heroConfig;
         public AttackConfig[] attackConfigs;
 
-        [Header("Ordered debuffs — applied one per hero kill")]
-        public List<DebuffEntry> debuffs = new();
-
-        [ContextMenu("Reset to Default Stages")]
-        private void ResetToDefaults()
-        {
-#if UNITY_EDITOR
-            debuffs = DefaultStages.Build();
-            UnityEditor.EditorUtility.SetDirty(this);
-#endif
-        }
-    }
-
-    /// <summary>
-    /// One authored debuff. The <see cref="effects"/> list is polymorphic via
-    /// [SerializeReference] — pick concrete IDebuffEffect entries from the
-    /// Inspector dropdown. Each tier can carry any number of effects (or
-    /// none, for pure-flavor tier entries that only update the HUD label).
-    ///
-    /// Tier fields: when <see cref="tierName"/> is non-empty and differs from
-    /// the runtime's current tier, applying this entry promotes the tier and
-    /// raises TierChanged. A blank tierName inherits the previous label.
-    /// </summary>
-    [Serializable]
-    public class DebuffEntry
-    {
-        public string name;
-        [TextArea] public string description;
-        public Sprite icon;
-        public Color tint = Color.white;
-
-        [Header("Tier (shown on HUD when this entry applies)")]
-        public string tierName;
-        [TextArea] public string tierDescription;
-
-        [Tooltip("Effects fired when this entry lands. Each entry is a DebuffEffect ScriptableObject asset — " +
-                 "create them via Assets → Create → BossJam/Difficulty/Stat Modifier Effect (or other subtype).")]
-        public List<DebuffEffect> effects = new List<DebuffEffect>();
+        [Header("Ordered tiers — applied one per hero kill")]
+        public List<Difficulty> tiers = new();
     }
 }

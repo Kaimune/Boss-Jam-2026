@@ -1,0 +1,130 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a73878d60ec4c7b8e0d2263cee6661, type: 3}
+  m_Name: Beginner
+  m_EditorClassIdentifier: 
+  tierName: Beginner
+  tierDescription: 
+  tint: {r: 0.15, g: 0.75, b: 0.95, a: 1}
+  icon: {fileID: 0}
+  description: "Hero save-scums on first 1hp. Fireballs \xD71.2 faster."
+  narrationScriptName: tier_6_narration
+  effects:
+  - rid: 5190052775017840835
+  - rid: 5190052775017840836
+  - rid: 5190052775017840837
+  - rid: 5190052775017840838
+  - rid: 5190052775017840839
+  - rid: 5190052775017840840
+  - rid: 5190052775017840841
+  - rid: 5190052775017840842
+  - rid: 5190052775017840843
+  - rid: 5190052775017840844
+  - rid: 5190052775017840845
+  - rid: 5190052775017840846
+  - rid: 5190052775017840847
+  references:
+    version: 2
+    RefIds:
+    - rid: 5190052775017840835
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 0
+        op: 2
+        value: 3
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840836
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 2
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840837
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 13
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840838
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 14
+        op: 2
+        value: 4
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840839
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 12
+        op: 2
+        value: 4
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840840
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 18
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840841
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 22
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840842
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 23
+        op: 2
+        value: 10
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840843
+      type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        target: 29
+        op: 2
+        value: 1
+        attackId: 
+        extensionKey: 
+    - rid: 5190052775017840844
+      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        hpPerInterval: 1
+        intervalSeconds: 5
+    - rid: 5190052775017840845
+      type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        seconds: 1
+    - rid: 5190052775017840846
+      type: {class: HeroRespawnEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        mode: 1
+        thresholdHp: 1
+        windowSeconds: 1.5
+        restoreHp: 5
+        replayIntro: 1
+    - rid: 5190052775017840847
+      type: {class: FireballSpeedEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
+      data:
+        multiplier: 1.2

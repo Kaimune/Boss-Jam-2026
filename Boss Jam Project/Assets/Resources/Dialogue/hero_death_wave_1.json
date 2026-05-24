@@ -1,5 +1,9 @@
 {
   "lines": [
-    { "speaker": "minotaur", "text": "Another bone for the pile." }
+    { "speaker": "minotaur", "text": "It is here your journey ends, Theseus…" },
+    { "speaker": "theseus", "text": "Wait… I swear I couldn't move…" },
+    { "speaker": "minotaur", "text": "Well… um… how did you get in here, then? Wait— you're dead? How can you even talk?" },
+    { "speaker": "theseus", "text": "Man… this difficulty is impossible… the devs have to patch-fix this…" },
+    { "speaker": "minotaur", "text": "… What is going on?" }
   ]
 }

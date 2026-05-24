@@ -78,7 +78,7 @@ namespace BossJam.UI
         private void RefreshLabels()
         {
             // Show the tier the player died on (their high-water mark).
-            string tierName = runtime != null ? runtime.CurrentTierName : DifficultyRuntime.ImmortalTierName;
+            string tierName = runtime != null ? runtime.CurrentTierName : "";
             var entry = runtime != null ? runtime.CurrentTierEntry : null;
 
             if (tierLabel != null)
