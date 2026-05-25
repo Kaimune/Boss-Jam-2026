@@ -88901,10 +88901,24 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 1.1666666
-    functionName: PlayProfile
+  - time: 0
+    functionName: StopAxeTrail
     data: 
-    objectReferenceParameter: {fileID: 11400000, guid: 36bc471eb13cd41b48c3d1cf42d70916, type: 2}
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.41666666
+    functionName: StartAxeTrail
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 1.1666666
+    functionName: Slam
+    data: 
+    objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
@@ -88916,7 +88930,21 @@ AnimationClip:
     intParameter: 0
     messageOptions: 0
   - time: 1.1666666
-    functionName: Slam
+    functionName: PlayProfile
+    data: 
+    objectReferenceParameter: {fileID: 11400000, guid: 36bc471eb13cd41b48c3d1cf42d70916, type: 2}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 1.3333334
+    functionName: PlaySfx
+    data: 
+    objectReferenceParameter: {fileID: 8300000, guid: 8b752be3dc7d5a849ad4dae1f23ec919, type: 3}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 1.6666666
+    functionName: StopAxeTrail
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0

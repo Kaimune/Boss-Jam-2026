@@ -1530,6 +1530,7 @@ GameObject:
   - component: {fileID: 2977289710572397576}
   - component: {fileID: 6883417561824152340}
   - component: {fileID: 3860330556890816077}
+  - component: {fileID: 1580619385398076274}
   m_Layer: 0
   m_Name: boss_prefab
   m_TagString: Untagged
@@ -1631,6 +1632,22 @@ MonoBehaviour:
   forwardSlashVFX: {fileID: 8595461296565755314}
   slamVFX: {fileID: 314410936209707069}
   slamEchoVFX: {fileID: 5003788874238155565}
+  axeSlashTrail: {fileID: 7229452296852812854}
+--- !u!114 &1580619385398076274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4861109385937965429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9fb4fb0de5e21c478aee5d4ca77c07d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  effectVolume: {fileID: 0}
+  fadeInTime: 0.15
+  fadeOutTime: 0.25
 --- !u!1 &5118348898369756526
 GameObject:
   m_ObjectHideFlags: 0

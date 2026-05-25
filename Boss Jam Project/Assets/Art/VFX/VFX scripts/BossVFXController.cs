@@ -5,28 +5,33 @@ public class BossVFXController : MonoBehaviour
     public ForwardSlashVFX forwardSlashVFX;
     public SlamVFX slamVFX;
     public SlamEchoVFX slamEchoVFX;
-public void PlayForwardSlashVFX()
-{
-    Debug.Log("Forward slash VFX event fired");
 
-    if (forwardSlashVFX != null)
-        forwardSlashVFX.PlaySlash();
-    else
-        Debug.LogWarning("ForwardSlashVFX reference missing");
-}
+    public AxeSlashTrail axeSlashTrail;
 
-public void PlaySlamVFX()
-{
-    Debug.Log("SLAM VFX EVENT FIRED");
+    public void PlayForwardSlashVFX()
+    {
+        if (forwardSlashVFX != null)
+            forwardSlashVFX.PlaySlash();
+    }
 
-    if (slamVFX != null)
-        slamVFX.PlaySlam();
-    else
-        Debug.LogWarning("slamVFX is missing");
+    public void PlaySlamVFX()
+    {
+        if (slamVFX != null)
+            slamVFX.PlaySlam();
 
-    if (slamEchoVFX != null)
-        slamEchoVFX.PlayEcho();
-    else
-        Debug.LogWarning("slamEchoVFX is missing");
-}
+        if (slamEchoVFX != null)
+            slamEchoVFX.PlayEcho();
+    }
+
+    public void StartAxeTrail()
+    {
+        if (axeSlashTrail != null)
+            axeSlashTrail.StartTrail();
+    }
+
+    public void StopAxeTrail()
+    {
+        if (axeSlashTrail != null)
+            axeSlashTrail.StopTrail();
+    }
 }
