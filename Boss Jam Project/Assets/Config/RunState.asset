@@ -12,14 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a557d0ad4f3e244b0bde05b52f42443a, type: 3}
   m_Name: RunState
   m_EditorClassIdentifier: 
-  currentWaveIndex: 1
-  appliedTiers: []
-  currentTierName: 
-  currentTierEntry: {fileID: 0}
+  currentWaveIndex: 2
+  appliedTiers:
+  - {fileID: 11400000, guid: 1f19498169e114e61ac0ce60d5e8470d, type: 2}
+  currentTierName: Impossible
+  currentTierEntry: {fileID: 11400000, guid: 1f19498169e114e61ac0ce60d5e8470d, type: 2}
   previousTierName: 
   previousTierEntry: {fileID: 0}
   pendingTierNarration: 0
   skipNextIntro: 0
   saveScumAvailable: 1
-  debugStartingTier: 7
-  showDebugVisuals: 1
+  debugStartingTier: 0
+  showDebugVisuals: 0
+  debugHeroHpKeys: 1
