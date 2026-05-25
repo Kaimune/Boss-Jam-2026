@@ -53481,6 +53481,20 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
+  - time: 0
+    functionName: StopAxeTrail
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.16666667
+    functionName: StartAxeTrail
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
   - time: 0.75
     functionName: PlayForwardSlashVFX
     data: 
@@ -53495,17 +53509,24 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.875
+  - time: 0.8333333
     functionName: PlayForwardSlash
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.875
+  - time: 0.8333333
     functionName: PlaySfx
     data: 
-    objectReferenceParameter: {fileID: 8300000, guid: 910a969c90ad12244b2fb5cb9bb457cc, type: 3}
+    objectReferenceParameter: {fileID: 8300000, guid: 0f0b206b616f77549aa379bc0e6b9895, type: 3}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 1.1666666
+    functionName: StopAxeTrail
+    data: 
+    objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0

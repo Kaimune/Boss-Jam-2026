@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   config: {fileID: 11400000, guid: 1520cfe2c1ec343daa5c83de20106b3c, type: 2}
+  autoSlamOnRecovery: 1
 --- !u!114 &1101258938867755037
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -290,6 +291,7 @@ MonoBehaviour:
   tickMultiplier: 1
   maxHp: 20
   hitFx: {fileID: 0}
+  deathFx: {fileID: 0}
   deadzone: 0.3
   visual: {fileID: 0}
   turnDegreesPerSecond: 720
@@ -490,6 +492,14 @@ PrefabInstance:
     - target: {fileID: 6196526380993520276, guid: cd372368ae60f864883899cdc239efee, type: 3}
       propertyPath: m_LocalPosition.z
       value: 2.2044
+      objectReference: {fileID: 0}
+    - target: {fileID: 7229452296852812854, guid: cd372368ae60f864883899cdc239efee, type: 3}
+      propertyPath: lifetime
+      value: 1.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7229452296852812854, guid: cd372368ae60f864883899cdc239efee, type: 3}
+      propertyPath: maxPoints
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 9058500767662283136, guid: cd372368ae60f864883899cdc239efee, type: 3}
       propertyPath: m_Enabled

@@ -7,9 +7,8 @@ public class AxeSlashTrail : MonoBehaviour
     [Header("References")]
     public Transform top;
     public Transform bottom;
-
     [Header("Trail Settings")]
-    public bool emitting;
+    public bool emitting = false;
     public float lifetime = 0.18f;
     public float minDistance = 0.05f;
     public int maxPoints = 24;
