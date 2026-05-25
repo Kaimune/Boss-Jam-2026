@@ -12,18 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a557d0ad4f3e244b0bde05b52f42443a, type: 3}
   m_Name: RunState
   m_EditorClassIdentifier: 
-  currentWaveIndex: 9
-  appliedTiers:
-  - {fileID: 11400000, guid: 1f19498169e114e61ac0ce60d5e8470d, type: 2}
-  - {fileID: 11400000, guid: f73eecd1f41474d238d2a92a0067bd43, type: 2}
-  - {fileID: 11400000, guid: 731ab168e99a14a838c5b78f22c9a193, type: 2}
-  - {fileID: 11400000, guid: 05b661a8ccbdb49a98932eb3c100b835, type: 2}
-  - {fileID: 11400000, guid: 361b801c82832487686675d48b1a11e5, type: 2}
-  - {fileID: 11400000, guid: 226b6d4830e614158ae5e05d6d0514a3, type: 2}
-  - {fileID: 11400000, guid: 660ef041158a641bfbb74d6793d7a190, type: 2}
-  - {fileID: 11400000, guid: 7e7c40c11a6124a9f83ed5db7f061029, type: 2}
-  currentTierName: Error.
-  currentTierEntry: {fileID: 11400000, guid: 7e7c40c11a6124a9f83ed5db7f061029, type: 2}
+  currentWaveIndex: 1
+  appliedTiers: []
+  currentTierName: 
+  currentTierEntry: {fileID: 0}
   previousTierName: 
   previousTierEntry: {fileID: 0}
   pendingTierNarration: 0
