@@ -289,7 +289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tickMultiplier: 1
-  maxHp: 20
+  maxHp: 10
   hitFx: {fileID: 0}
   deathFx: {fileID: 0}
   deadzone: 0.3
