@@ -21,6 +21,6 @@ MonoBehaviour:
   pendingTierNarration: 0
   skipNextIntro: 0
   saveScumAvailable: 1
-  debugStartingTier: 8
+  debugStartingTier: 0
   showDebugVisuals: 0
-  debugHeroHpKeys: 1
+  debugHeroHpKeys: 0
