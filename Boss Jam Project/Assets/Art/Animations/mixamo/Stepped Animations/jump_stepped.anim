@@ -88915,10 +88915,10 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 1.4166666
-    functionName: PlaySfx
+  - time: 1.1666666
+    functionName: Slam
     data: 
-    objectReferenceParameter: {fileID: 8300000, guid: 0f0b206b616f77549aa379bc0e6b9895, type: 3}
+    objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0

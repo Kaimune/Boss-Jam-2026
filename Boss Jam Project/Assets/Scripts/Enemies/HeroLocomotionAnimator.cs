@@ -27,7 +27,7 @@ namespace BossJam.Enemies
         private GridMover mover;
         private HeroEnemy hero;
         private HeroDodge dodge;
-        private HeroMelee melee;
+        private HeroDashStrike dashStrike;
         private bool? currentRunning;
         private bool idleStateExists;
         private bool runStateExists;
@@ -37,7 +37,7 @@ namespace BossJam.Enemies
             mover = GetComponent<GridMover>();
             hero = GetComponent<HeroEnemy>();
             dodge = GetComponent<HeroDodge>();
-            melee = GetComponent<HeroMelee>();
+            dashStrike = GetComponent<HeroDashStrike>();
             if (animator == null) animator = GetComponentInChildren<Animator>(includeInactive: true);
             idleStateExists = WarnIfStateMissing(idleStateName);
             runStateExists  = WarnIfStateMissing(runStateName);
@@ -53,7 +53,7 @@ namespace BossJam.Enemies
             // back to idle on the same frame DeathFx.Play() set the death state,
             // clobbering the death anim.
             if ((dodge != null && dodge.IsActive)
-                || (melee != null && melee.IsBusy)
+                || (dashStrike != null && dashStrike.IsBusy)
                 || (hero != null && hero.IsStunned)
                 || (hero != null && hero.IsDead))
             {

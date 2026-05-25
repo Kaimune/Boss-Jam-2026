@@ -29,6 +29,15 @@ namespace BossJam.Difficulty
                  "narration doesn't loop.")]
         public bool pendingTierNarration;
 
+        [Tooltip("One-shot: skip the intro cutscene + pre-fight dialogue on the next scene load, " +
+                 "jump straight to Playing, and play the respawn_reload dialogue. Set by the hero " +
+                 "respawn warning / boss save-scum flow; consumed by GameStateController.Begin.")]
+        public bool skipNextIntro;
+
+        [Tooltip("True while the hero's once-per-tier save-scum revival is still available. " +
+                 "Consumed when the boss dies and the save fires; reset to true on each tier-apply.")]
+        public bool saveScumAvailable = true;
+
         [Header("Debug (persists across ResetForNewRun)")]
         [Tooltip("If > 0, the runtime pre-applies this many tiers at game start. " +
                  "0 = normal flow (auto-advance to Tier 1 on Begin). Set via Tools > BossJam > Debug > Start At Tier.")]
@@ -45,6 +54,8 @@ namespace BossJam.Difficulty
             previousTierName = "";
             previousTierEntry = null;
             pendingTierNarration = false;
+            skipNextIntro = false;
+            saveScumAvailable = true;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

@@ -1,0 +1,7 @@
+{
+  "lines": [
+    { "speaker": "system", "text": "SYSTEM: [reload completed]" },
+    { "speaker": "minotaur", "text": "what just happened - im back here again" },
+    { "speaker": "theseus", "text": "\"phew\" that was close" }
+  ]
+}

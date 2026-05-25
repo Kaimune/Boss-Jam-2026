@@ -94,7 +94,7 @@ namespace BossJam.Attacks
         {
             rt = FindFirstObjectByType<DifficultyRuntime>();
             if (config != null) fsm.Init(BuildTimings());
-            fsm.OnEnter(AttackState.Windup,   SpawnTelegraph);
+            fsm.OnEnter(AttackState.Windup,   OnWindupEnter);
             fsm.OnEnter(AttackState.Active,   OnActiveEnter);
             fsm.OnEnter(AttackState.Recovery, DestroyHitbox);
             fsm.OnEnter(AttackState.Idle,     DestroyLive);
@@ -189,6 +189,25 @@ namespace BossJam.Attacks
             hazard.Configure(anchor, fpSize);
         }
 
+        // Boss is invulnerable from windup start until the slash keyframe
+        // (Strike() — called via AnimationEvent or the autoStrikeOnActive
+        // fallback). After the keyframe, recovery + cooldown are open for the
+        // hero to punish.
+        //
+        // Generously over-armed (windup + active) so animation event timing
+        // wobble can't leave a frame-sized vulnerable gap before the keyframe
+        // fires. Strike() force-ends the window the moment damage actually
+        // commits.
+        private void OnWindupEnter()
+        {
+            SpawnTelegraph();
+            var boss = BossControllerRef;
+            if (boss == null || config == null) return;
+            float windupSec = Eff(Target.BossAttackWindupSeconds, config.windupSeconds);
+            float activeSec = Eff(Target.BossAttackActiveSeconds, config.activeSeconds);
+            boss.SetInvulnFor(windupSec + activeSec);
+        }
+
         private void OnActiveEnter()
         {
             DestroyTelegraph();
@@ -218,6 +237,11 @@ namespace BossJam.Attacks
             if (hasStruck) return;
             hasStruck = true;
             SpawnHitboxAtCurrentAim();
+            // Keyframe-aligned vulnerability: the boss commits to the swing
+            // here, so i-frames from OnWindupEnter end now. Hero can punish
+            // through recovery/cooldown.
+            var boss = BossControllerRef;
+            if (boss != null) boss.ClearInvuln();
         }
 
         private void SpawnHitboxAtCurrentAim()

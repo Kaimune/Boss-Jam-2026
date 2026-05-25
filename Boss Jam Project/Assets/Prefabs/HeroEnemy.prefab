@@ -87,7 +87,7 @@ MonoBehaviour:
   grid: {fileID: 0}
   config: {fileID: 11400000, guid: 4978d48ee606748c89f956fe01dc2978, type: 2}
   brain: {fileID: 4241545259068807302}
-  melee: {fileID: 3874092561385176467}
+  dashStrike: {fileID: 3874092561385176467}
   fireball: {fileID: 8768223249846523597}
   dodge: {fileID: 6904885068016557614}
   fireballUnlockWave: 2
@@ -122,11 +122,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1432158357741170}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6ac1aa4dd6035443e9333f9cf33e7a89, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 5e77dab958258483ca2e15a8ca4965ab, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  enabledByDefault: 1
   animator: {fileID: 0}
-  animatorTrigger: Attack
+  animatorStateName: attack
+  crossfadeSeconds: 0.05
 --- !u!114 &8768223249846523597
 MonoBehaviour:
   m_ObjectHideFlags: 0

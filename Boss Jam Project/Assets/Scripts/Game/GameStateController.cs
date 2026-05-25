@@ -164,6 +164,20 @@ namespace BossJam.Game
         {
             if (State != GameState.Startup) return;
 
+            // Respawn fast-path: hero's low-HP warning or boss save-scum sets
+            // RunState.skipNextIntro and reloads the scene. On that reload we
+            // skip narration / intermediate card / cutscene / pre-fight dialogue
+            // entirely, drop straight into Playing, and play the respawn_reload
+            // script so the player is back in the fight in one beat.
+            if (runtime != null && runtime.State != null && runtime.State.skipNextIntro)
+            {
+                runtime.State.skipNextIntro = false;
+                runtime.State.pendingTierNarration = false; // never replay tier narration on a save-scum reload
+                EnterPlaying();
+                PlayInGameDialogue("respawn_reload");
+                return;
+            }
+
             // Fresh-run auto-advance: the player should never see the empty
             // pre-tier state. On the first wave (no tiers applied yet), commit
             // tier 1 (Impossible) before the difficulty card renders so the
@@ -405,7 +419,10 @@ namespace BossJam.Game
             if (outroDirector != null) outroDirector.OutroComplete -= OnGameOverOutroComplete;
             // Boss death just replays the current tier — no GameOver screen, no
             // tier advance. The RunState persists so the player retries the same
-            // wave with the same difficulty.
+            // wave with the same difficulty, but reset the save-scum token so
+            // the hero can save-scum once again in the new attempt.
+            if (runtime != null && runtime.State != null)
+                runtime.State.saveScumAvailable = true;
             ReloadScene();
         }
 
@@ -441,7 +458,7 @@ namespace BossJam.Game
             }
         }
 
-        private void ReloadScene()
+        public void ReloadScene()
         {
             // Restore timescale before reloading — OnDestroy will run during
             // the scene unload, but doing it explicitly first means any code

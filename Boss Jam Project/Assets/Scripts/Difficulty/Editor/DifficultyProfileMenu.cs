@@ -21,7 +21,7 @@ namespace BossJam.Difficulty.Editor
             ("Impossible.asset", "Impossible", "Hero dies in 1 hit. No movespeed. No abilities. Boss attacks deal 2.", new Color(0.4f, 0.0f, 0.0f)),
             ("VeryHard.asset",   "Very Hard",  "Hero: 3 hp, 5 movespeed, melee enabled.",                              new Color(0.85f, 0.15f, 0.15f)),
             ("Hard.asset",       "Hard",       "Hero: 10 movespeed, melee + dodge, 2 dmg. Boss attacks deal 1.",       new Color(0.95f, 0.55f, 0.10f)),
-            ("Medium.asset",     "Medium",     "Hero finds fireballs + regenerates 1 hp / 5s.",                        new Color(0.95f, 0.85f, 0.10f)),
+            ("Medium.asset",     "Medium",     "Hero finds fireballs + regenerates 1 hp / 10s.",                        new Color(0.95f, 0.85f, 0.10f)),
             ("Easy.asset",       "Easy",       "Hero: 4 melee dmg + post-hit iframes.",                                new Color(0.30f, 0.85f, 0.30f)),
             ("Beginner.asset",   "Beginner",   "Hero save-scums on first 1hp. Fireballs ×1.2 faster.",                 new Color(0.15f, 0.75f, 0.95f)),
             ("Tutorial.asset",   "Tutorial",   "Homing fireballs. Conditional respawn-to-full. 15 movespeed.",         new Color(0.15f, 0.45f, 0.95f)),
@@ -161,7 +161,7 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.HeroFireballEnabled,   Op.Override, 1),
                 Stat(Target.BossMaxHp,             Op.Override, 10),
                 Stat(Target.BossAttackDamage,      Op.Override, 1),
-                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 10f },
             };
             EditorUtility.SetDirty(d);
         }
@@ -180,7 +180,7 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.HeroFireballEnabled,   Op.Override, 1),
                 Stat(Target.BossMaxHp,             Op.Override, 10),
                 Stat(Target.BossAttackDamage,      Op.Override, 1),
-                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 10f },
                 new HeroIframesOnHitEffect { seconds = 1f },
             };
             EditorUtility.SetDirty(d);
@@ -200,7 +200,7 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.HeroFireballEnabled,   Op.Override, 1),
                 Stat(Target.BossMaxHp,             Op.Override, 10),
                 Stat(Target.BossAttackDamage,      Op.Override, 1),
-                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 10f },
                 new HeroIframesOnHitEffect { seconds = 1f },
                 new HeroRespawnEffect {
                     mode = HeroRespawnMode.SaveScumOnFirstOneHp,
@@ -227,7 +227,7 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.HeroFireballEnabled,   Op.Override, 1),
                 Stat(Target.BossMaxHp,             Op.Override, 10),
                 Stat(Target.BossAttackDamage,      Op.Override, 1),
-                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 10f },
                 new HeroIframesOnHitEffect { seconds = 1f },
                 new HeroRespawnEffect {
                     mode = HeroRespawnMode.FullHpIfNotInstakilled,
@@ -254,7 +254,7 @@ namespace BossJam.Difficulty.Editor
                 Stat(Target.HeroFireballEnabled,   Op.Override, 1),
                 Stat(Target.BossMaxHp,             Op.Override, 10),
                 Stat(Target.BossAttackDamage,      Op.Override, 1),
-                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 5f },
+                new HeroRegenEffect { hpPerInterval = 1, intervalSeconds = 10f },
                 new HeroIframesOnHitEffect { seconds = 1f },
                 new HeroRespawnEffect {
                     mode = HeroRespawnMode.FullHpIfNotInstakilled,

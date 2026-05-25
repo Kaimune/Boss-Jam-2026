@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using BossJam.Attacks;
 using UnityEngine;
 
 namespace BossJam.Audio
 {
     /// <summary>
     /// Death feedback bundle: plays a death SFX through <see cref="AudioDirector"/>
-    /// and crossfades the Animator into a "death" state when <see cref="Play"/>
+    /// and snaps the Animator into a "death" state when <see cref="Play"/>
     /// is called. Drop one on the Boss prefab and one on the Hero prefab; the
     /// owning script calls Play() from its lethal-damage branch.
     ///
@@ -19,7 +20,12 @@ namespace BossJam.Audio
         [SerializeField] private AudioClip deathSfx;
         [SerializeField] private Animator animator;
         [SerializeField] private string deathStateName = "hero_die_stepped";
-        [SerializeField, Min(0f)] private float crossfadeSeconds = 0.05f;
+        [SerializeField, Tooltip("When true, Animator.Play() is used for an instant cut — anything currently " +
+                                 "blending in or playing (attack mid-recovery, locomotion, hit reaction) is " +
+                                 "discarded. When false, falls back to a soft crossfade.")]
+        private bool hardOverride = true;
+        [SerializeField, Min(0f), Tooltip("Crossfade duration used only when hardOverride is false.")]
+        private float crossfadeSeconds = 0.05f;
 
         private readonly Dictionary<string, float> clipLengthByName = new Dictionary<string, float>();
 
@@ -43,10 +49,28 @@ namespace BossJam.Audio
         {
             AudioDirector.Sfx(deathSfx);
             if (animator == null || string.IsNullOrEmpty(deathStateName)) return;
+
+            // Silence anything that could re-drive the animator after we've snapped
+            // to death (AttackAnimationBinder's Recovery→Cooldown fires an idle
+            // CrossFade even after the entity dies mid-attack). Locomotion animators
+            // already self-guard via IsDead.
+            DisableCompetingAnimators();
+
             // Reset speed in case AttackAnimationBinder previously scaled it to
             // fit an attack clip; the death clip plays at its authored rate.
             animator.speed = 1f;
-            animator.CrossFadeInFixedTime(deathStateName, crossfadeSeconds);
+            if (hardOverride)
+                animator.Play(deathStateName, 0, 0f);
+            else
+                animator.CrossFadeInFixedTime(deathStateName, crossfadeSeconds);
+        }
+
+        private void DisableCompetingAnimators()
+        {
+            var root = transform.root;
+            var binders = root.GetComponentsInChildren<AttackAnimationBinder>(includeInactive: true);
+            for (int i = 0; i < binders.Length; i++)
+                if (binders[i] != null) binders[i].enabled = false;
         }
 
         private void CacheClipLengths()
