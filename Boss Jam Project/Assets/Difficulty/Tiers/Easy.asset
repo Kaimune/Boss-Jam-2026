@@ -28,7 +28,6 @@ MonoBehaviour:
   - rid: 5190052775017840830
   - rid: 5190052775017840831
   - rid: 5190052775017840832
-  - rid: 5190052775017840833
   - rid: 5190052775017840834
   references:
     version: 2
@@ -105,11 +104,6 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840833
-      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        hpPerInterval: 1
-        intervalSeconds: 10
     - rid: 5190052775017840834
       type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:

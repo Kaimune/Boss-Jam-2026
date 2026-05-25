@@ -2,6 +2,7 @@
   "lines": [
     { "speaker": "minotaur", "text": "What is going on… You're back…" },
     { "speaker": "theseus", "text": "?" },
+    { "speaker": "theseus", "text": "its called reloading a save..." },
     { "speaker": "minotaur", "text": "…" }
   ]
 }

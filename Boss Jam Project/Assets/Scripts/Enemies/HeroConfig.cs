@@ -57,14 +57,20 @@ namespace BossJam.Enemies
         [Min(0f)] public float dashStrikeMeleeRangeCells = 2f;
         [Tooltip("Kite distance the hero closes to while a punish window is open — the dash launches from here.")]
         [Min(0.5f)] public float dashStrikeTriggerDistanceCells = 5f;
-        [Tooltip("Movement-speed multiplier applied during the dash itself.")]
+        [Tooltip("Movement-speed multiplier applied during the dash. Combined with dashStrikeDurationSeconds this defines max dash reach — the score gate uses that reach (no separate \"max range\" knob) so the hero only commits dashes that can actually land.")]
         [Min(1f)] public float dashStrikeSpeedMultiplier = 5.5f;
-        [Tooltip("Dash duration. The hero always plays out the full dash; the hit resolves at the END so the strike is unmistakably a dash, not a tap.")]
+        [Tooltip("Maximum dash duration. The dash uses a fixed speed (dashStrikeSpeedMultiplier × move speed) but its duration scales down to end exactly at the boss edge — capped here so it can never run for longer than this even if the target is unreachable.")]
         [Min(0.05f)] public float dashStrikeDurationSeconds = 0.2f;
-        [Tooltip("Max distance (cells, center-to-center) at which the hero will commit to a dash-strike. Beyond this the dash can't plausibly reach, so the hero kites closer first instead of whiffing.")]
-        [Min(1f)] public float dashStrikeMaxRangeCells = 12f;
+        [Tooltip("Minimum dash duration. Keeps close-range dashes visible (so they don't look like an instant tap).")]
+        [Min(0.01f)] public float dashStrikeMinDurationSeconds = 0.08f;
         [Tooltip("Seconds between dash-strikes (independent of the per-window one-hit cap).")]
         [Min(0.05f)] public float dashStrikeCooldownSeconds = 0.9f;
+        [Tooltip("Initial cooldown on both dash charges at hero spawn — keeps the hero from insta-attacking on scene load.")]
+        [Min(0f)] public float dashStrikeSpawnDelaySeconds = 1.5f;
+        [Tooltip("After a dash-strike lands a hit on the boss, the hero is locked out of all offensive abilities (dash-strike + fireball) for this many seconds. Gives the player breathing room between hits.")]
+        [Min(0f)] public float dashStrikePostHitLockoutSeconds = 2f;
+        [Tooltip("After a dash-strike ends WITHOUT landing a hit (whiff or invuln target), the hero is still locked out of offensive abilities for this many seconds. Always arms; the post-hit lockout above wins when both apply (lockout only ever extends).")]
+        [Min(0f)] public float dashStrikePostMissLockoutSeconds = 1f;
 
         [Header("Dodge")]
         [Tooltip("Movement-speed multiplier applied during the dodge burst.")]

@@ -1,6 +1,8 @@
 {
   "lines": [
     { "speaker": "minotaur", "text": "I feel like… killing you… it's as if I am carrying a boulder up a hill… and every time I reach the top, I am back at the bottom…" },
+    { "speaker": "minotaur", "text": "and every time I reach the top..." },
+    { "speaker": "minotaur", "text": "I am back at the bottom…" },
     { "speaker": "theseus", "text": "Huh… like… Sisyphus?" },
     { "speaker": "minotaur", "text": "Sisy… who?" }
   ]

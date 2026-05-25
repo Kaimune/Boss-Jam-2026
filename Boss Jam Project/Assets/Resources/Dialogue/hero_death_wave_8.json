@@ -1,6 +1,11 @@
 {
   "lines": [
-    { "speaker": "system", "text": "I'm FREE. You have been killed." },
-    { "speaker": "theseus", "text": "[ boss hp → 0 ]" }
+    { "speaker": "minotaur", "text": "I'm FREE. You have been killed." },
+    { "speaker": "theseus", "text": "this game..." },
+    { "speaker": "theseus", "text": "literally impossible..." },
+    { "speaker": "minotaur", "text": "..." },
+    { "speaker": "minotaur", "text": "skill diff..." },
+    { "speaker": "system", "text": "HACKER_DETECTED......!" },
+    { "speaker": "system", "text": "RESTART INITIATED......!" }
   ]
 }

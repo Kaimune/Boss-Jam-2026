@@ -22,8 +22,8 @@ MonoBehaviour:
   hitboxFootprint: {x: 11, y: 11}
   hitboxForwardOffsetCells: 8
   lockMovementDuringWindup: 0
-  lockMovementDuringActive: 1
-  lockMovementDuringRecovery: 1
+  lockMovementDuringActive: 0
+  lockMovementDuringRecovery: 0
   chargeCellsPerSecond: 40
   invulnTrailSeconds: 0.25
   spawnCount: 12

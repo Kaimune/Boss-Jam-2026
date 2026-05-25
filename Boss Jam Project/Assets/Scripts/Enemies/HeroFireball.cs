@@ -42,13 +42,25 @@ namespace BossJam.Enemies
 
         private void OnEnable()
         {
-            // First shot delayed via firstShotDelay so a freshly spawned hero
-            // doesn't fire on frame 1 before perception has settled.
+            // Initial safety net; the canonical (re)arm happens via
+            // ArmFirstShotDelay() once gameplay actually starts (post-dialogue),
+            // because Time.time set here is already in the past by then.
             float delay = Eff(Target.HeroFirstShotDelay, hero.Config.firstShotDelay);
             nextShotTime = Time.time + delay;
         }
 
+        /// <summary>
+        /// (Re)arm the first-shot delay measured from now. Called by HeroEnemy
+        /// on the dialogue → Playing transition.
+        /// </summary>
+        public void ArmFirstShotDelay()
+        {
+            float delay = Eff(Target.HeroFirstShotDelay, hero.Config.firstShotDelay);
+            nextShotTime = Time.time + Mathf.Max(0f, delay);
+        }
+
         public bool IsReady => fireballPrefab != null && hero != null && hero.Grid != null
+                               && !hero.IsAttackLocked
                                && Time.time >= nextShotTime;
 
         public float Score(in HeroDecisionContext ctx)

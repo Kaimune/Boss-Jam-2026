@@ -95,6 +95,18 @@ namespace BossJam.Enemies
             // hero feels active from the moment of engagement.
             nextProactiveAttemptAt = Time.time + Random.Range(3f, 5f);
             if (animator == null) animator = GetComponentInChildren<Animator>(includeInactive: true);
+
+            // Arm a generous initial cooldown here as a safety net. The real
+            // re-arm happens via ArmSpawnDelay() once HeroEnemy detects the
+            // gameplay (post-dialogue) state — by then the Time.time set in
+            // Awake is already in the past, so the dialogue-driven delay
+            // wouldn't help on its own.
+            float spawnDelay = hero != null && hero.Config != null
+                ? hero.Config.dashStrikeSpawnDelaySeconds
+                : 1.5f;
+            float ready = Time.time + Mathf.Max(0f, spawnDelay);
+            charge0ReadyAt = ready;
+            charge1ReadyAt = ready;
             if (animator != null && !string.IsNullOrEmpty(animatorStateName))
             {
                 stateExists = animator.HasState(0, Animator.StringToHash(animatorStateName));
@@ -105,15 +117,20 @@ namespace BossJam.Enemies
         }
 
         // Ready if either charge has regenerated AND the hero isn't already
-        // mid-dash.
-        public bool IsReady => !IsActive && (Time.time >= charge0ReadyAt || Time.time >= charge1ReadyAt);
+        // mid-dash AND the post-hit attack lockout isn't active.
+        public bool IsReady => !IsActive
+            && !hero.IsAttackLocked
+            && (Time.time >= charge0ReadyAt || Time.time >= charge1ReadyAt);
 
         public float Score(in HeroDecisionContext ctx)
         {
-            // Max-range gate: don't commit a dash the hero can't possibly
-            // reach. Beyond this distance the kite-steering closes the gap
-            // first; the dash only fires when it can plausibly connect.
-            if (ctx.distanceToBossCells > hero.Config.dashStrikeMaxRangeCells) return 0f;
+            // Max-range gate: distance to the boss's footprint EDGE must be
+            // within actual dash reach (fixed speed × max duration). Beyond
+            // that, the dash physically can't land and the kite-steering
+            // closes the gap first instead of letting the hero whiff a
+            // half-step lunge.
+            float distToEdge = DistanceToBossEdge(ctx.heroCenter);
+            if (distToEdge > MaxDashReachCells()) return 0f;
 
             // Punish window: top-priority commit. Pacing comes from the
             // cooldown + the brain's one-HIT-per-window rule (NOT
@@ -131,31 +148,59 @@ namespace BossJam.Enemies
             return 0f;
         }
 
+        // Distance (cells) the dash travels at max duration. Public so the
+        // kite steering can park the hero just inside this range — that way
+        // the punish-window approach phase ends at "dash distance", not
+        // pressed against the boss.
+        public float MaxDashReachCells()
+        {
+            float baseline = hero.Config.moveSpeed * Mathf.Max(0.01f, hero.Config.moveSpeedMultiplier);
+            float speed = Eff(Target.HeroMoveSpeed, baseline) * Mathf.Max(1f, hero.Config.dashStrikeSpeedMultiplier);
+            return speed * hero.Config.dashStrikeDurationSeconds;
+        }
+
+        // Cell-radius the hero should kite to during the punish window — far
+        // enough for the dash to look like a real lunge, close enough that
+        // the dash always lands. Includes an approximate boss radius so the
+        // kite point sits at "edge of dash range" relative to the boss
+        // footprint, not the boss center.
+        public float PunishEngagementDistanceCells()
+        {
+            float bossRadius = 1.75f;
+            if (bossFootprint != null)
+            {
+                Vector2 fp = bossFootprint.Footprint;
+                bossRadius = 0.5f * Mathf.Max(fp.x, fp.y);
+            }
+            // Leave a 0.5-cell buffer inside max reach so grid snap doesn't
+            // park the hero just outside the score gate.
+            return Mathf.Max(1f, MaxDashReachCells() + bossRadius - 0.5f);
+        }
+
         public void Begin(in HeroDecisionContext ctx)
         {
             if (animator != null && stateExists)
                 animator.CrossFadeInFixedTime(animatorStateName, crossfadeSeconds);
 
-            float dur = hero.Config.dashStrikeDurationSeconds;
-            // "Lock-on lunge": the dash always covers the current hero→boss
-            // gap so the strike lands exactly at the boss's footprint edge,
-            // regardless of starting distance. Speed scales from the gap and
-            // the dash duration; the dashStrikeSpeedMultiplier config field
-            // is no longer used directly here.
-            //
-            // Floored at 1× so close-up dashes still play at baseline (a
-            // visible lunge, not zero motion). Beyond Config.dashStrikeMaxRangeCells
-            // the Score gate prevents firing at all, so the speed never has
-            // to model an unreachable target.
+            // Fixed-speed dash with a duration scaled to the current gap.
+            // Speed is constant (dashStrikeSpeedMultiplier × move speed) so
+            // every dash reads as a real lunge; duration shrinks so the dash
+            // naturally ends AT the boss edge instead of overshooting and
+            // bouncing off grid collision. Beyond MaxDashReachCells the
+            // Score gate already blocked the commit, so duration here is
+            // bounded by the configured cap.
+            activeSpeedMul = hero.Config.dashStrikeSpeedMultiplier;
+            float maxDur = hero.Config.dashStrikeDurationSeconds;
+            float minDur = hero.Config.dashStrikeMinDurationSeconds;
             {
                 Vector2 heroCenterNow = hero.Footprint.Anchor + hero.Footprint.Footprint * 0.5f;
                 float distToEdge = DistanceToBossEdge(heroCenterNow);
-                float requiredSpeed = distToEdge / Mathf.Max(0.01f, dur);
                 float baseline = hero.Config.moveSpeed * Mathf.Max(0.01f, hero.Config.moveSpeedMultiplier);
                 float effSpeed = Eff(Target.HeroMoveSpeed, baseline);
-                activeSpeedMul = Mathf.Max(1f, requiredSpeed / Mathf.Max(0.01f, effSpeed));
+                float dashSpeed = effSpeed * activeSpeedMul;
+                float arriveDur = dashSpeed > 0.0001f ? distToEdge / dashSpeed : maxDur;
+                activeUntil = Time.time + Mathf.Clamp(arriveDur, minDur, maxDur);
             }
-            activeUntil = Time.time + dur;
             // Two-charge cooldown: consume whichever charge has been ready
             // longest (oldest readyAt). The other charge stays available for
             // an immediate follow-up dash. Cooldown starts on cast so a whiff
@@ -204,6 +249,13 @@ namespace BossJam.Enemies
         // on the next charge.
         private void ResolveHitAtDashEnd()
         {
+            // Always arm a short post-attack lockout so even a whiffed dash
+            // forces a pause before the next swing. TryResolveHit will extend
+            // this with the longer post-hit lockout when damage actually
+            // landed (LockoutAttacksFor only ever extends).
+            if (hero != null)
+                hero.LockoutAttacksFor(hero.Config.dashStrikePostMissLockoutSeconds);
+
             if (hitResolved) return;
             Vector2 heroCenter = hero.Footprint.Anchor + hero.Footprint.Footprint * 0.5f;
             float range = Eff(Target.HeroMeleeRangeCells, hero.Config.dashStrikeMeleeRangeCells);
@@ -231,6 +283,24 @@ namespace BossJam.Enemies
             charge1ReadyAt = Time.time;
             activeUntil = 0f;
             hitResolved = false;
+        }
+
+        /// <summary>
+        /// (Re)arm both charges with the spawn delay measured from now.
+        /// Called by HeroEnemy on the dialogue → Playing transition so the
+        /// hero can't insta-attack the moment the cutscene clears.
+        /// </summary>
+        public void ArmSpawnDelay()
+        {
+            float spawnDelay = hero != null && hero.Config != null
+                ? hero.Config.dashStrikeSpawnDelaySeconds
+                : 1.5f;
+            float ready = Time.time + Mathf.Max(0f, spawnDelay);
+            charge0ReadyAt = ready;
+            charge1ReadyAt = ready;
+            // Also push out the next proactive jab so the hero doesn't immediately
+            // free-fire something else either.
+            nextProactiveAttemptAt = Time.time + Mathf.Max(spawnDelay, Random.Range(3f, 5f));
         }
 
         private Vector2 ComputeDirectionTowardBoss(Vector2 heroCenter, Vector2 bossCenter)
@@ -262,6 +332,11 @@ namespace BossJam.Enemies
             if (bossRef.IsInvulnerable) return false;
             int damage = EffI(Target.HeroMeleeDamage, hero.Config.dashStrikeDamage);
             bossRef.TakeDamage(damage, hero);
+            // Breathing-room lockout: after the hero successfully connects,
+            // gate all offensive abilities (dash-strike + fireball) for
+            // dashStrikePostHitLockoutSeconds so the player isn't immediately
+            // re-pressured between hits.
+            hero.LockoutAttacksFor(hero.Config.dashStrikePostHitLockoutSeconds);
             return true;
         }
 

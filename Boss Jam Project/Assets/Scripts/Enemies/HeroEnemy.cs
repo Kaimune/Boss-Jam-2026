@@ -146,15 +146,36 @@ namespace BossJam.Enemies
         [Header("Hit reaction")]
         [Tooltip("Combo window after a hit. Hero is stunned but vulnerable — chained player attacks landing in this window all do damage.")]
         [SerializeField, Min(0f)] private float comboWindowSeconds = 0.5f;
-        [Tooltip("Extra brain-pause after the combo window closes, before the AI re-engages. Hero stays put — no displacement.")]
-        [SerializeField, Min(0f)] private float iframesAfterKnockbackSeconds = 0.5f;
+        [Tooltip("Total stun duration after the boss lands a hit. The hero stays planted (no input, no abilities) for this long before the AI re-engages. Independent of comboWindowSeconds, which controls when chained-hit damage stops stacking.")]
+        [SerializeField, Min(0f)] private float stunSecondsAfterHit = 2f;
 
         private float invulnUntil = -1f;
         private float stunUntil = -1f;
         private float knockbackFiresAt = -1f;
+        private float attackLockoutUntil = -1f;
 
         public bool IsInvulnerable => Time.time < invulnUntil;
         public bool IsStunned => Time.time < stunUntil;
+        // Post-hit attack lockout. While true, offensive abilities (dash-strike,
+        // fireball) skip themselves so the hero can't immediately retaliate
+        // after eating a boss attack. Defensive abilities (dodge, kiting) are
+        // unaffected. Armed by BeginHitReaction.
+        public bool IsAttackLocked => Time.time < attackLockoutUntil;
+
+        [Tooltip("How long after taking a hit the hero cannot use offensive abilities (dash-strike, fireball). Kiting and dodge stay active. Set to 0 to disable the lockout.")]
+        [SerializeField, Min(0f)] private float postHitAttackLockoutSeconds = 1.5f;
+
+        /// <summary>
+        /// Extend (never shorten) the offensive-ability lockout by `seconds`
+        /// from now. Used both for post-hit recovery on the hero AND post-hit
+        /// breathing room after the hero lands a strike on the boss.
+        /// </summary>
+        public void LockoutAttacksFor(float seconds)
+        {
+            if (seconds <= 0f) return;
+            float until = Time.time + seconds;
+            if (until > attackLockoutUntil) attackLockoutUntil = until;
+        }
 
         public void SetInvulnFor(float seconds)
         {
@@ -186,9 +207,32 @@ namespace BossJam.Enemies
             // during the 1-HP warning window or directly from full hp on a high
             // damage roll). If save-scum is still available for this attempt,
             // short-circuit the death and trigger the reload-with-skip flow.
+
+            // Tutorial exit gate: a kill landed while the warning window was
+            // armed is what passes the tier. Skip the save-scum so the death
+            // outro fires and AdvanceTier promotes us. Outside the window
+            // (boss one-shot or hp > threshold) save-scum still loops the
+            // tutorial — the player has to bring the hero down to the warning
+            // hp range first.
+            bool isTutorial = rt != null && rt.CurrentTierName == "Tutorial";
+            if (isTutorial && conditionalRespawnArmedAt > 0f) return false;
+
+            // Final tier: lethal damage ends the run. Skip the lethal-blow
+            // save-scum here (which would freeze the boss + play the hero's
+            // death fx, reading as a player death and looping forever). The
+            // low-HP-warning reload still fires through TickConditionalRespawn
+            // so the player_health_restore mechanic stays alive.
+            if (rt != null && !rt.HasNextTier) return false;
+
             if (!TrySpendSaveScum()) return false;
             conditionalRespawnArmedAt = -1f;
-            TriggerReloadRespawn();
+            // Lethal-blow save-scum: play the death animation in place before
+            // the reload so the player sees the hit register. GSC owns the
+            // wait + lockdown + reload; the 1-HP-window path below still
+            // uses the instant TriggerReloadRespawn since no death happened.
+            var gsc = BossJam.Game.GameStateController.Instance;
+            if (gsc != null) gsc.TriggerSaveScumReload(deathFx);
+            else TriggerReloadRespawn();
             return true;
         }
 
@@ -211,7 +255,12 @@ namespace BossJam.Enemies
             // keep landing without the hero teleporting out of range.
             float now = Time.time;
             knockbackFiresAt = now + comboWindowSeconds;
-            stunUntil = now + comboWindowSeconds + iframesAfterKnockbackSeconds;
+            stunUntil = now + stunSecondsAfterHit;
+            // Post-hit attack lockout — measured from the moment of impact,
+            // not the end of stun, so the cooldown is predictable regardless
+            // of combo length.
+            if (postHitAttackLockoutSeconds > 0f)
+                attackLockoutUntil = now + postHitAttackLockoutSeconds;
 
             // Abort any in-progress ability so the brain isn't mid-dodge or
             // mid-fireball-spawn when control resumes. Brain.CancelAll calls
@@ -221,7 +270,7 @@ namespace BossJam.Enemies
 
         // Combo window timer expiry. No displacement and no iframes — just
         // clears the latch so Update stops calling us. The brain stays parked
-        // by stunUntil for iframesAfterKnockbackSeconds longer.
+        // by stunUntil until stunSecondsAfterHit fully elapses.
         private void FireDelayedKnockback()
         {
             knockbackFiresAt = -1f;
@@ -240,6 +289,20 @@ namespace BossJam.Enemies
         // cleared when the reload fires or the hero recovers above the threshold.
         // (SaveScumOnFirstOneHp is now boss-death triggered; see GameStateController.)
         private float conditionalRespawnArmedAt = -1f;
+
+        /// <summary>True while the low-HP warning timer is counting down toward a save-scum reload.</summary>
+        public bool IsRespawnWarningActive => conditionalRespawnArmedAt > 0f;
+
+        /// <summary>Seconds remaining before the warning expires and the reload fires. 0 if not armed.</summary>
+        public float RespawnWarningSecondsRemaining
+        {
+            get
+            {
+                if (rt == null || conditionalRespawnArmedAt <= 0f) return 0f;
+                float remaining = (conditionalRespawnArmedAt + rt.Flags.HeroRespawnWindowSeconds) - Time.time;
+                return Mathf.Max(0f, remaining);
+            }
+        }
 
         private Vector2 kiteTarget;
         private bool hasKiteTarget;
@@ -379,11 +442,26 @@ namespace BossJam.Enemies
             HpChanged?.Invoke(currentHp, spawnedMaxHp);
         }
 
+        // True once Update has seen the first GameState.Playing frame after
+        // scene load. Used to arm spawn-delay cooldowns on the *gameplay*
+        // start moment instead of the scene-load moment (Awake), so a long
+        // intro dialogue doesn't burn the delay before the player can react.
+        private bool playingStateSeen;
+
         private void Update()
         {
             if (BossJam.Game.GameStateController.Instance != null &&
                 BossJam.Game.GameStateController.Instance.State != BossJam.Game.GameState.Playing)
                 return;
+
+            // First gameplay frame: (re)arm spawn delays so cooldowns start
+            // counting from now, after the cutscene/dialogue.
+            if (!playingStateSeen)
+            {
+                playingStateSeen = true;
+                if (dashStrike != null) dashStrike.ArmSpawnDelay();
+                if (fireball != null)   fireball.ArmFirstShotDelay();
+            }
 
             TickRegen(Time.deltaTime);
             TickConditionalRespawn();
@@ -545,12 +623,22 @@ namespace BossJam.Enemies
             Vector2 myCenter = Footprint.Anchor + Footprint.Footprint * 0.5f;
 
             // Dynamic preferred distance: when a punish window is open the
-            // hero closes to dash-strike trigger range; otherwise kite at the
-            // full radius. The dash itself covers the last few cells into
-            // melee range.
-            float kiteDist = bossInPunishWindowAndUnspent
-                ? Eff(Target.HeroMeleeApproachDistanceCells, config.dashStrikeTriggerDistanceCells)
-                : Eff(Target.HeroPreferredDistanceCells, config.preferredDistanceCells);
+            // hero closes to "dash distance" — the edge of the dash's actual
+            // reach (computed by HeroDashStrike from tier-adjusted move
+            // speed). The dash itself then covers that last gap. Past that,
+            // the dash physically can't connect, so kiting closer would just
+            // produce whiffs.
+            float kiteDist;
+            if (bossInPunishWindowAndUnspent)
+            {
+                kiteDist = dashStrike != null
+                    ? dashStrike.PunishEngagementDistanceCells()
+                    : Eff(Target.HeroMeleeApproachDistanceCells, config.dashStrikeTriggerDistanceCells);
+            }
+            else
+            {
+                kiteDist = Eff(Target.HeroPreferredDistanceCells, config.preferredDistanceCells);
+            }
 
             var r = HeroKiteSteering.Solve(
                 myCenter, predictedBossCenter, kiteDist, grid,
@@ -643,7 +731,8 @@ namespace BossJam.Enemies
 
         private void UpdateKiteVisual()
         {
-            if (!drawKiteVisual || !hasKiteTarget || grid == null || Footprint == null)
+            bool debugOn = rt == null || rt.State == null || rt.State.showDebugVisuals;
+            if (!debugOn || !drawKiteVisual || !hasKiteTarget || grid == null || Footprint == null)
             {
                 if (kiteLine != null) kiteLine.enabled = false;
                 if (kiteDot != null) kiteDot.gameObject.SetActive(false);

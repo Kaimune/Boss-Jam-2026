@@ -48,7 +48,11 @@ namespace BossJam.Audio
         public void Play()
         {
             AudioDirector.Sfx(deathSfx);
-            if (animator == null || string.IsNullOrEmpty(deathStateName)) return;
+            if (animator == null || string.IsNullOrEmpty(deathStateName))
+            {
+                Debug.LogWarning($"[DeathFx:{name}] Play aborted — animator={(animator!=null?animator.name:"NULL")} state='{deathStateName}'", this);
+                return;
+            }
 
             // Silence anything that could re-drive the animator after we've snapped
             // to death (AttackAnimationBinder's Recovery→Cooldown fires an idle
@@ -59,6 +63,9 @@ namespace BossJam.Audio
             // Reset speed in case AttackAnimationBinder previously scaled it to
             // fit an attack clip; the death clip plays at its authored rate.
             animator.speed = 1f;
+            int hash = Animator.StringToHash(deathStateName);
+            bool hasState = animator.HasState(0, hash);
+            Debug.Log($"[DeathFx:{name}] Play — animator='{animator.name}' ctrl='{(animator.runtimeAnimatorController!=null?animator.runtimeAnimatorController.name:"NULL")}' state='{deathStateName}' hasStateLayer0={hasState} hardOverride={hardOverride}", this);
             if (hardOverride)
                 animator.Play(deathStateName, 0, 0f);
             else

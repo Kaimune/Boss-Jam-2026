@@ -43,9 +43,17 @@ namespace BossJam.Dialogue
         [SerializeField] private RawImage portraitImage;
         [SerializeField] private CanvasGroup canvasGroup;
 
-        [Tooltip("Full-screen black panel toggled per-speaker. Speakers with useBlackoutBackground=true " +
-                 "activate it; others deactivate it.")]
-        [SerializeField] private GameObject blackoutPanel;
+        [Serializable]
+        public struct SpeakerOverlay
+        {
+            [Tooltip("Speaker token (matches SpeakerProfile.speakerToken).")]
+            public string speakerToken;
+            [Tooltip("Scene GameObject shown while this speaker is active and hidden otherwise. Use for SYSTEM-style intrusions.")]
+            public GameObject overlay;
+        }
+
+        [Tooltip("Per-speaker overlay GameObjects. When a line's speaker matches an entry, that overlay turns on; all others turn off.")]
+        [SerializeField] private List<SpeakerOverlay> speakerOverlays;
 
         [Header("Audio")]
         [SerializeField] private AudioSource letterAudioSource;
@@ -115,7 +123,10 @@ namespace BossJam.Dialogue
                 if (runner.SpeakerChangedSincePrevious) ApplySpeakerProfile(runner.Current.speaker);
                 currentLineText = runner.Current.text ?? string.Empty;
                 yield return TypeLine(runner.Current);
-                // Wait for an explicit advance press before moving to the next line.
+                // Two-press model: first press during the typewriter completes
+                // the current line; the next press advances to the next line.
+                // Reset the flag here so the press that finished the typewriter
+                // does NOT also count as the advance press.
                 advanceRequested = false;
                 while (!advanceRequested) yield return null;
                 runner.Advance();
@@ -165,7 +176,18 @@ namespace BossJam.Dialogue
                     portraitImage.enabled = false;
                 }
             }
-            if (blackoutPanel != null) blackoutPanel.SetActive(profile.useBlackoutBackground);
+            ApplySpeakerOverlays(speakerToken);
+        }
+
+        private void ApplySpeakerOverlays(string speakerToken)
+        {
+            if (speakerOverlays == null) return;
+            for (int i = 0; i < speakerOverlays.Count; i++)
+            {
+                var entry = speakerOverlays[i];
+                if (entry.overlay == null) continue;
+                entry.overlay.SetActive(entry.speakerToken == speakerToken);
+            }
         }
 
         private SpeakerProfile ResolveProfile(string token)
@@ -184,7 +206,11 @@ namespace BossJam.Dialogue
         private void HideUi()
         {
             if (canvasGroup != null) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; canvasGroup.interactable = false; }
-            if (blackoutPanel != null) blackoutPanel.SetActive(false);
+            if (speakerOverlays != null)
+            {
+                for (int i = 0; i < speakerOverlays.Count; i++)
+                    if (speakerOverlays[i].overlay != null) speakerOverlays[i].overlay.SetActive(false);
+            }
             if (portraitImage != null) portraitImage.enabled = true; // restore for next time
         }
     }

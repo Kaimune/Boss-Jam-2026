@@ -43,6 +43,12 @@ namespace BossJam.Difficulty
                  "0 = normal flow (auto-advance to Tier 1 on Begin). Set via Tools > BossJam > Debug > Start At Tier.")]
         public int debugStartingTier = 0;
 
+        [Tooltip("Master toggle for in-engine debug visuals — hero kite line/dot (green) and active-frame attack hitbox mesh (yellow/orange). Untick for clean play / screenshots; the attack telegraph (red) and gameplay logic are unaffected.")]
+        public bool showDebugVisuals = true;
+
+        [Tooltip("Enables the DebugBossHp dev keys: P = instakill the hero, O = drop the hero to 1 HP. Untick to disable the bindings entirely.")]
+        public bool debugHeroHpKeys = true;
+
         public bool IsMidRun => appliedTiers != null && appliedTiers.Count > 0;
 
         public void ResetForNewRun()

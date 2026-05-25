@@ -19,17 +19,18 @@ MonoBehaviour:
   recoverySeconds: 1
   cooldownSeconds: 0.25
   damage: 2
-  hitboxFootprint: {x: 9, y: 9}
+  hitboxFootprint: {x: 11, y: 11}
   hitboxForwardOffsetCells: 5
   lockMovementDuringWindup: 0
   lockMovementDuringActive: 0
   lockMovementDuringRecovery: 0
   chargeCellsPerSecond: 18
+  invulnTrailSeconds: 0.25
   spawnCount: 12
   perSpawnTelegraphSeconds: 0.4
   perSpawnHitboxSeconds: 0.25
   spawnTimeJitter: 0.15
-  fallingRockPrefab: {fileID: 0}
+  fallingRockPrefabs: []
   fallStartHeight: 10
   telegraphPrefab: {fileID: 8097395814287246815, guid: 75e1c9e648a1e412f92ad9fa5bc1e4d9, type: 3}
   hitboxPrefab: {fileID: 2105078953355176187, guid: da617104d14ca44d5be3d32138ed3a10, type: 3}

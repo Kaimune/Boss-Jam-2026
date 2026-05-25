@@ -16,7 +16,7 @@ MonoBehaviour:
   tierDescription: 
   tint: {r: 0.6901961, g: 0.54509807, b: 0.32156864, a: 1}
   icon: {fileID: 0}
-  description: Hero finds fireballs + regenerates 1 hp / 10s.
+  description: Hero finds projectiles.
   narrationScriptName: tier_4_narration
   effects:
   - rid: 5190052775017840877
@@ -28,7 +28,6 @@ MonoBehaviour:
   - rid: 5190052775017840883
   - rid: 5190052775017840884
   - rid: 5190052775017840885
-  - rid: 5190052775017840886
   references:
     version: 2
     RefIds:
@@ -104,8 +103,3 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840886
-      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        hpPerInterval: 1
-        intervalSeconds: 10

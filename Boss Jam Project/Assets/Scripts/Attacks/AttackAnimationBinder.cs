@@ -81,6 +81,11 @@ namespace BossJam.Attacks
 
         private void OnPhase(AttackState prev, AttackState next)
         {
+            // C# event subscriptions ignore Behaviour.enabled, so DeathFx.Play()
+            // disabling this binder is not enough on its own — without this
+            // guard, a mid-flight attack would still fire idle CrossFades from
+            // its Active→Recovery→Cooldown ticks and clobber the death state.
+            if (!enabled) return;
             Debug.Log($"[AttackAnimBinder:{name}] OnPhase {prev}->{next} (cfg={attack?.Config?.id} stateName='{attack?.Config?.attackStateName}' animator={(animator!=null?animator.name:"NULL")})", this);
             if (animator == null || attack.Config == null) return;
 
