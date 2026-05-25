@@ -37,6 +37,11 @@ namespace BossJam.UI
 
         private GameStateController controller;
         private bool inputArmed;
+        // Set true on arm if Space is currently held over from the previous
+        // scene's outro dialogue. Blocks Begin() until the player physically
+        // releases Space, so mashing through a death outro can't insta-skip
+        // straight off the title.
+        private bool requireSpaceRelease;
 
         private void Awake()
         {
@@ -107,7 +112,16 @@ namespace BossJam.UI
         {
             if (!inputArmed || controller == null || controller.State != GameState.Startup) return;
             var kb = Keyboard.current;
-            if (kb != null && kb.spaceKey.wasPressedThisFrame)
+            if (kb == null) return;
+            // Player was still holding Space when the title appeared (mashed
+            // through the outro). Wait for a release before honouring any
+            // press, so the held key can't immediately fire Begin().
+            if (requireSpaceRelease)
+            {
+                if (!kb.spaceKey.isPressed) requireSpaceRelease = false;
+                return;
+            }
+            if (kb.spaceKey.wasPressedThisFrame)
             {
                 // Mid-run keeps applied debuffs; only a true fresh launch wipes RunState.
                 if (!GameSession.IsMidRun) GameSession.StartNewRun();
@@ -122,6 +136,10 @@ namespace BossJam.UI
             {
                 yield return fadeOverlay.FadeOut(fadeOutSeconds);
             }
+            // Snapshot the key state at the moment input arms — if Space is
+            // already held (carried over from the outro), require a release
+            // before accepting the next press.
+            requireSpaceRelease = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
             inputArmed = true;
         }
     }

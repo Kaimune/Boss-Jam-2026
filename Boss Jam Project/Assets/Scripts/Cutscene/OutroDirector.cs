@@ -49,6 +49,12 @@ namespace BossJam.Cutscene
 
             yield return PlayLine(string.Format(heroDeathScriptFormat, waveIndex));
 
+            // Freeze the world for the fade so in-flight fireballs / hitboxes
+            // don't visibly drift behind the partially-transparent overlay.
+            // Fade/typewriter use unscaled time; ReloadScene restores timescale
+            // before the next scene loads.
+            Time.timeScale = 0f;
+
             // Fade to black and leave it on — the scene reload happens under
             // the black overlay so the player never sees the dying-wave scene.
             // The next wave's FadeOverlay starts at alpha=1 and the start
@@ -69,12 +75,32 @@ namespace BossJam.Cutscene
                 ? string.Format(bossDeathScriptFormat, waveIndex)
                 : gameOverScriptFallback;
 
-            yield return PlayLine(scriptName);
-
-            if (fadeOverlay != null) yield return fadeOverlay.FadeIn(fadeDurationSeconds);
-
-            // Leave fade on; GameOverScreenUI shows over it.
-            OutroComplete?.Invoke();
+            // Fire OutroComplete the SAME frame the dialogue's Finished event
+            // hits — no extra-frame wait. The controller restores save-scum
+            // and reloads the scene synchronously so the world can't keep
+            // running between the last Space press and the reload.
+            if (dialogueRig != null && dialogueRig.Controller != null)
+            {
+                bool fired = false;
+                Action onFinished = null;
+                onFinished = () =>
+                {
+                    if (fired) return;
+                    fired = true;
+                    dialogueRig.Controller.Finished -= onFinished;
+                    Time.timeScale = 0f;
+                    if (fadeOverlay != null) fadeOverlay.SetAlpha(1f);
+                    OutroComplete?.Invoke();
+                };
+                dialogueRig.Controller.Finished += onFinished;
+                dialogueRig.Play(scriptName);
+            }
+            else
+            {
+                Time.timeScale = 0f;
+                if (fadeOverlay != null) fadeOverlay.SetAlpha(1f);
+                OutroComplete?.Invoke();
+            }
         }
 
         private IEnumerator PlayLine(string scriptName)

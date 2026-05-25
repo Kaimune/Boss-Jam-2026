@@ -21,4 +21,5 @@ MonoBehaviour:
   pendingTierNarration: 0
   skipNextIntro: 0
   saveScumAvailable: 1
-  debugStartingTier: 3
+  debugStartingTier: 7
+  showDebugVisuals: 1

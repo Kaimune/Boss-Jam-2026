@@ -85,8 +85,18 @@ namespace BossJam.Audio
             sfxSource.PlayOneShot(clip);
         }
 
+        /// <summary>Fire-and-forget SFX with a per-call volume scale (0..1+).</summary>
+        public void PlayOneShot(AudioClip clip, float volumeScale)
+        {
+            if (clip == null || sfxSource == null) return;
+            sfxSource.PlayOneShot(clip, volumeScale);
+        }
+
         /// <summary>Static convenience for code-driven calls; no-ops if no AudioDirector exists.</summary>
         public static void Sfx(AudioClip clip) => Instance?.PlayOneShot(clip);
+
+        /// <summary>Static convenience with per-call volume scale.</summary>
+        public static void Sfx(AudioClip clip, float volumeScale) => Instance?.PlayOneShot(clip, volumeScale);
 
         private void HandleStateChanged(GameState s) => SwitchTo(ClipForState(s));
 

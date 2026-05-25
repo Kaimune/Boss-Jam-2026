@@ -16,7 +16,7 @@ MonoBehaviour:
   tierDescription: 
   tint: {r: 0.735849, g: 0.210573, b: 0.5382203, a: 1}
   icon: {fileID: 0}
-  description: "Boss instakill on any hit. Fireballs \xD71.44 faster. 20 movespeed."
+  description: "Hero melee one-shots. 15 movespeed."
   narrationScriptName: tier_8_narration
   effects:
   - rid: 5190052775017840809
@@ -28,12 +28,9 @@ MonoBehaviour:
   - rid: 5190052775017840815
   - rid: 5190052775017840816
   - rid: 5190052775017840817
-  - rid: 5190052775017840818
   - rid: 5190052775017840819
   - rid: 5190052775017840820
-  - rid: 5190052775017840821
   - rid: 5190052775017840822
-  - rid: 5190052775017840823
   references:
     version: 2
     RefIds:
@@ -50,7 +47,7 @@ MonoBehaviour:
       data:
         target: 2
         op: 2
-        value: 20
+        value: 15
         attackId: 
         extensionKey: 
     - rid: 5190052775017840811
@@ -66,15 +63,15 @@ MonoBehaviour:
       data:
         target: 14
         op: 2
-        value: 4
-        attackId: 
-        extensionKey: 
+        value: 999
+        attackId:
+        extensionKey:
     - rid: 5190052775017840813
       type: {class: StatModifierEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         target: 12
         op: 2
-        value: 4
+        value: 2
         attackId: 
         extensionKey: 
     - rid: 5190052775017840814
@@ -109,11 +106,6 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840818
-      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        hpPerInterval: 1
-        intervalSeconds: 10
     - rid: 5190052775017840819
       type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
@@ -126,14 +118,7 @@ MonoBehaviour:
         windowSeconds: 1.5
         restoreHp: 3
         replayIntro: 0
-    - rid: 5190052775017840821
-      type: {class: FireballSpeedEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        multiplier: 1.44
     - rid: 5190052775017840822
       type: {class: FireballHomingEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:
         turnRateDegPerSec: 180
-    - rid: 5190052775017840823
-      type: {class: BossInstakillEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data: 

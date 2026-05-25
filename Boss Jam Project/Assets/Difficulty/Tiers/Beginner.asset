@@ -16,7 +16,7 @@ MonoBehaviour:
   tierDescription: 
   tint: {r: 0.43137255, g: 0.56078434, b: 0.41568628, a: 1}
   icon: {fileID: 0}
-  description: "Hero save-scums on first 1hp. Fireballs \xD71.2 faster."
+  description: "Hero save-scums on first 1hp. Projectiles \xD71.2 faster."
   narrationScriptName: tier_6_narration
   effects:
   - rid: 5190052775017840835
@@ -28,7 +28,6 @@ MonoBehaviour:
   - rid: 5190052775017840841
   - rid: 5190052775017840842
   - rid: 5190052775017840843
-  - rid: 5190052775017840844
   - rid: 5190052775017840845
   - rid: 5190052775017840846
   - rid: 5190052775017840847
@@ -107,11 +106,6 @@ MonoBehaviour:
         value: 1
         attackId: 
         extensionKey: 
-    - rid: 5190052775017840844
-      type: {class: HeroRegenEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
-      data:
-        hpPerInterval: 1
-        intervalSeconds: 10
     - rid: 5190052775017840845
       type: {class: HeroIframesOnHitEffect, ns: BossJam.Difficulty, asm: Assembly-CSharp}
       data:

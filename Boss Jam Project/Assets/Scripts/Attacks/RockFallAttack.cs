@@ -104,13 +104,15 @@ namespace BossJam.Attacks
                 : (cachedBoss = GetComponentInParent<BossController>());
 
         // Boss is rooted during the ult cast — give it iframes for the whole
-        // windup so the hero can't trivially punish it while it can't move.
+        // locked-in-place window (windup + active) so the hero can't trivially
+        // punish it while it can't move. Matches GroundSlash's invuln pattern.
         private void ArmWindupInvulnerability()
         {
             var boss = BossControllerRef;
             if (boss == null || config == null) return;
             float windupSec = Eff(Target.BossAttackWindupSeconds, config.windupSeconds);
-            boss.SetInvulnFor(windupSec * tickScale);
+            float activeSec = Eff(Target.BossAttackActiveSeconds, config.activeSeconds);
+            boss.SetInvulnFor((windupSec + activeSec) * tickScale);
         }
 
         private void Update()

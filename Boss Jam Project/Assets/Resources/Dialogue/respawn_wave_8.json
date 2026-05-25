@@ -1,5 +1,6 @@
 {
   "lines": [
-    { "speaker": "theseus", "text": "[[$`system.debug.reset_hero_hp()`]]" }
+    { "speaker": "theseus", "text": "[[$`system.debug.reset_hero_hp()`]]" },
+    { "speaker": "system", "text": "SUCCESSFULL: action_c▒ompleted"}
   ]
 }

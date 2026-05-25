@@ -48,6 +48,15 @@ namespace BossJam.Game
         [SerializeField] private IntroDirector introDirector;
         [SerializeField] private OutroDirector outroDirector;
 
+        [Header("End-of-run")]
+        [Tooltip("Root GameObject containing the End of Game and Credits children. Activated after the hero death outro on the final tier (a beaten run).")]
+        [SerializeField] private GameObject creditsRoot;
+
+        [Tooltip("Start-screen GameObject to force-disable when the credits handoff activates (e.g. the StartScreen canvas). Optional.")]
+        [SerializeField] private GameObject startScreenRoot;
+
+        private bool pendingCreditsHandoff;
+
         private GameState postDialogueTarget = GameState.Playing;
 
         // Auto-set by BossController.Awake. The setter syncs the boss's enabled
@@ -154,9 +163,16 @@ namespace BossJam.Game
 
         private void OnHeroKilled()
         {
-            // Only pause for a tier-advance screen if there's a debuff queued
-            // to apply. Once the curve is exhausted, hero deaths are silent.
-            if (runtime == null || !runtime.HasNextTier) return;
+            if (runtime == null) return;
+            // Final-tier kill: player beat the run. Play the death outro
+            // (which fires the hero death animation), then hand off to the
+            // credits flow instead of advancing tier / reloading.
+            if (!runtime.HasNextTier)
+            {
+                pendingCreditsHandoff = true;
+                EnterDeathOutro();
+                return;
+            }
             TriggerDeath();
         }
 
@@ -367,7 +383,12 @@ namespace BossJam.Game
             LockMovers();
             StateChanged?.Invoke(State);
 
-            if (outroDirector == null) { ResumeAfterDeathOutro(); return; }
+            if (outroDirector == null)
+            {
+                if (pendingCreditsHandoff) ActivateCreditsHandoff();
+                else ResumeAfterDeathOutro();
+                return;
+            }
             outroDirector.OutroComplete += OnDeathOutroComplete;
             int wave = (runtime != null) ? runtime.AppliedCount : 1;
             // Forward the dying hero's DeathFx so the outro sizes its wait to
@@ -380,7 +401,15 @@ namespace BossJam.Game
         private void OnDeathOutroComplete()
         {
             if (outroDirector != null) outroDirector.OutroComplete -= OnDeathOutroComplete;
+            if (pendingCreditsHandoff) { ActivateCreditsHandoff(); return; }
             ResumeAfterDeathOutro();
+        }
+
+        private void ActivateCreditsHandoff()
+        {
+            pendingCreditsHandoff = false;
+            if (startScreenRoot != null) startScreenRoot.SetActive(false);
+            if (creditsRoot != null) creditsRoot.SetActive(true);
         }
 
         private void ResumeAfterDeathOutro()
@@ -398,6 +427,33 @@ namespace BossJam.Game
         {
             if (State == GameState.GameOver) return;
             EnterGameOverOutro();
+        }
+
+        // Save-scum on lethal damage: play the hero's death clip in place,
+        // lock the world like a normal death outro, then reload into the
+        // respawn_reload dialogue. Skips the outro line + fade entirely so the
+        // beat reads as a system-reload rather than a story moment.
+        public void TriggerSaveScumReload(BossJam.Audio.DeathFx heroDeathFx)
+        {
+            if (State == GameState.Death || State == GameState.GameOver) return;
+            StartCoroutine(SaveScumReloadRoutine(heroDeathFx));
+        }
+
+        private System.Collections.IEnumerator SaveScumReloadRoutine(BossJam.Audio.DeathFx heroDeathFx)
+        {
+            State = GameState.Death;
+            if (Boss != null) Boss.enabled = false;
+            LockMovers();
+            StateChanged?.Invoke(State);
+
+            if (heroDeathFx != null) heroDeathFx.Play();
+            float wait = (heroDeathFx != null && heroDeathFx.ClipLengthSeconds > 0f)
+                ? heroDeathFx.ClipLengthSeconds
+                : 0.4f;
+            yield return new WaitForSecondsRealtime(wait);
+
+            if (runtime != null && runtime.State != null) runtime.State.skipNextIntro = true;
+            ReloadScene();
         }
 
         private void EnterGameOverOutro()

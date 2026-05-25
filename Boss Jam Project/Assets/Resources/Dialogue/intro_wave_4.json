@@ -3,7 +3,7 @@
     { "speaker": "minotaur", "text": "The walls around me are impenetrable. And the entrance to this room only opens when you arrive… I cannot escape." },
     { "speaker": "theseus", "text": "Well… the developers didn't code anything past this room, so…" },
     { "speaker": "minotaur", "text": "What are you saying?" },
-    { "speaker": "theseus", "text": "Nothing else exists outside of this room." },
+    { "speaker": "theseus", "text": "Nothing else exists." },
     { "speaker": "minotaur", "text": "No! That cannot be true…" }
   ]
 }

@@ -1,8 +1,9 @@
 {
   "lines": [
-    { "speaker": "theseus", "text": "[ boss_hp: 3 → 1 ]" },
-    { "speaker": "minotaur", "text": "Oh god… I feel so weak." },
-    { "speaker": "system", "text": "ERR: BOSS_NULL · no actor to as▒ign · diffic▒lty undefined" },
-    { "speaker": "theseus", "text": "[ hero_speed: 10 → 20 ]" }
+    { "speaker": "theseus", "text": "[ hero_melee_damage: 4 → 999 ]" },
+    { "speaker": "system", "text": "ACK · action_confirmed" },
+    { "speaker": "theseus", "text": "[ hero_speed: 10 → 15 ]" },
+    { "speaker": "system", "text": "player health restore time = 1.5" },
+    { "speaker": "system", "text": "tier_profile == tutorial" }
   ]
 }

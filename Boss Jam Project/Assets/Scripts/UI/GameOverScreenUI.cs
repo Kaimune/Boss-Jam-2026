@@ -31,6 +31,12 @@ namespace BossJam.UI
 
         private GameStateController controller;
         private BossJam.Cutscene.OutroDirector outroDirector;
+        // Set true on outro complete; cleared while panel is hidden. Blocks
+        // Space from firing Resume() during the death animation / dialogue.
+        private bool inputArmed;
+        // If Space was held when the panel first showed (e.g. mashed during
+        // the outro), require a release before the next press counts.
+        private bool requireSpaceRelease;
 
         private void Awake()
         {
@@ -66,6 +72,7 @@ namespace BossJam.UI
         {
             // Hide on every other state. The cutscene must finish before we show the panel.
             if (state != GameState.GameOver && panelRoot != null) panelRoot.SetActive(false);
+            if (state != GameState.GameOver) inputArmed = false;
         }
 
         private void OnOutroComplete()
@@ -73,6 +80,11 @@ namespace BossJam.UI
             if (controller == null || controller.State != GameState.GameOver) return;
             RefreshLabels();
             if (panelRoot != null) panelRoot.SetActive(true);
+            // Arm input only now that the outro has finished. If Space is
+            // already held (player mashed through the outro), wait for a
+            // release before honouring the next press.
+            requireSpaceRelease = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+            inputArmed = true;
         }
 
         private void RefreshLabels()
@@ -93,8 +105,15 @@ namespace BossJam.UI
         private void Update()
         {
             if (controller == null || controller.State != GameState.GameOver) return;
+            if (!inputArmed) return; // outro still running — Space does nothing
             var kb = Keyboard.current;
-            if (kb != null && kb.spaceKey.wasPressedThisFrame) controller.Resume();
+            if (kb == null) return;
+            if (requireSpaceRelease)
+            {
+                if (!kb.spaceKey.isPressed) requireSpaceRelease = false;
+                return;
+            }
+            if (kb.spaceKey.wasPressedThisFrame) controller.Resume();
         }
     }
 }

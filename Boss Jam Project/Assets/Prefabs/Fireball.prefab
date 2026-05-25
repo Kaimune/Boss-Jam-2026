@@ -9972,7 +9972,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Direction: {x: -1, y: 0}
-  cellsPerSecond: 6
+  cellsPerSecond: 4.5
   damage: 1
   visual: {fileID: 5505620045018730555}
   trail: {fileID: 506361101151355344}

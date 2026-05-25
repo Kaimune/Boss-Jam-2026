@@ -28,10 +28,5 @@ namespace BossJam.Dialogue
 
         [Tooltip("Random pitch jitter applied to the tick clip per character.")]
         [Range(0f, 0.4f)] public float pitchJitter = 0.08f;
-
-        [Tooltip("If true, the DialogueController shows a full-screen black panel behind the " +
-                 "dialogue box while this speaker is active. Use for SYSTEM-style intrusions " +
-                 "that should hide the gameplay camera.")]
-        public bool useBlackoutBackground = false;
     }
 }

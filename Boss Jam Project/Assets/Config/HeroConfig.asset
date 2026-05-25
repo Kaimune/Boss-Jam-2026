@@ -31,9 +31,12 @@ MonoBehaviour:
   dashStrikeMeleeRangeCells: 2
   dashStrikeTriggerDistanceCells: 5
   dashStrikeSpeedMultiplier: 5.5
-  dashStrikeDurationSeconds: 0.2
-  dashStrikeMaxRangeCells: 12
+  dashStrikeDurationSeconds: 0.15
+  dashStrikeMinDurationSeconds: 0.08
   dashStrikeCooldownSeconds: 0.9
+  dashStrikeSpawnDelaySeconds: 1.5
+  dashStrikePostHitLockoutSeconds: 2
+  dashStrikePostMissLockoutSeconds: 1
   dodgeSpeedMultiplier: 4.5
-  dodgeDurationSeconds: 0.2625
+  dodgeDurationSeconds: 0.196875
   dodgeCooldownSeconds: 1.5
