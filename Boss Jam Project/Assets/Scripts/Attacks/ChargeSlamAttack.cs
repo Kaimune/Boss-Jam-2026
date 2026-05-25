@@ -17,11 +17,17 @@ namespace BossJam.Attacks
     {
         [SerializeField] private AttackConfig config;
 
+        [SerializeField, Tooltip("If true, the slam hitbox auto-spawns at the Active→Recovery transition. " +
+                                 "Set false to drive Slam() from an AnimationEvent (via ChargeSlamStrikeRelay) " +
+                                 "for frame-precise impact timing.")]
+        private bool autoSlamOnRecovery = true;
+
         private readonly AttackStateMachine fsm = new AttackStateMachine();
         private Vector3 lastAim;
         private Vector2 chargeDirection; // locked at TryStart, in cell-space
         private GameObject liveTelegraph;
         private GameObject liveHitbox;
+        private bool hasSlammed;
         private GridFootprint cachedBossFootprint;
         private GridMover cachedMover;
         private BossController cachedBoss;
@@ -72,6 +78,10 @@ namespace BossJam.Attacks
             chargeDirection = AimDirectionFromBoss();
             fsm.Init(BuildTimings());
             rt?.RaiseAttackStarted(config);
+            // Per-swing latch reset. With an animation event the slam may fire
+            // during Active (before Recovery enter), so a stale latch from the
+            // prior swing would silently swallow the hit.
+            hasSlammed = false;
             return fsm.TryStart();
         }
 
@@ -94,7 +104,7 @@ namespace BossJam.Attacks
             if (config != null) fsm.Init(BuildTimings());
             fsm.OnEnter(AttackState.Windup,   SpawnTelegraph);
             fsm.OnEnter(AttackState.Active,   ArmInvulnerability);
-            fsm.OnEnter(AttackState.Recovery, SpawnHitboxAndClearTelegraph);
+            fsm.OnEnter(AttackState.Recovery, OnRecoveryEnter);
             fsm.OnEnter(AttackState.Cooldown, DestroyHitbox);
             fsm.OnEnter(AttackState.Idle,     DestroyLive);
         }
@@ -123,16 +133,16 @@ namespace BossJam.Attacks
                 ? cachedBoss
                 : (cachedBoss = GetComponentInParent<BossController>());
 
-        // Boss is invulnerable for the whole charge (Active+Recovery, tick-scaled)
-        // plus a fixed grace trail. If the charge ends early on a wall hit, the
-        // already-armed window keeps protecting the boss for the buffered time.
+        // Boss is invulnerable for the charge's Active phase only (the sliding
+        // motion) plus a short trail for animation safety. Recovery is the
+        // hero's punish window — covering it with i-frames defeated the entire
+        // point of the opening and made dash-strikes silently whiff.
         private void ArmInvulnerability()
         {
             var boss = BossControllerRef;
             if (boss == null || config == null) return;
-            float activeSec   = Eff(Target.BossAttackActiveSeconds,   config.activeSeconds);
-            float recoverySec = Eff(Target.BossAttackRecoverySeconds, config.recoverySeconds);
-            boss.SetInvulnFor(activeSec * tickScale + recoverySec * tickScale + config.invulnTrailSeconds);
+            float activeSec = Eff(Target.BossAttackActiveSeconds, config.activeSeconds);
+            boss.SetInvulnFor(activeSec * tickScale + config.invulnTrailSeconds);
         }
 
         private Vector2 AimDirectionFromBoss()
@@ -165,12 +175,25 @@ namespace BossJam.Attacks
                 fsm.AdvanceNow();
         }
 
-        // Hitbox spawns at boss's CURRENT center (after charge has moved them).
+        // Hitbox spawns at boss's CURRENT center (after charge has moved them),
+        // pushed forward along the boss's CURRENT facing — not the locked
+        // chargeDirection, so rotating mid-charge re-aims the slam.
         private Vector2 HitboxAnchorAtBoss(Vector2 fpSize)
         {
             var fp = BossFootprint;
             var bossCenter = fp.Anchor + fp.Footprint * 0.5f;
-            return bossCenter - fpSize * 0.5f;
+            float fwd = Eff(Target.BossAttackHitboxForwardOffsetCells, config.hitboxForwardOffsetCells);
+            var hbCenter = bossCenter + CurrentFacing() * fwd;
+            return hbCenter - fpSize * 0.5f;
+        }
+
+        private Vector2 CurrentFacing()
+        {
+            var boss = BossControllerRef;
+            if (boss == null) return chargeDirection;
+            var f = boss.AimForward;
+            var d2 = new Vector2(f.x, f.z);
+            return d2.sqrMagnitude > 0.0001f ? d2.normalized : chargeDirection;
         }
 
         // Telegraph shows the PROJECTED end position based on charge speed × active duration.
@@ -217,9 +240,31 @@ namespace BossJam.Attacks
             hazard.Configure(anchor, fpSize);
         }
 
-        private void SpawnHitboxAndClearTelegraph()
+        private void OnRecoveryEnter()
         {
             DestroyTelegraph();
+            if (autoSlamOnRecovery) Slam();
+        }
+
+        /// <summary>
+        /// Spawn the slam hitbox at the boss's current position + forward offset.
+        /// Idempotent within a single swing (TryStart resets the latch).
+        /// Call from a Unity AnimationEvent (see <see cref="ChargeSlamStrikeRelay"/>)
+        /// for frame-precise impact, or leave <c>autoSlamOnRecovery</c> = true to
+        /// fire at the Active→Recovery boundary.
+        /// </summary>
+        public void Slam()
+        {
+            // Gate matches GroundSlash.Strike: allow any non-Idle/Cooldown state
+            // so a clip event landing at a phase boundary still lands damage.
+            if (fsm.State == AttackState.Idle || fsm.State == AttackState.Cooldown) return;
+            if (hasSlammed) return;
+            hasSlammed = true;
+            SpawnHitboxAtCurrentPosition();
+        }
+
+        private void SpawnHitboxAtCurrentPosition()
+        {
             if (config == null || config.hitboxPrefab == null) return;
             var grid = BossFootprint != null ? BossFootprint.Grid : null;
             if (grid == null) return;

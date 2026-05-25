@@ -227,6 +227,9 @@ namespace BossJam.Difficulty
 
             runState.appliedTiers.Add(entry);
             runState.pendingTierNarration = !string.IsNullOrWhiteSpace(entry.narrationScriptName);
+            // Every new tier re-arms the hero's save-scum revival (the next
+            // boss death will spend it; the one after that is a real game over).
+            runState.saveScumAvailable = true;
             ApplyAllEffects(entry);
 
             bool tierPromoted = false;

@@ -1,5 +1,6 @@
 using System.Collections;
 using BossJam.Cutscene;
+using BossJam.Difficulty;
 using BossJam.Game;
 using TMPro;
 using UnityEngine;
@@ -58,7 +59,33 @@ namespace BossJam.UI
             panelRoot.SetActive(show);
             if (!show) { enabled = false; return; }
 
+            // Respawn fast-path: a hero respawn warning or boss save-scum sets
+            // RunState.skipNextIntro before reloading. Bypass the start screen
+            // entirely so the player is back in the fight without a Press SPACE
+            // beat. GameStateController.Begin consumes the flag and routes to
+            // the respawn_reload dialogue instead of the cutscene.
+            var runState = FindFirstObjectByType<DifficultyRuntime>()?.State;
+            if (runState != null && runState.skipNextIntro)
+            {
+                panelRoot.SetActive(false);
+                if (fadeOverlay != null) fadeOverlay.SetAlpha(0f);
+                StartCoroutine(BeginAfterSettle());
+                return;
+            }
+
             StartCoroutine(RunIntro(GameSession.IsMidRun));
+        }
+
+        // Defer the Begin() one frame so GameStateController's OnEnable + the
+        // dialogue rig's subscription have all run by the time the respawn_reload
+        // dialogue fires. Otherwise the Finished event may not be wired and the
+        // state machine strands in Dialogue.
+        private IEnumerator BeginAfterSettle()
+        {
+            yield return null;
+            if (controller != null) controller.Begin();
+            inputArmed = false;
+            enabled = false;
         }
 
         private void OnEnable()

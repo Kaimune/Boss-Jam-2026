@@ -51,7 +51,15 @@ namespace BossJam.Enemies
         public bool IsReady => fireballPrefab != null && hero != null && hero.Grid != null
                                && Time.time >= nextShotTime;
 
-        public float Score(in HeroDecisionContext ctx) => 0.3f;
+        public float Score(in HeroDecisionContext ctx)
+        {
+            // Distance gate: only lob when far enough away that the projectile
+            // has room to read as ranged pressure. Closing the gap is the
+            // dash-strike's job.
+            float minDist = hero.Config.fireballMinDistanceCells;
+            if (ctx.distanceToBossCells < minDist) return 0f;
+            return 0.3f;
+        }
 
         public void Begin(in HeroDecisionContext ctx)
         {

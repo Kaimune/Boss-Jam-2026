@@ -164,6 +164,14 @@ namespace BossJam.Player
             if (until > invulnUntil) invulnUntil = until;
         }
 
+        /// <summary>
+        /// Force-end the current invulnerability window. Used by attack animations
+        /// (e.g. GroundSlash via AnimationEvent at the strike keyframe) so the boss
+        /// can be punished as soon as the swing commits, instead of being protected
+        /// through the entire phase.
+        /// </summary>
+        public void ClearInvuln() => invulnUntil = -1f;
+
         private void Die()
         {
             isDead = true;
@@ -283,12 +291,15 @@ namespace BossJam.Player
         private void Update()
         {
             var raw = moveAction.ReadValue<Vector2>();
-            var dir = IsMovementLockedByAttack ? Vector2.zero : ToDirection(raw);
-            mover.InputDirection = dir;
+            var inputDir = ToDirection(raw);
+            mover.InputDirection = IsMovementLockedByAttack ? Vector2.zero : inputDir;
 
-            if (dir.sqrMagnitude > 0.0001f)
+            // Facing tracks input even when movement is locked, so attacks like
+            // ChargeSlam can let the player rotate the impact direction mid-swing.
+            // Attacks that need a locked facing should clamp themselves.
+            if (inputDir.sqrMagnitude > 0.0001f)
             {
-                var forward = new Vector3(dir.x, 0f, dir.y);
+                var forward = new Vector3(inputDir.x, 0f, inputDir.y);
                 aimForward = forward;
                 facingTarget = Quaternion.LookRotation(forward, Vector3.up) * Quaternion.Euler(0f, modelYawOffset, 0f);
             }

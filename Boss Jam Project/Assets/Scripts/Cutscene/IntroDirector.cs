@@ -35,6 +35,15 @@ namespace BossJam.Cutscene
                                  "cutscene walk. Restored to 1 when the intro completes.")]
         private float cutsceneAnimatorSpeed = 0.5f;
 
+        [SerializeField, Tooltip("Animator state crossfaded in while the hero is walking into the arena.")]
+        private string runStateName = "hero_run_stepped";
+
+        [SerializeField, Tooltip("Animator state crossfaded in once the hero reaches the fight-start cell.")]
+        private string idleStateName = "hero_idle_stepped";
+
+        [SerializeField, Min(0f), Tooltip("Crossfade duration (fixed seconds) used when swapping into the run/idle states.")]
+        private float animCrossfadeSeconds = 0.15f;
+
         [SerializeField, Tooltip("Rotate the hero to face the walk direction at intro start. " +
                                  "Disable if the prefab's idle facing already reads right.")]
         private bool faceWalkDirection = true;
@@ -103,7 +112,12 @@ namespace BossJam.Cutscene
             if (faceWalkDirection) ApplyWalkFacing();
 
             // Slow the walk animation for cinematic pacing. Restored in Complete().
-            if (heroAnimator != null) heroAnimator.speed = cutsceneAnimatorSpeed;
+            if (heroAnimator != null)
+            {
+                heroAnimator.speed = cutsceneAnimatorSpeed;
+                if (!string.IsNullOrEmpty(runStateName) && HasState(heroAnimator, runStateName))
+                    heroAnimator.CrossFadeInFixedTime(runStateName, animCrossfadeSeconds);
+            }
 
             walkRoutine = StartCoroutine(WalkIn());
         }
@@ -171,7 +185,12 @@ namespace BossJam.Cutscene
                 if (gm != null) gm.SyncFromFootprint();
                 ToggleCombatComponents(true);
             }
-            if (heroAnimator != null) heroAnimator.speed = 1f;
+            if (heroAnimator != null)
+            {
+                heroAnimator.speed = 1f;
+                if (!string.IsNullOrEmpty(idleStateName) && HasState(heroAnimator, idleStateName))
+                    heroAnimator.CrossFadeInFixedTime(idleStateName, animCrossfadeSeconds);
+            }
             RestoreGameplayFraming();
             IntroComplete?.Invoke();
         }
@@ -233,6 +252,16 @@ namespace BossJam.Cutscene
             // in WalkIn and the hero appears to "snap back" to its scene-authored cell.
             var gm = hero.GetComponent<BossJam.Player.GridMover>();
             if (gm != null) gm.enabled = enabledFlag;
+        }
+
+        private static bool HasState(Animator animator, string stateName)
+        {
+            if (animator == null || animator.runtimeAnimatorController == null) return false;
+            int hash = Animator.StringToHash(stateName);
+            for (int i = 0; i < animator.layerCount; i++)
+                if (animator.HasState(i, hash)) return true;
+            Debug.LogWarning($"{nameof(IntroDirector)}: animator '{animator.name}' has no state '{stateName}'.", animator);
+            return false;
         }
 
         private static void ToggleByTypeName(GameObject go, string fullName, bool enabledFlag)

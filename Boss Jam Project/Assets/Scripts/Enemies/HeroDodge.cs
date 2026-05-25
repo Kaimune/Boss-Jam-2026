@@ -101,9 +101,38 @@ namespace BossJam.Enemies
             // Lock the boost direction at commit time so a mid-dodge kite
             // re-evaluation doesn't tug the hero around. The boost has a
             // committed feel — once you press, you go that way.
-            lockedDirection = ctx.kiteDir.sqrMagnitude > 0.0001f
-                ? ctx.kiteDir.normalized
-                : Vector2.zero;
+            //
+            // Direction rules:
+            //   - bossIsExecutingAttack → perpendicular to the boss→hero axis,
+            //     so the dodge actually clears the lane of a charge/swing
+            //     instead of sliding along whatever strafe was already happening.
+            //   - else → fall back to the current kite vector (used for hazard
+            //     rect dodges that aren't charge-axis-aligned).
+            if (ctx.bossIsExecutingAttack)
+            {
+                Vector2 axis = ctx.heroCenter - ctx.bossCenter;
+                if (axis.sqrMagnitude > 0.0001f)
+                {
+                    axis.Normalize();
+                    Vector2 perp = new Vector2(-axis.y, axis.x);
+                    // Pick the side that aligns with current kite drift when
+                    // the kite vector has a sign; otherwise default positive.
+                    float sign = Vector2.Dot(perp, ctx.kiteDir) >= 0f ? 1f : -1f;
+                    lockedDirection = perp * sign;
+                }
+                else
+                {
+                    lockedDirection = ctx.kiteDir.sqrMagnitude > 0.0001f
+                        ? ctx.kiteDir.normalized
+                        : Vector2.zero;
+                }
+            }
+            else
+            {
+                lockedDirection = ctx.kiteDir.sqrMagnitude > 0.0001f
+                    ? ctx.kiteDir.normalized
+                    : Vector2.zero;
+            }
             lockedSpeedMul = Eff(Target.HeroDodgeSpeedMultiplier, hero.Config.dodgeSpeedMultiplier);
 
             float dur = Eff(Target.HeroDodgeDurationSeconds, hero.Config.dodgeDurationSeconds);

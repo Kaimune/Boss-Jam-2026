@@ -16,7 +16,7 @@ MonoBehaviour:
   tickMultiplier: 1
   moveSpeed: 0.01
   moveSpeedMultiplier: 1
-  preferredDistanceCells: 10
+  preferredDistanceCells: 17
   stuckFlipSeconds: 0.25
   reactionTimeSeconds: 0.25
   velocityWindowSeconds: 0.1
@@ -26,10 +26,14 @@ MonoBehaviour:
   fireballSize: {x: 1, y: 1}
   fireballDamage: 1
   firstShotDelay: 1
-  meleeDamage: 1
-  meleeRangeCells: 1.75
-  meleeApproachDistanceCells: 1.5
-  meleeCooldownSeconds: 0.9
+  fireballMinDistanceCells: 10
+  dashStrikeDamage: 1
+  dashStrikeMeleeRangeCells: 2
+  dashStrikeTriggerDistanceCells: 5
+  dashStrikeSpeedMultiplier: 5.5
+  dashStrikeDurationSeconds: 0.2
+  dashStrikeMaxRangeCells: 12
+  dashStrikeCooldownSeconds: 0.9
   dodgeSpeedMultiplier: 4.5
   dodgeDurationSeconds: 0.2625
   dodgeCooldownSeconds: 1.5

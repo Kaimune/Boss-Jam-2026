@@ -21,7 +21,7 @@ namespace BossJam.Enemies
 
         [Header("Kiting")]
         [Tooltip("Distance in cells the hero tries to maintain from the boss.")]
-        [Min(0.5f)] public float preferredDistanceCells = 13f;
+        [Min(0.5f)] public float preferredDistanceCells = 17f;
 
         [Tooltip("If movement is requested but blocked for this long, flip orbit direction.")]
         [Min(0.05f)] public float stuckFlipSeconds = 0.25f;
@@ -47,14 +47,24 @@ namespace BossJam.Enemies
         [Tooltip("Delay before the first shot after spawning.")]
         [Min(0f)] public float firstShotDelay = 1f;
 
-        [Header("Melee")]
-        [Min(0)] public int meleeDamage = 1;
-        [Tooltip("Hero is in range to land a melee when distanceToBoss <= this value (cells).")]
-        [Min(0.5f)] public float meleeRangeCells = 1.75f;
-        [Tooltip("Preferred distance the hero kites at while a boss-attack punish window is open.")]
-        [Min(0.5f)] public float meleeApproachDistanceCells = 1.5f;
-        [Tooltip("Seconds between melee swings (independent of the per-window one-hit cap).")]
-        [Min(0.05f)] public float meleeCooldownSeconds = 0.9f;
+        [Tooltip("Hero won't fire a fireball when within this distance (cells) of the boss.")]
+        [Min(0f)] public float fireballMinDistanceCells = 10f;
+
+        [Header("Dash-Strike")]
+        [Tooltip("Damage applied when the dash-strike connects.")]
+        [Min(0)] public int dashStrikeDamage = 1;
+        [Tooltip("Hit lands when the hero is within this distance (cells) of the boss's footprint EDGE — not the center. 0 means \"touching the boss\". Footprint-aware so the value stays meaningful regardless of how large the boss footprint is.")]
+        [Min(0f)] public float dashStrikeMeleeRangeCells = 2f;
+        [Tooltip("Kite distance the hero closes to while a punish window is open — the dash launches from here.")]
+        [Min(0.5f)] public float dashStrikeTriggerDistanceCells = 5f;
+        [Tooltip("Movement-speed multiplier applied during the dash itself.")]
+        [Min(1f)] public float dashStrikeSpeedMultiplier = 5.5f;
+        [Tooltip("Dash duration. The hero always plays out the full dash; the hit resolves at the END so the strike is unmistakably a dash, not a tap.")]
+        [Min(0.05f)] public float dashStrikeDurationSeconds = 0.2f;
+        [Tooltip("Max distance (cells, center-to-center) at which the hero will commit to a dash-strike. Beyond this the dash can't plausibly reach, so the hero kites closer first instead of whiffing.")]
+        [Min(1f)] public float dashStrikeMaxRangeCells = 12f;
+        [Tooltip("Seconds between dash-strikes (independent of the per-window one-hit cap).")]
+        [Min(0.05f)] public float dashStrikeCooldownSeconds = 0.9f;
 
         [Header("Dodge")]
         [Tooltip("Movement-speed multiplier applied during the dodge burst.")]

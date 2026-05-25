@@ -9,9 +9,9 @@ namespace BossJam.Enemies
     /// Awake based on the wave-index loadout, then queries Choose() each
     /// Update to know what to fire.
     ///
-    /// Also tracks the "one melee per boss punish window" rule: once melee
-    /// fires while the boss is in Recovery/Cooldown, the brain forbids
-    /// further melee until the window closes and a new one opens.
+    /// Also tracks the "one dash-strike per boss punish window" rule: once
+    /// the dash-strike fires while the boss is in Recovery/Cooldown, the brain
+    /// forbids further dash-strikes until the window closes and a new one opens.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class HeroBrain : MonoBehaviour
@@ -54,9 +54,9 @@ namespace BossJam.Enemies
             {
                 var a = abilities[i];
                 if (!a.IsReady) continue;
-                // Once-per-window cap: melee is gated out for the rest of this
-                // window after the first swing. Other abilities are not.
-                if (a is HeroMelee && punishWindowConsumed) continue;
+                // Once-per-window cap: dash-strike is gated out for the rest
+                // of this window after the first connect. Other abilities are not.
+                if (a is HeroDashStrike && punishWindowConsumed) continue;
 
                 float s = a.Score(ctx);
                 if (s > bestScore) { best = a; bestScore = s; }
@@ -73,15 +73,24 @@ namespace BossJam.Enemies
             if (ability == null) return;
             ability.Begin(ctx);
             activeAbility = ability;
-            // Melee is the only ability that spends the punish window in Spec 1.
-            if (ability is HeroMelee && ctx.bossInPunishWindow)
-                punishWindowConsumed = true;
+            // Window consumption happens on HIT (see TickAll), not on commit —
+            // a whiffed dash shouldn't lock the hero out of the rest of the
+            // opening.
         }
 
         public void TickAll(float dt)
         {
             for (int i = 0; i < abilities.Count; i++)
-                abilities[i]?.Tick(dt);
+            {
+                var a = abilities[i];
+                if (a == null) continue;
+                a.Tick(dt);
+                // Mark the window spent once a dash actually lands inside a
+                // punish window. Whiffs and random out-of-window jabs leave
+                // the cap alone, so the hero can try again after the cooldown.
+                if (a is HeroDashStrike ds && ds.HitConsumedPunishWindow)
+                    punishWindowConsumed = true;
+            }
         }
 
         public void CancelAll()
