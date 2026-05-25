@@ -1,6 +1,7 @@
 using System.Collections;
 using BossJam.Enemies;
 using BossJam.Game;
+using BossJam.Player;
 using TMPro;
 using UnityEngine;
 
@@ -55,6 +56,15 @@ namespace BossJam.UI
 
         private bool subscribedToStateChanged;
 
+        // Latched at the moment either combatant dies. Once true, the warning
+        // panel stays force-off + the beep stays muted for the rest of this
+        // scene instance, regardless of game state or armed flag. The flag
+        // resets naturally on the next scene load (fresh WarningScreenUI).
+        private bool permanentlyDisabled;
+        private BossController boss;
+        private bool subscribedHeroKilled;
+        private bool subscribedBossDied;
+
         private void Start()
         {
             hero = FindFirstObjectByType<HeroEnemy>(FindObjectsInactive.Include);
@@ -63,6 +73,7 @@ namespace BossJam.UI
             EnsureSfxSource();
             SetPanelActive(false);
             TryBindGameState();
+            TryBindDeathEvents();
         }
 
         private void EnsureSfxSource()
@@ -78,6 +89,8 @@ namespace BossJam.UI
         {
             if (gameState != null && subscribedToStateChanged)
                 gameState.StateChanged -= OnStateChanged;
+            if (subscribedHeroKilled) HeroEnemy.HeroKilledStatic -= OnAnyoneDied;
+            if (boss != null && subscribedBossDied) boss.BossDied -= OnAnyoneDied;
         }
 
         private void TryBindGameState()
@@ -87,6 +100,35 @@ namespace BossJam.UI
             if (gameState == null) return;
             gameState.StateChanged += OnStateChanged;
             subscribedToStateChanged = true;
+        }
+
+        private void TryBindDeathEvents()
+        {
+            if (!subscribedHeroKilled)
+            {
+                HeroEnemy.HeroKilledStatic += OnAnyoneDied;
+                subscribedHeroKilled = true;
+            }
+            if (boss == null) boss = FindFirstObjectByType<BossController>(FindObjectsInactive.Include);
+            if (boss != null && !subscribedBossDied)
+            {
+                boss.BossDied += OnAnyoneDied;
+                subscribedBossDied = true;
+            }
+        }
+
+        // Hard-off latch: fires on hero or boss death. Once tripped, Update
+        // re-asserts panel-off / sfx-stop every frame for the rest of this
+        // scene instance. No path can re-arm the warning until scene reload.
+        private void OnAnyoneDied()
+        {
+            permanentlyDisabled = true;
+            if (flashRoutine != null) { StopCoroutine(flashRoutine); flashRoutine = null; }
+            flashing = false;
+            prevArmed = false;
+            SetPanelActive(false);
+            if (sfxSource != null && sfxSource.isPlaying) sfxSource.Stop();
+            nextBlinkSfxAt = float.PositiveInfinity;
         }
 
         // Kill-switch: the moment the game leaves Playing, snap everything off.
@@ -115,6 +157,20 @@ namespace BossJam.UI
             // frame after a scene reload; re-resolve until they show up.
             if (gameState == null) TryBindGameState();
             if (hero == null) hero = FindFirstObjectByType<HeroEnemy>(FindObjectsInactive.Include);
+            if (boss == null || !subscribedBossDied) TryBindDeathEvents();
+
+            // Hard-off after any death this scene — force everything off and
+            // exit before any armed-driven path can re-flip the panel.
+            if (permanentlyDisabled)
+            {
+                if (flashRoutine != null) { StopCoroutine(flashRoutine); flashRoutine = null; }
+                flashing = false;
+                prevArmed = false;
+                SetPanelActive(false);
+                if (sfxSource != null && sfxSource.isPlaying) sfxSource.Stop();
+                nextBlinkSfxAt = float.PositiveInfinity;
+                return;
+            }
 
             bool playing = gameState != null && gameState.State == GameState.Playing;
 

@@ -368,6 +368,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 145994100156036586, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 233133062278488973, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -780,6 +784,10 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 7664300432318410115, guid: 4fb15619488354e44bd634236c75dd78, type: 2}
+    - target: {fileID: 5142808394104658210, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -443
+      objectReference: {fileID: 0}
     - target: {fileID: 5153298430684158894, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_Type
       value: 0
@@ -968,6 +976,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6220693359790877070, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+      propertyPath: m_text
+      value: END OF GAME
+      objectReference: {fileID: 0}
     - target: {fileID: 6343709814502971189, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.2
@@ -1034,6 +1046,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6705647228209916147, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6775062780919801231, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+      propertyPath: m_Name
+      value: Credits
+      objectReference: {fileID: 0}
+    - target: {fileID: 6775062780919801231, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+      propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6830207083115589356, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
@@ -1223,6 +1243,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 6861581959145763977, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+    - {fileID: 1047666767872416387, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
+    - {fileID: 8545593782643991309, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 9066771635181248367, guid: f9c818df6210741c489d862e63d3edf1, type: 3}
       insertIndex: -1
@@ -3558,7 +3580,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &881417021
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3955,8 +3977,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 8.565002, y: -47.253128}
+  m_SizeDelta: {x: 544.082, y: 503.1284}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1024756972
 MonoBehaviour:
@@ -5153,6 +5175,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Post process take dmg (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8372686327735049049, guid: 38cc4c86dec147347bedf17a8b3db767, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5499,7 +5525,7 @@ RectTransform:
   m_GameObject: {fileID: 1718846504}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1.0989, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2035568471}
@@ -6671,7 +6697,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9068278657857270815, guid: 54882ebcafd304b05badfdab47dc9cf5, type: 3}
       propertyPath: m_Alpha
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
