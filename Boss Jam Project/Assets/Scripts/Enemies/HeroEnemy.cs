@@ -678,10 +678,12 @@ namespace BossJam.Enemies
         {
             if (rt == null) return;
             ref var f = ref rt.Flags;
-            // Any tier with a respawn mode gets the warning (Tutorial/Easy can
-            // be FullHp, harder tiers SaveScum — the gate is just "is this tier
-            // save-scum-enabled?"). None = no warning.
-            if (f.HeroRespawnMode == HeroRespawnMode.None) return;
+            // Only the timer-based respawn (FullHpIfNotInstakilled — Tutorial /
+            // Error) arms the warning UI: that's the mode where surviving the
+            // window triggers the reload. SaveScumOnFirstOneHp (Beginner) is
+            // boss-death triggered (see GameStateController) and has no use
+            // for the countdown overlay.
+            if (f.HeroRespawnMode != HeroRespawnMode.FullHpIfNotInstakilled) return;
 
             if (currentHp <= RespawnArmHpThreshold && conditionalRespawnArmedAt < 0f)
                 conditionalRespawnArmedAt = Time.time;
