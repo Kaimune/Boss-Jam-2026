@@ -230,6 +230,7 @@ namespace BossJam.Attacks
             var anchor = ClampAnchor(TelegraphAnchor(fpSize), fpSize);
             var world = grid.FootprintCenterWorld(anchor, fpSize);
             liveTelegraph = Instantiate(config.telegraphPrefab, world, Quaternion.identity);
+            BossJam.Game.DebugVisualHider.ApplyTo(liveTelegraph);
             var vis = liveTelegraph.transform.Find("Visual");
             if (vis != null)
             {

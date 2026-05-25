@@ -231,6 +231,7 @@ namespace BossJam.Attacks
             if (config.telegraphPrefab == null) return null;
 
             GameObject t = Instantiate(config.telegraphPrefab, worldImpact, Quaternion.identity);
+            BossJam.Game.DebugVisualHider.ApplyTo(t);
 
             Transform vis = t.transform.Find("Visual");
 

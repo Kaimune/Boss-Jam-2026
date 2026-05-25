@@ -1,3 +1,4 @@
+using BossJam.Game;
 using BossJam.GridSystem;
 using UnityEngine;
 
@@ -29,14 +30,6 @@ namespace BossJam.Attacks
         private float tickMultiplier = 1f;
         public void ApplyTick(float m) => tickMultiplier = m;
 
-        private void Awake()
-        {
-            var rt = FindFirstObjectByType<BossJam.Difficulty.DifficultyRuntime>();
-            if (rt != null && rt.State != null && !rt.State.showDebugVisuals)
-            {
-                foreach (var mr in GetComponentsInChildren<MeshRenderer>(true))
-                    mr.enabled = false;
-            }
-        }
+        private void Awake() => DebugVisualHider.ApplyTo(gameObject);
     }
 }

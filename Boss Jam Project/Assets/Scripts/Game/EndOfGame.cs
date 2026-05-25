@@ -14,6 +14,9 @@ namespace BossJam.Game
         [Tooltip("Section to activate when Space is pressed (e.g. the Credits child). This object deactivates itself on advance.")]
         [SerializeField] private GameObject nextSection;
 
+        [Tooltip("GameObjects to deactivate when advancing to credits (gameplay roots, HUD, etc). Main Camera should NOT be in this list.")]
+        [SerializeField] private GameObject[] objectsToDisable;
+
         private float enabledAt;
         private bool promptShown;
 
@@ -36,23 +39,15 @@ namespace BossJam.Game
             var kb = Keyboard.current;
             if (kb != null && kb.spaceKey.wasPressedThisFrame)
             {
-                DisableEverythingElseInScene();
+                if (objectsToDisable != null)
+                {
+                    for (int i = 0; i < objectsToDisable.Length; i++)
+                    {
+                        if (objectsToDisable[i] != null) objectsToDisable[i].SetActive(false);
+                    }
+                }
                 if (nextSection != null) nextSection.SetActive(true);
                 gameObject.SetActive(false);
-            }
-        }
-
-        // Wipe the rest of the scene — gameplay, HUD, start screen, world —
-        // so the credits flow takes over a clean stage. The root containing
-        // this EndOfGame (and its sibling Credits screen) is preserved.
-        private void DisableEverythingElseInScene()
-        {
-            var scene = gameObject.scene;
-            var keepRoot = transform.root.gameObject;
-            var roots = scene.GetRootGameObjects();
-            for (int i = 0; i < roots.Length; i++)
-            {
-                if (roots[i] != keepRoot) roots[i].SetActive(false);
             }
         }
     }
